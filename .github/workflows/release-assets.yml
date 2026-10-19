@@ -6,6 +6,8 @@ on:
     paths:
       - 'apps/web/downloads/**'
       - '.github/workflows/release-assets.yml'
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -31,8 +33,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           shopt -s nullglob
-          files=(apps/web/downloads/*.exe apps/web/downloads/*.zip apps/web/downloads/*.apk apps/web/downloads/*.ipa apps/web/downloads/SHA256SUMS.txt)
+          files=(apps/web/downloads/*.exe apps/web/downloads/*.zip apps/web/downloads/*.apk apps/web/downloads/*.ipa)
           if [ ${#files[@]} -eq 0 ]; then
-            echo "no binaries to publish"; exit 0
+            echo "no binaries to publish"
+          else
+            gh release upload v1.0.0 "${files[@]}" --clobber
           fi
-          gh release upload v1.0.0 "${files[@]}" --clobber
+
+      - name: Rebuild the combined checksum file
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p verify
+          gh release download v1.0.0 --dir verify --clobber \
+            --pattern 'VoxBridge-*' || true
+          cd verify
+          rm -f SHA256SUMS.txt
+          if ls VoxBridge-* >/dev/null 2>&1; then
+            sha256sum VoxBridge-* | tee SHA256SUMS.txt
+            gh release upload v1.0.0 SHA256SUMS.txt --clobber
+          else
+            echo "release has no binaries yet"
+          fi

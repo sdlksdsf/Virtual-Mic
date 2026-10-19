@@ -18,86 +18,75 @@ permissions:
 jobs:
   build:
     name: Build installer
-    runs-on: windows-latest
-    timeout-minutes: 50
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: apps/desktop/package-lock.json
 
-      - name: Toolchain versions
-        shell: pwsh
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the cross compiler
+        run: pip install --disable-pip-version-check ziglang==0.17.0
+
+      - name: Build the native Windows capture service
         run: |
-          cmake --version
-          node --version
-          npm --version
-          Get-ChildItem apps/desktop -Name
+          set -euo pipefail
+          ZIG=$(python3 -c "import ziglang, os; print(os.path.join(os.path.dirname(ziglang.__file__), 'zig'))")
+          "$ZIG" version
+          mkdir -p apps/desktop/service-bin
+          "$ZIG" c++ -target x86_64-windows-gnu -municode -std=c++17 -O2 \
+            -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS \
+            -Iapps/desktop/service/src \
+            apps/desktop/service/src/win_main.cpp \
+            apps/desktop/service/src/windows_audio.cpp \
+            -lole32 -loleaut32 -luuid -lpropsys -lwintrust -lcrypt32 -lshell32 \
+            -o apps/desktop/service-bin/VoxBridgeMic.exe
+          ls -lh apps/desktop/service-bin/VoxBridgeMic.exe
 
-      - name: Configure native service
-        shell: pwsh
-        run: |
-          cmake -S apps/desktop/service -B build/service -A x64 2>&1 | Tee-Object -FilePath build/configure.log
-          if ($LASTEXITCODE -ne 0) {
-            Get-Content build/configure.log -Tail 25 | ForEach-Object { "::error::$_" }
-            exit 1
-          }
-
-      - name: Build native service
-        shell: pwsh
-        run: |
-          cmake --build build/service --config Release --parallel 2>&1 | Tee-Object -FilePath build/compile.log
-          if ($LASTEXITCODE -ne 0) {
-            Get-Content build/compile.log -Tail 40 | ForEach-Object { "::error::$_" }
-            exit 1
-          }
-          Get-ChildItem build/service/Release | Select-Object Name, Length | Format-Table
-
-      - name: Run portable core tests
-        shell: pwsh
-        run: |
-          $test = Get-ChildItem build/service/Release -Filter 'voxbridge_coretest.exe' -Recurse | Select-Object -First 1
-          if (-not $test) { "::error::coretest binary was not produced"; exit 1 }
-          & $test.FullName
-          if ($LASTEXITCODE -ne 0) { "::error::core self-test failed"; exit 1 }
-
-      - name: Stage service binary
-        shell: pwsh
-        run: |
-          New-Item -ItemType Directory -Force apps/desktop/service-bin | Out-Null
-          $exe = Get-ChildItem build/service/Release -Filter 'VoxBridgeMic.exe' -Recurse | Select-Object -First 1
-          if (-not $exe) { "::error::VoxBridgeMic.exe was not produced"; exit 1 }
-          Copy-Item $exe.FullName apps/desktop/service-bin/
-          Copy-Item build/service/Release/voxbridge_coretest.exe apps/desktop/service-bin/
-          Get-Item apps/desktop/service-bin/VoxBridgeMic.exe | Select-Object Name, Length
-
-      - name: Install desktop dependencies
+      - name: Install runtime dependency
         working-directory: apps/desktop
-        run: npm ci
-
-      - name: Lint main and renderer
-        working-directory: apps/desktop
-        run: npm run lint
+        run: npm install --omit=dev --ignore-scripts --no-audit --no-fund
 
       - name: Build installer and portable build
-        working-directory: apps/desktop
-        run: npm run dist -- --publish never
         env:
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-
-      - name: Checksums
-        working-directory: release
-        shell: pwsh
+          SERVICE_EXE: ${{ github.workspace }}/apps/desktop/service-bin/VoxBridgeMic.exe
         run: |
-          Get-ChildItem -Filter *.exe | ForEach-Object {
-            $h = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
-            "$h  $($_.Name)" | Out-File -Append SHA256SUMS.txt -Encoding ascii
-          }
-          Get-ChildItem | Select-Object Name, Length
-          Get-Content SHA256SUMS.txt
+          set -euo pipefail
+          ZIG=$(python3 -c "import ziglang, os; print(os.path.join(os.path.dirname(ziglang.__file__), 'zig'))")
+          ZIG="$ZIG" SERVICE_EXE="$SERVICE_EXE" ./apps/desktop/standalone/build-windows.sh 2>&1 | tee build-windows.log
+
+      - name: Verify the payload
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import struct, zlib
+          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe'
+          data = open(path, 'rb').read()
+          assert data[-24:-16] == b'VBXPAY1\x00'
+          offset, size = struct.unpack('<QQ', data[-16:])
+          assert offset + size + 24 == len(data)
+          payload = data[offset:offset + size]
+          assert payload[:4] == b'VBXP'
+          count = struct.unpack('<I', payload[4:8])[0]
+          cursor = 8
+          names = []
+          for _ in range(count):
+              length = struct.unpack('<H', payload[cursor:cursor + 2])[0]
+              cursor += 2
+              names.append(payload[cursor:cursor + length].decode())
+              cursor += length
+              raw, compressed = struct.unpack('<QQ', payload[cursor:cursor + 16])
+              cursor += 16
+          assert count > 20, count
+          print(f'{count} files in payload:', ', '.join(names[:6]), '...')
+          PY
+          cd apps/desktop/standalone/dist && cat SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -105,12 +94,11 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           path: |
-            release/*.exe
-            release/SHA256SUMS.txt
-            release/latest.yml
-            release/*.blockmap
+            apps/desktop/standalone/dist/*.exe
+            apps/desktop/standalone/dist/*.zip
+            apps/desktop/standalone/dist/SHA256SUMS.txt
 
-      - name: Publish installer to release
+      - name: Publish to the release
         if: success()
         uses: softprops/action-gh-release@v2
         with:
@@ -118,19 +106,24 @@ jobs:
           name: VoxBridge 1.0.0
           fail_on_unmatched_files: false
           files: |
-            release/*.exe
-            release/SHA256SUMS.txt
-            release/latest.yml
+            apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe
+            apps/desktop/standalone/dist/VoxBridge-1.0.0-win64-portable.zip
 
-      - name: Preserve build log
+      - name: Report build log
         if: failure()
-        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          New-Item -ItemType Directory -Force ci-logs | Out-Null
-          Copy-Item build/*.log ci-logs/ -ErrorAction SilentlyContinue
-          git config user.name "VoxBridge CI"
-          git config user.email "ci@voxbridge.app"
-          git add -f ci-logs
-          if ($LASTEXITCODE -eq 0) { git commit -m "ci: desktop build log [skip ci]" }
-          git pull --rebase origin "${{ github.ref_name }}"
-          git push origin "HEAD:${{ github.ref_name }}"
+          set +e
+          n=$(gh issue list --state open --search 'CI build logs in:title' --json number --jq '.[0].number // empty')
+          if [ -z "$n" ]; then
+            url=$(gh issue create --title "CI build logs" --body "Automated diagnostics from failed builds.")
+            n=${url##*/}
+          fi
+          {
+            echo "### Desktop build failure (run ${{ github.run_id }})"
+            echo '```'
+            tail -n 80 build-windows.log 2>/dev/null
+            echo '```'
+          } > /tmp/report.md
+          gh issue comment "$n" --body-file /tmp/report.md

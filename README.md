@@ -4,10 +4,22 @@
 
 VoxBridge turns an Android phone, iPhone, or tablet into a studio-clean microphone for Windows 10 and 11. It ships a native Windows capture service, native mobile apps, a real installer, and this repository holds the entire stack: desktop app, mobile apps, protocol, DSP, website and database.
 
-- **Website:** https://voxbridge.vercel.app
-- **Downloads:** https://voxbridge.vercel.app/download
+- **Website:** https://voxbridge-app-pi.vercel.app
+- **Downloads:** https://voxbridge-app-pi.vercel.app/download
 - **Docs:** [`docs/`](docs)
 - **Protocol:** [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
+
+---
+
+## Download
+
+| Platform | Build | Notes |
+|---|---|---|
+| Windows 10/11 x64 | [VoxBridge Setup 1.0.0](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe) | Single-file installer, per-user, no admin rights |
+| Windows portable | [VoxBridge 1.0.0 portable ZIP](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip) | Unzip anywhere and run `VoxBridge.exe` |
+| Android 8+ | [VoxBridge 1.0.0 APK](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk) | Debug-signed release build, sideload it |
+| iOS 16+ | [VoxBridge 1.0.0 unsigned IPA](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa) | Sign with AltStore, Sideloadly or Xcode |
+| All builds | [SHA256SUMS.txt](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/SHA256SUMS.txt) | Verify before you run |
 
 ---
 
