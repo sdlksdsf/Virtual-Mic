@@ -19,7 +19,7 @@ jobs:
     name: Verify the live product
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     concurrency:
-      group: release-verification
+      group: release-smoke
       cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:

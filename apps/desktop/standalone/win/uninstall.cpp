@@ -7,6 +7,8 @@
 #include <shlobj.h>
 #include <shellapi.h>
 #include <string>
+#include <fstream>
+#include <cstdio>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -37,6 +39,23 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     CoUninitialize();
     return 0;
   }
+
+  // Stop the running host and capture service first: node.exe and
+  // VoxBridgeMic.exe are locked while they run, and the delayed rmdir below
+  // would silently leave the installation behind otherwise.
+  const std::wstring localAppData = knownFolder(FOLDERID_LocalAppData);
+  if (!localAppData.empty()) {
+    std::wifstream pidFile(fs::path(localAppData) / L"VoxBridge" / L"server.pid");
+    long pid = 0;
+    if (pidFile >> pid && pid > 0) {
+      wchar_t kill[128];
+      swprintf_s(kill, L"/c taskkill /F /PID %ld /T >nul 2>&1", pid);
+      _wsystem(kill);
+    }
+  }
+  _wsystem(L"/c taskkill /F /IM VoxBridgeMic.exe /T >nul 2>&1");
+  _wsystem(L"/c taskkill /F /IM VoxBridge.exe /T >nul 2>&1");
+  Sleep(500);
 
   std::error_code ec;
   const std::wstring programs = knownFolder(FOLDERID_Programs);

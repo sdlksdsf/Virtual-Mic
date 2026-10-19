@@ -13,6 +13,8 @@
 #include <objbase.h>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <cstdio>
 #include <filesystem>
 #include <cstdint>
 #include "miniz.h"
@@ -324,6 +326,22 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
       L"Settings > Apps. Administrator rights are not required.",
       L"Install VoxBridge", MB_YESNO | MB_ICONQUESTION);
   if (answer != IDYES) return 0;
+
+  // An upgrade has to replace node.exe and the capture service, so stop a
+  // running copy (using its recorded PID) before touching the install folder.
+  const std::wstring appData = knownFolder(FOLDERID_LocalAppData);
+  if (!appData.empty()) {
+    std::wifstream pidFile(fs::path(appData) / L"VoxBridge" / L"server.pid");
+    long pid = 0;
+    if (pidFile >> pid && pid > 0) {
+      wchar_t kill[128];
+      swprintf_s(kill, L"/c taskkill /F /PID %ld /T >nul 2>&1", pid);
+      _wsystem(kill);
+    }
+  }
+  _wsystem(L"/c taskkill /F /IM VoxBridgeMic.exe /T >nul 2>&1");
+  _wsystem(L"/c taskkill /F /IM VoxBridge.exe /T >nul 2>&1");
+  Sleep(400);
 
   createProgressWindow();
   setProgress(2, L"Preparing...");
