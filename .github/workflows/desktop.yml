@@ -1,0 +1,76 @@
+name: Desktop (Windows)
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - 'apps/desktop/**'
+      - '.github/workflows/desktop.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build installer
+    runs-on: windows-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: apps/desktop/package-lock.json
+
+      - name: Configure native service
+        run: cmake -S apps/desktop/service -B build/service -A x64
+
+      - name: Build native service
+        run: cmake --build build/service --config Release --parallel
+
+      - name: Run portable core tests
+        run: build/service/Release/voxbridge_coretest.exe
+
+      - name: Stage service binary
+        run: |
+          New-Item -ItemType Directory -Force apps/desktop/service-bin | Out-Null
+          Copy-Item build/service/Release/VoxBridgeMic.exe apps/desktop/service-bin/
+          Copy-Item build/service/Release/voxbridge_coretest.exe apps/desktop/service-bin/
+          Get-Item apps/desktop/service-bin/VoxBridgeMic.exe | Select-Object Name, Length
+
+      - name: Install desktop dependencies
+        working-directory: apps/desktop
+        run: npm ci
+
+      - name: Build installer and portable build
+        working-directory: apps/desktop
+        run: npm run dist -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Checksums
+        working-directory: release
+        run: |
+          Get-ChildItem -Filter *.exe | ForEach-Object {
+            $h = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()
+            "$h  $($_.Name)" | Out-File -Append SHA256SUMS.txt -Encoding ascii
+          }
+          Get-ChildItem | Select-Object Name, Length
+          Get-Content SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxbridge-windows
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+            release/latest.yml
+            release/*.blockmap

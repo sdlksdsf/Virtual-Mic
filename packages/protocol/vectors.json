@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "packets": [
+    {
+      "name": "pcm16-silence",
+      "hex": "5601000000000000000000"
+    },
+    {
+      "name": "pcm16-one-sample",
+      "hex": "5601000000000000000000020034"
+    },
+    {
+      "name": "adpcm-4-samples",
+      "hex": "56010100000000000000060000000012"
+    }
+  ],
+  "notes": "Header: V/version/codec/flags/seq(2)/ts(4)/len(2). The adpcm vector uses predictor=0, index=0, then nibbles 0x1,0x2 represent four samples. Update alongside PROTOCOL.md."
+}

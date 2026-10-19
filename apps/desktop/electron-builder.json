@@ -1,0 +1,62 @@
+{
+  "appId": "app.voxbridge.desktop",
+  "productName": "VoxBridge",
+  "copyright": "Copyright (c) 2026 VoxBridge contributors",
+  "directories": {
+    "output": "../../release",
+    "buildResources": "build"
+  },
+  "files": [
+    "src/**/*",
+    "package.json",
+    "!**/*.map"
+  ],
+  "extraResources": [
+    {
+      "from": "service-bin",
+      "to": "service",
+      "filter": ["**/*"]
+    }
+  ],
+  "asar": true,
+  "compression": "maximum",
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": ["x64"] },
+      { "target": "portable", "arch": ["x64"] }
+    ],
+    "icon": "build/icon.ico",
+    "publisherName": "VoxBridge",
+    "artifactName": "VoxBridge-${version}-${arch}.${ext}",
+    "requestedExecutionLevel": "asInvoker"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "VoxBridge",
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "deleteAppDataOnUninstall": false,
+    "runAfterFinish": true,
+    "license": "build/license.txt",
+    "artifactName": "VoxBridge-Setup-${version}-${arch}.${ext}"
+  },
+  "portable": {
+    "artifactName": "VoxBridge-Portable-${version}-${arch}.${ext}"
+  },
+  "mac": {
+    "category": "public.app-category.utilities",
+    "target": ["dmg", "zip"],
+    "artifactName": "VoxBridge-${version}-${arch}.${ext}",
+    "icon": "build/icon.icns"
+  },
+  "linux": {
+    "target": ["AppImage"],
+    "category": "AudioVideo",
+    "icon": "build/icons"
+  }
+}
