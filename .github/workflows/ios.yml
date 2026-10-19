@@ -88,7 +88,6 @@ jobs:
             sleep $((attempt * 10))
           done
           test "$ok" = "1"
-            apps/ios/SHA256SUMS.txt
 
       - name: Preserve build log
         if: failure()
