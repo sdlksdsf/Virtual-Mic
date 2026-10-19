@@ -1,0 +1,98 @@
+name: Release smoke test
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - '.github/workflows/smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    name: Verify the live product
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Website pages
+        run: |
+          set -euo pipefail
+          base=https://voxbridge-app-pi.vercel.app
+          for path in / /download /features /setup /privacy /terms /security /licenses /support; do
+            code=$(curl -fsSL -o /dev/null -w '%{http_code}' "$base$path")
+            echo "$path -> $code"
+            test "$code" = "200"
+          done
+          curl -fsSL "$base/download" -o /tmp/download.html
+          grep -q 'VoxBridge-Setup-1.0.0-x64.exe' /tmp/download.html
+          grep -q 'VoxBridge-1.0.0-android.apk' /tmp/download.html
+          grep -q 'VoxBridge-1.0.0-unsigned.ipa' /tmp/download.html
+          echo "download links present"
+
+      - name: Release assets
+        run: |
+          set -euo pipefail
+          mkdir -p dl
+          cd dl
+          base=https://github.com/sdlksdsf/Virtual-Mic/releases/download/v1.0.0
+          for file in \
+            VoxBridge-Setup-1.0.0-x64.exe \
+            VoxBridge-1.0.0-win64-portable.zip \
+            VoxBridge-1.0.0-android.apk \
+            VoxBridge-1.0.0-unsigned.ipa \
+            SHA256SUMS.txt; do
+            curl -fsSL --retry 3 "$base/$file" -o "$file"
+            echo "$file $(stat -c%s "$file") bytes"
+          done
+          sha256sum -c SHA256SUMS.txt
+          unzip -q VoxBridge-1.0.0-android.apk -d apk
+          test -f apk/AndroidManifest.xml
+          test -f apk/classes.dex
+          unzip -q VoxBridge-1.0.0-unsigned.ipa -d ipa
+          test -f ipa/Payload/VoxBridge.app/VoxBridge
+          test -f ipa/Payload/VoxBridge.app/Info.plist
+          python3 - <<'PY'
+          import struct
+          data = open('VoxBridge-Setup-1.0.0-x64.exe', 'rb').read()
+          assert data[-24:-16] == b'VBXPAY1\x00', 'installer footer missing'
+          offset, size = struct.unpack('<QQ', data[-16:])
+          assert offset + size + 24 == len(data), 'installer footer is inconsistent'
+          assert data[offset:offset + 4] == b'VBXP', 'installer payload missing'
+          print('installer payload is intact:', size, 'bytes')
+          PY
+
+      - name: Supabase inserts
+        run: |
+          set -euo pipefail
+          url=$(grep -o "https://[a-z0-9]*\.supabase\.co" apps/web/assets/js/config.js | head -1)
+          key=$(grep -o "sb_publishable_[A-Za-z0-9_]*" apps/web/assets/js/config.js | head -1)
+          curl -fsS -X POST "$url/rest/v1/download_events" \
+            -H "apikey: $key" -H "Authorization: Bearer $key" \
+            -H 'Content-Type: application/json' \
+            -d '{"platform":"ci","version":"1.0.0","source":"smoke-test"}' -o /dev/null
+          curl -fsS -X POST "$url/rest/v1/feedback" \
+            -H "apikey: $key" -H "Authorization: Bearer $key" \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"ci@voxbridge.app","topic":"smoke-test","message":"release smoke test","platform":"ci","app_version":"1.0.0"}' -o /dev/null
+          echo "supabase inserts accepted"
+
+      - name: Report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          n=$(gh issue list --state open --search 'CI build logs in:title' --json number --jq '.[0].number // empty')
+          if [ -z "$n" ]; then
+            url=$(gh issue create --title "CI build logs" --body "Automated diagnostics from failed builds.")
+            n=${url##*/}
+          fi
+          {
+            echo "### Release smoke test passed (${{ github.run_id }})"
+            echo ""
+            echo "Website pages, installer payload, APK and IPA structure, SHA-256 checksums and Supabase inserts all verified."
+          } > /tmp/report.md
+          gh issue comment "$n" --body-file /tmp/report.md
