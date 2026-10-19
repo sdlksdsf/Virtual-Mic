@@ -1,2 +1,0 @@
-744e4be2c7c1424b30ffebf0f7a6b8b3a48197f8473cd5faf8d44f6d5b6cf2a8  VoxBridge-Setup-1.0.0-x64.exe
-edc01bba5ba45e9fa776da9bed885bc575e16f4b9df9e4609e386658c78400f1  VoxBridge-1.0.0-win64-portable.zip

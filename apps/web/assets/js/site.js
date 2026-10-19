@@ -146,25 +146,25 @@
       file: `VoxBridge-Setup-${VERSION}-x64.exe`,
       page: `${RELEASES}`,
       label: 'Download for Windows',
-      size: '≈ 39 MB',
+      size: '≈ 40 MB',
     },
     portable: {
       file: `VoxBridge-${VERSION}-win64-portable.zip`,
       page: `${RELEASES}`,
       label: 'Portable build',
-      size: '≈ 39 MB',
+      size: '≈ 38 MB',
     },
     android: {
       file: `VoxBridge-${VERSION}-android.apk`,
       page: `${RELEASES}`,
       label: 'Download APK',
-      size: '≈ 12 MB',
+      size: '≈ 1.3 MB',
     },
     ios: {
       file: `VoxBridge-${VERSION}-unsigned.ipa`,
       page: `${RELEASES}`,
       label: 'Download IPA',
-      size: '≈ 8 MB',
+      size: '≈ 0.3 MB',
     },
   };
 

@@ -46,3 +46,6 @@ Thumbs.db
 # python tooling used during development
 .venv/
 __pycache__/
+
+# Website binaries live in the GitHub release, not in git.
+apps/web/downloads/
