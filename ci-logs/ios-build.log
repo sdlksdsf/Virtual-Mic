@@ -1,0 +1,18 @@
+Command line invocation:
+    /Applications/Xcode_15.4.app/Contents/Developer/usr/bin/xcodebuild -project VoxBridge.xcodeproj -scheme VoxBridge -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= build
+
+User defaults from command line:
+    IDEDerivedDataPathOverride = /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build
+    IDEPackageSupportUseBuiltinSCM = YES
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = 
+    CODE_SIGNING_ALLOWED = NO
+    CODE_SIGNING_REQUIRED = NO
+    SDKROOT = iphoneos17.5
+
+2026-10-19 16:47:50.582 xcodebuild[8167:25913] Writing error result bundle to /var/folders/s6/5hzmn6lx4dz5nxs7k_0slzph0000gn/T/ResultBundle_2026-19-10_16-47-0050.xcresult
+xcodebuild: error: Unable to read project 'VoxBridge.xcodeproj'.
+	Reason: The project ‘VoxBridge’ cannot be opened because it is in a future Xcode project file format (77). Adjust the project format using a compatible version of Xcode to allow it to be opened by this version of Xcode.
+
+
