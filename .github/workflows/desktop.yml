@@ -108,3 +108,28 @@ jobs:
             release/SHA256SUMS.txt
             release/latest.yml
             release/*.blockmap
+
+      - name: Publish installer to release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: VoxBridge 1.0.0
+          fail_on_unmatched_files: false
+          files: |
+            release/*.exe
+            release/SHA256SUMS.txt
+            release/latest.yml
+
+      - name: Preserve build log
+        if: failure()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force ci-logs | Out-Null
+          Copy-Item build/*.log ci-logs/ -ErrorAction SilentlyContinue
+          git config user.name "VoxBridge CI"
+          git config user.email "ci@voxbridge.app"
+          git add -f ci-logs
+          if ($LASTEXITCODE -eq 0) { git commit -m "ci: desktop build log [skip ci]" }
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"

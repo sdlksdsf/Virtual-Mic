@@ -14,8 +14,12 @@
 #include <wrl/client.h>
 
 #include <audioclient.h>
-#include <functiondiscoverykeys_devpkey.h>
 #include <mmdeviceapi.h>
+#ifndef _MSC_VER
+// The Windows SDK's mmdeviceapi.h already defines the device property keys
+// when building with MSVC; including the header again triggers C2374.
+#include <functiondiscoverykeys_devpkey.h>
+#endif
 #include <softpub.h>
 #include <wintrust.h>
 
@@ -32,8 +36,9 @@ std::string narrow(const wchar_t* value) {
   if (!value) return {};
   int len = WideCharToMultiByte(CP_UTF8, 0, value, -1, nullptr, 0, nullptr, nullptr);
   if (len <= 1) return {};
-  std::string out(static_cast<std::size_t>(len - 1), '\0');
+  std::string out(static_cast<std::size_t>(len), '\0');
   WideCharToMultiByte(CP_UTF8, 0, value, -1, out.data(), len, nullptr, nullptr);
+  out.resize(static_cast<std::size_t>(len - 1));
   return out;
 }
 
@@ -41,8 +46,9 @@ std::wstring widen(const std::string& value) {
   if (value.empty()) return {};
   int len = MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, nullptr, 0);
   if (len <= 1) return {};
-  std::wstring out(static_cast<std::size_t>(len - 1), L'\0');
+  std::wstring out(static_cast<std::size_t>(len), L'\0');
   MultiByteToWideChar(CP_UTF8, 0, value.c_str(), -1, out.data(), len);
+  out.resize(static_cast<std::size_t>(len - 1));
   return out;
 }
 
@@ -102,8 +108,8 @@ std::vector<Device> collect(bool capture, IMMDevice* defaultDevice) {
     ComPtr<IMMDevice> device;
     if (FAILED(collection->Item(i, &device))) continue;
     Device info;
-    info.id = endpointId(device.get());
-    info.name = friendlyName(device.get());
+    info.id = endpointId(device.Get());
+    info.name = friendlyName(device.Get());
     info.isDefault = !defaultId.empty() && info.id == defaultId;
     result.push_back(std::move(info));
   }
@@ -122,7 +128,7 @@ std::vector<Device> listDevices(bool capture) {
   }
   ComPtr<IMMDevice> def;
   enumerator->GetDefaultAudioEndpoint(capture ? eCapture : eRender, eConsole, &def);
-  return collect(capture, def.get());
+  return collect(capture, def.Get());
 }
 
 bool verifySignature(const std::wstring& path, std::string* detail) {
@@ -307,7 +313,7 @@ void Renderer::close() {
 
 bool Renderer::pump(vb::PcmRing& ring, vb::OutputStage& stage) {
   if (!impl_) return true;
-  if (impl_->nullSink) return true;
+  if (nullSink_) return true;
 
   WaitForSingleObject(impl_->event, 40);
   UINT32 padding = 0;

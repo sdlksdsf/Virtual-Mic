@@ -64,3 +64,26 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           path: artifacts/*
+
+      - name: Publish APK to release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: VoxBridge 1.0.0
+          fail_on_unmatched_files: false
+          files: |
+            artifacts/VoxBridge-1.0.0-android.apk
+            artifacts/SHA256SUMS.txt
+
+      - name: Preserve build log
+        if: failure()
+        run: |
+          mkdir -p ci-logs
+          cp apps/android/gradle.log ci-logs/android-gradle.log 2>/dev/null || true
+          git config user.name "VoxBridge CI"
+          git config user.email "ci@voxbridge.app"
+          git add -f ci-logs
+          git commit -m "ci: android build log [skip ci]" || exit 0
+          git pull --rebase origin "${{ github.ref_name }}" || true
+          git push origin "HEAD:${{ github.ref_name }}"

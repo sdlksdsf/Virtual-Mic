@@ -146,7 +146,13 @@
       file: `VoxBridge-Setup-${VERSION}-x64.exe`,
       page: `${RELEASES}`,
       label: 'Download for Windows',
-      size: '≈ 85 MB',
+      size: '≈ 39 MB',
+    },
+    portable: {
+      file: `VoxBridge-${VERSION}-win64-portable.zip`,
+      page: `${RELEASES}`,
+      label: 'Portable build',
+      size: '≈ 39 MB',
     },
     android: {
       file: `VoxBridge-${VERSION}-android.apk`,
@@ -203,7 +209,7 @@
       const key = link.dataset.download;
       const target = DOWNLOADS[key];
       if (!target) return;
-      let url = `${RELEASES}/latest/download/${target.file}`;
+      let url = `downloads/${target.file}`;
       let size = target.size;
       let available = null;
       if (release && release.assets) {

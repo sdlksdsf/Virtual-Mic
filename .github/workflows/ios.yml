@@ -71,3 +71,27 @@ jobs:
           path: |
             apps/ios/VoxBridge-1.0.0-unsigned.ipa
             apps/ios/SHA256SUMS.txt
+
+      - name: Publish IPA to release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: VoxBridge 1.0.0
+          fail_on_unmatched_files: false
+          files: |
+            apps/ios/VoxBridge-1.0.0-unsigned.ipa
+            apps/ios/SHA256SUMS.txt
+
+      - name: Preserve build log
+        if: failure()
+        run: |
+          mkdir -p ci-logs
+          cp apps/ios/build.log ci-logs/ios-build.log 2>/dev/null || true
+          cp apps/ios/generate.log ci-logs/ios-generate.log 2>/dev/null || true
+          git config user.name "VoxBridge CI"
+          git config user.email "ci@voxbridge.app"
+          git add -f ci-logs
+          git commit -m "ci: ios build log [skip ci]" || exit 0
+          git pull --rebase origin "${{ github.ref_name }}" || true
+          git push origin "HEAD:${{ github.ref_name }}"

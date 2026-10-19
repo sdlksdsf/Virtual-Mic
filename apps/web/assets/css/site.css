@@ -1887,3 +1887,28 @@ html[data-theme='dark'] .btn.primary {
 [data-theme='dark'] .hero-frame .shot-dark {
   display: block;
 }
+
+/* Keep the hero screenshot inside the viewport on narrow screens. */
+.hero-visual,
+.hero-frame {
+  min-width: 0;
+}
+.hero-frame img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+@media (max-width: 640px) {
+  .hero-frame {
+    padding: 6px;
+    border-radius: 14px;
+  }
+  .hero-note {
+    right: 10px;
+    bottom: -14px;
+    padding: 8px 10px;
+  }
+  .hero-note strong {
+    font-size: 13px;
+  }
+}
