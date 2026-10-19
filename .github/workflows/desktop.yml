@@ -84,6 +84,8 @@ jobs:
               raw, compressed = struct.unpack('<QQ', payload[cursor:cursor + 16])
               cursor += 16
           assert count > 20, count
+          assert any(name.endswith("service/VoxBridgeMic.exe") for name in names), names
+          assert any(name.endswith("node.exe") for name in names), names
           print(f'{count} files in payload:', ', '.join(names[:6]), '...')
           PY
           cd apps/desktop/standalone/dist && cat SHA256SUMS.txt
@@ -108,6 +110,18 @@ jobs:
           files: |
             apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe
             apps/desktop/standalone/dist/VoxBridge-1.0.0-win64-portable.zip
+
+      - name: Publish the combined checksum file
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets && cd assets
+          gh release download v1.0.0 --dir . --clobber --pattern 'VoxBridge-*'
+          sha256sum VoxBridge-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload v1.0.0 SHA256SUMS.txt --clobber
 
       - name: Report build log
         if: failure()

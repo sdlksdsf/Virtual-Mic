@@ -73,11 +73,11 @@ jobs:
           curl -fsS -X POST "$url/rest/v1/download_events" \
             -H "apikey: $key" -H "Authorization: Bearer $key" \
             -H 'Content-Type: application/json' \
-            -d '{"platform":"ci","version":"1.0.0","source":"smoke-test"}' -o /dev/null
+            -d '{"platform":"other","version":"1.0.0","source":"smoke-test"}' -o /dev/null
           curl -fsS -X POST "$url/rest/v1/feedback" \
             -H "apikey: $key" -H "Authorization: Bearer $key" \
             -H 'Content-Type: application/json' \
-            -d '{"email":"ci@voxbridge.app","topic":"smoke-test","message":"release smoke test","platform":"ci","app_version":"1.0.0"}' -o /dev/null
+            -d '{"email":"ci@voxbridge.app","topic":"smoke-test","message":"release smoke test","platform":"other","app_version":"1.0.0"}' -o /dev/null
           echo "supabase inserts accepted"
 
       - name: Report
