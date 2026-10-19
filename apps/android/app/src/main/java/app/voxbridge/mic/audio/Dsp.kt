@@ -276,9 +276,10 @@ class Fft(private val n: Int) {
             size = size shl 1
         }
         if (inverse) {
+            val scale = 1f / n
             for (i in 0 until n) {
-                re[i] /= n
-                im[i] /= n
+                re[i] = re[i] * scale
+                im[i] = im[i] * scale
             }
         }
     }
