@@ -709,6 +709,7 @@ function openUi(port) {
 
 function shutdown(code = 0) {
   try {
+    fs.rmSync(path.join(DATA_DIR, 'server.pid'), { force: true });
     stopService();
     receiver?.stop();
     recorder?.stop('quit');
@@ -742,6 +743,11 @@ async function main() {
   const preferred = Number(process.env.VOXBRIDGE_PORT || 47800);
   const { server, port } = await listen(preferred);
   httpServer = server;
+  try {
+    fs.writeFileSync(path.join(DATA_DIR, 'server.pid'), String(process.pid));
+  } catch {
+    /* the uninstaller simply falls back to image-name termination */
+  }
   attachBridge(server);
 
   startReceiver();
