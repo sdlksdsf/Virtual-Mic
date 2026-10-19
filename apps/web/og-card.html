@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+@font-face{font-family:'Instrument Serif';src:url('/assets/fonts/instrument-serif-400.woff2') format('woff2');font-weight:400;font-style:normal}
+@font-face{font-family:'Instrument Serif';src:url('/assets/fonts/instrument-serif-400-italic.woff2') format('woff2');font-weight:400;font-style:italic}
+@font-face{font-family:'Inter Tight';src:url('/assets/fonts/inter-tight-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Inter Tight';src:url('/assets/fonts/inter-tight-500.woff2') format('woff2');font-weight:500}
+@font-face{font-family:'JetBrains Mono';src:url('/assets/fonts/jetbrains-mono-400.woff2') format('woff2');font-weight:400}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1200px;height:630px;background:#f4f1ea;color:#15150f;font-family:'Inter Tight',sans-serif;overflow:hidden;position:relative}
+.grain{position:absolute;inset:0;background:radial-gradient(900px 420px at 88% -10%,rgba(255,90,46,.20),transparent 62%),radial-gradient(700px 380px at 6% 108%,rgba(21,21,15,.07),transparent 60%)}
+.rule{position:absolute;left:64px;right:64px;top:64px;height:1px;background:#dcd6c8}
+.top{position:absolute;left:64px;top:88px;right:64px;display:flex;align-items:center;gap:16px}
+.mark{width:48px;height:48px;border-radius:13px;background:#15150f;display:flex;align-items:center;justify-content:center;gap:3px}
+.mark i{display:block;width:3px;border-radius:3px;background:#f4f1ea}
+.mark i:nth-child(3){background:#ff5a2e}
+.word{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.word small{display:block;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#918d7f;font-weight:400;margin-top:3px}
+.pill{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;border:1px solid #dcd6c8;background:#fbf9f4;border-radius:999px;padding:9px 15px;color:#6f6c60}
+h1{position:absolute;left:64px;top:172px;font-family:'Instrument Serif',serif;font-weight:400;font-size:86px;line-height:.98;letter-spacing:-.02em;max-width:760px}
+h1 em{font-style:italic;color:#ff5a2e}
+.sub{position:absolute;left:66px;top:392px;font-size:20px;line-height:1.5;color:#6f6c60;max-width:560px}
+.wave{position:absolute;right:64px;bottom:96px;display:flex;align-items:flex-end;gap:7px;height:210px}
+.wave i{display:block;width:11px;border-radius:6px;background:#15150f}
+.wave i.accent{background:#ff5a2e}
+.chips{position:absolute;left:64px;bottom:74px;display:flex;gap:10px}
+.chip{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid #dcd6c8;border-radius:8px;padding:8px 12px;color:#33322a;background:#fbf9f4}
+.chip b{font-weight:400;color:#918d7f;margin-right:6px}
+.foot{position:absolute;left:64px;right:64px;bottom:38px;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#918d7f}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="rule"></div>
+<div class="top">
+  <div class="mark"><i style="height:12px"></i><i style="height:22px"></i><i style="height:30px"></i><i style="height:18px"></i><i style="height:9px"></i></div>
+  <div class="word">VoxBridge<small>phone as microphone</small></div>
+  <div class="pill">Windows · Android · iOS</div>
+</div>
+<h1>Your phone, now your <em>best microphone.</em></h1>
+<p class="sub">A real virtual microphone for every app on your PC. Low-latency Wi-Fi or USB, studio cleanup, no cloud in the audio path.</p>
+<div class="wave">
+  <i style="height:34px"></i><i style="height:62px"></i><i style="height:104px"></i><i style="height:78px"></i>
+  <i style="height:146px"></i><i class="accent" style="height:198px"></i><i style="height:132px"></i>
+  <i style="height:88px"></i><i style="height:156px"></i><i style="height:112px"></i><i style="height:58px"></i>
+  <i style="height:92px"></i><i style="height:40px"></i>
+</div>
+<div class="chips"><span class="chip"><b>01</b>Virtual mic</span><span class="chip"><b>02</b>Noise cleanup</span><span class="chip"><b>03</b>USB &amp; Wi-Fi</span></div>
+<div class="foot"><span>voxbridge-app-pi.vercel.app</span><span>Open source · MIT</span></div>
+</body>
+</html>

@@ -1,0 +1,143 @@
+name: Desktop (Windows)
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - 'apps/desktop/**'
+      - '.github/workflows/desktop.yml'
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  build:
+    name: Build installer
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install the cross compiler
+        run: pip install --disable-pip-version-check ziglang==0.17.0
+
+      - name: Build the native Windows capture service
+        run: |
+          set -euo pipefail
+          ZIG=$(python3 -c "import ziglang, os; print(os.path.join(os.path.dirname(ziglang.__file__), 'zig'))")
+          "$ZIG" version
+          mkdir -p apps/desktop/service-bin
+          "$ZIG" c++ -target x86_64-windows-gnu -municode -std=c++17 -O2 \
+            -DUNICODE -D_UNICODE -D_CRT_SECURE_NO_WARNINGS \
+            -Iapps/desktop/service/src \
+            apps/desktop/service/src/win_main.cpp \
+            apps/desktop/service/src/windows_audio.cpp \
+            -lole32 -loleaut32 -luuid -lpropsys -lwintrust -lcrypt32 -lshell32 \
+            -o apps/desktop/service-bin/VoxBridgeMic.exe
+          ls -lh apps/desktop/service-bin/VoxBridgeMic.exe
+
+      - name: Install runtime dependency
+        working-directory: apps/desktop
+        run: npm install --omit=dev --ignore-scripts --no-audit --no-fund
+
+      - name: Build installer and portable build
+        env:
+          SERVICE_EXE: ${{ github.workspace }}/apps/desktop/service-bin/VoxBridgeMic.exe
+        run: |
+          set -euo pipefail
+          ZIG=$(python3 -c "import ziglang, os; print(os.path.join(os.path.dirname(ziglang.__file__), 'zig'))")
+          ZIG="$ZIG" SERVICE_EXE="$SERVICE_EXE" ./apps/desktop/standalone/build-windows.sh 2>&1 | tee build-windows.log
+
+      - name: Verify the payload
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import struct, zlib
+          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe'
+          data = open(path, 'rb').read()
+          assert data[-24:-16] == b'VBXPAY1\x00'
+          offset, size = struct.unpack('<QQ', data[-16:])
+          assert offset + size + 24 == len(data)
+          payload = data[offset:offset + size]
+          assert payload[:4] == b'VBXP'
+          count = struct.unpack('<I', payload[4:8])[0]
+          cursor = 8
+          names = []
+          for _ in range(count):
+              length = struct.unpack('<H', payload[cursor:cursor + 2])[0]
+              cursor += 2
+              names.append(payload[cursor:cursor + length].decode())
+              cursor += length
+              raw, compressed = struct.unpack('<QQ', payload[cursor:cursor + 16])
+              cursor += 16
+          assert count > 20, count
+          assert any(name.endswith("service/VoxBridgeMic.exe") for name in names), names
+          assert any(name.endswith("node.exe") for name in names), names
+          print(f'{count} files in payload:', ', '.join(names[:6]), '...')
+          PY
+          cd apps/desktop/standalone/dist && cat SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxbridge-windows
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            apps/desktop/standalone/dist/*.exe
+            apps/desktop/standalone/dist/*.zip
+            apps/desktop/standalone/dist/SHA256SUMS.txt
+
+      - name: Publish to the release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: VoxBridge 1.0.0
+          fail_on_unmatched_files: false
+          files: |
+            apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe
+            apps/desktop/standalone/dist/VoxBridge-1.0.0-win64-portable.zip
+
+      - name: Publish the combined checksum file
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets && cd assets
+          gh release download v1.0.0 --dir . --clobber --pattern 'VoxBridge-*'
+          sha256sum VoxBridge-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload v1.0.0 SHA256SUMS.txt --clobber
+
+      - name: Report build log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          n=$(gh issue list --state open --search 'CI build logs in:title' --json number --jq '.[0].number // empty')
+          if [ -z "$n" ]; then
+            url=$(gh issue create --title "CI build logs" --body "Automated diagnostics from failed builds.")
+            n=${url##*/}
+          fi
+          {
+            echo "### Desktop build failure (run ${{ github.run_id }})"
+            echo '```'
+            tail -n 80 build-windows.log 2>/dev/null
+            echo '```'
+          } > /tmp/report.md
+          gh issue comment "$n" --body-file /tmp/report.md

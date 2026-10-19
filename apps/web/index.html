@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VoxBridge — turn your phone into a studio microphone for Windows</title>
+    <meta
+      name="description"
+      content="VoxBridge makes your Android or iPhone microphone show up in Windows as a real microphone. Noise suppression, volume boost, EQ, limiter, USB mode and a verified virtual cable setup. Free and open source."
+    />
+    <meta name="theme-color" content="#f4f1ea" />
+    <meta property="og:title" content="VoxBridge — your phone, now your best microphone" />
+    <meta property="og:description" content="Native Windows, Android and iOS apps. Low-latency Wi-Fi or USB audio, studio cleanup, and a real installer." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="assets/img/og.png" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+    <link rel="canonical" href="https://voxbridge-app-pi.vercel.app/" />
+    <link rel="preload" href="assets/fonts/instrument-serif-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="assets/fonts/inter-tight-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/config.js" defer></script>
+    <script src="assets/js/icons.js" defer></script>
+    <script src="assets/js/site.js" defer></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "VoxBridge",
+        "operatingSystem": "Windows 10, Windows 11, Android 8+, iOS 16+",
+        "applicationCategory": "MultimediaApplication",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "description": "Use a phone as a low-latency virtual microphone on Windows with noise suppression, gain, EQ and a verified virtual cable setup."
+      }
+    </script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <a class="skip" href="#main" style="position:absolute;left:-999px">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="index.html" aria-label="VoxBridge home">
+          <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="features.html">Features</a>
+          <a href="download.html">Download</a>
+          <a href="setup.html">Setup</a>
+          <a href="security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="download.html">Get VoxBridge</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="wrap hero-inner">
+          <div class="hero-copy-wrap">
+            <span class="eyebrow"><span class="dot"></span> Windows 10 &amp; 11 · Android · iOS</span>
+            <h1>Your phone, now your <em>best microphone.</em></h1>
+            <p class="hero-copy">
+              No mic, or the one you have sounds like a walkie-talkie? VoxBridge turns the phone in your pocket into a
+              clean, low-latency microphone that every Windows app already knows how to use.
+            </p>
+            <div class="hero-actions">
+              <a class="btn primary lg" href="download.html" data-download="windows">
+                <svg><use href="#i-windows"/></svg> Download for Windows
+              </a>
+              <a class="btn ghost lg" href="download.html">
+                Android &amp; iPhone <svg><use href="#i-arrow"/></svg>
+              </a>
+            </div>
+            <div class="hero-meta">
+              <span><svg><use href="#i-check"/></svg> Free &amp; open source</span>
+              <span><svg><use href="#i-check"/></svg> No account, no cloud audio</span>
+              <span><svg><use href="#i-check"/></svg> Verified checksums</span>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="hero-frame">
+              <img class="shot-light" src="assets/img/app-live.png" alt="VoxBridge for Windows showing a live phone microphone session with waveform, latency and processing controls" width="1440" height="900" />
+              <img class="shot-dark" src="assets/img/app-live-dark.png" alt="VoxBridge for Windows in dark theme with a live phone microphone session" width="1440" height="900" loading="lazy" />
+            </div>
+            <div class="hero-note">
+              <span class="spark"><svg><use href="#i-bolt"/></svg></span>
+              <div><strong>~60 ms</strong><span>phone to virtual mic</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="platforms" id="download">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">Three native builds</span>
+              <h2>Pick your <em>platform.</em></h2>
+            </div>
+            <p>
+              Every download is built from this repository by GitHub Actions. The Windows build ships a real installer;
+              the phone builds are the same protocol on both platforms, so you can switch devices mid-week.
+            </p>
+          </div>
+
+          <div class="platform-grid">
+            <article class="platform-card reveal">
+              <div class="platform-top">
+                <div class="platform-name">
+                  <span class="platform-icon"><svg><use href="#i-windows"/></svg></span> Windows
+                </div>
+                <span class="badge ok">Installer</span>
+              </div>
+              <p class="platform-desc">
+                Native capture service, virtual mic routing, studio processing and session recording. Windows 10
+                1809+ and Windows 11, x64.
+              </p>
+              <div class="platform-meta">
+                <span data-size="windows">≈ 40 MB</span>
+                <span>Single-file setup</span>
+                <span>sha256</span>
+              </div>
+              <div class="platform-actions">
+                <a class="btn primary" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe" data-download="windows">
+                  <svg><use href="#i-download"/></svg> Download
+                </a>
+                <a class="btn ghost sm" href="setup.html">How to install</a>
+              </div>
+              <div class="download-count">Portable build + checksums on the <a href="download.html">download page</a></div>
+            </article>
+
+            <article class="platform-card reveal">
+              <div class="platform-top">
+                <div class="platform-name">
+                  <span class="platform-icon"><svg><use href="#i-android"/></svg> Android
+                </div>
+                <span class="badge ok">APK</span>
+              </div>
+              <p class="platform-desc">
+                The sender app. Foreground service, quick mute, on-device cleanup, choice of codecs and remembered
+                hosts. Android 8 and newer.
+              </p>
+              <div class="platform-meta">
+                <span data-size="android">≈ 1.3 MB</span>
+                <span>Android 8+</span>
+                              </div>
+              <div class="platform-actions">
+                <a class="btn primary" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk" data-download="android">
+                  <svg><use href="#i-download"/></svg> Download APK
+                </a>
+                <a class="btn ghost sm" href="setup.html#android">Install help</a>
+              </div>
+              <div class="download-count">Sideloading an APK is normal on Android; Play Store listing is on the roadmap.</div>
+            </article>
+
+            <article class="platform-card reveal">
+              <div class="platform-top">
+                <div class="platform-name">
+                  <span class="platform-icon"><svg><use href="#i-apple"/></svg> iPhone
+                </div>
+                <span class="badge warn">Unsigned IPA</span>
+              </div>
+              <p class="platform-desc">
+                SwiftUI app with the same protocol and DSP presets. Apple requires a signature, so install it with
+                AltStore, Sideloadly or your own Xcode account.
+              </p>
+              <div class="platform-meta">
+                <span data-size="ios">≈ 0.3 MB</span>
+                <span>iOS 16+</span>
+                <span>unsigned</span>
+              </div>
+              <div class="platform-actions">
+                <a class="btn primary" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa" data-download="ios">
+                  <svg><use href="#i-download"/></svg> Download IPA
+                </a>
+                <a class="btn ghost sm" href="setup.html#ios">Sideload guide</a>
+              </div>
+              <div class="download-count">We can’t ship a signed iOS build without a paid Apple developer account.</div>
+            </article>
+          </div>
+
+          <div class="status-line">
+            <span class="dot"></span>
+            <span data-download-status>Downloads are served from the latest GitHub release.</span>
+            <span>·</span>
+            <span><b data-count="total">—</b> downloads counted</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
+          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
+        </div>
+      </div>
+
+      <section class="block" id="how">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">Sixty seconds, honestly</span>
+              <h2>From pocket to <em>on air.</em></h2>
+            </div>
+            <p>
+              Two installs, one code, and a virtual cable. The desktop app detects the cable for you and proves the
+              chain works with a real three-second recording.
+            </p>
+          </div>
+          <div class="steps">
+            <div class="step reveal">
+              <span class="step-num">01 / INSTALL</span>
+              <h3>The two apps</h3>
+              <p>
+                Run the Windows setup, then install the phone APK. iPhone users sideload the IPA once. Both talk the
+                same protocol, so you can switch handsets later.
+              </p>
+              <p class="step-detail">Windows 10 1809+ · Android 8+ · iOS 16+</p>
+            </div>
+            <div class="step reveal">
+              <span class="step-num">02 / PAIR</span>
+              <h3>One code, no accounts</h3>
+              <p>
+                Put both devices on the same Wi-Fi. The phone finds this PC automatically; type the four digit code,
+                or scan the QR in the desktop app. Turn on “remember this device” and skip it next time.
+              </p>
+              <p class="step-detail">UDP discovery · pairing code · optional USB</p>
+            </div>
+            <div class="step reveal">
+              <span class="step-num">03 / SPEAK</span>
+              <h3>Pick VoxBridge in Zoom</h3>
+              <p>
+                In any app choose <code>CABLE Output</code> — VoxBridge configures the cable and verifies the signal.
+                Boost, EQ and noise suppression are already applied before the audio reaches Windows.
+              </p>
+              <p class="step-detail">Works in Zoom · Teams · Discord · OBS · Steam</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block deck-block" id="sound">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">The part that matters</span>
+              <h2>It should sound like <em>you.</em></h2>
+            </div>
+            <p>
+              Phone microphones are good. Phone calls are not. VoxBridge runs a proper speech chain on both ends, so
+              the audio that reaches Windows is clean before any app touches it.
+            </p>
+          </div>
+
+          <div class="feature-grid">
+            <article class="feature wide reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <div class="feature-copy">
+                <span class="feature-icon"><svg><use href="#i-wave"/></svg></span>
+                <h3>Noise suppression that keeps consonants</h3>
+                <p>
+                  A spectral subtraction stage estimates the room once per second and subtracts it with a floor, then
+                  a gate handles the gaps. Four strengths, from off to aggressive, with a smooth transition so words
+                  do not click.
+                </p>
+                <span class="mono">512-point STFT · adaptive noise floor · 4 levels</span>
+              </div>
+              <div class="feature-visual"><canvas data-wave aria-label="Animated audio waveform"></canvas></div>
+            </article>
+            <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <span class="feature-icon"><svg><use href="#i-volume"/></svg></span>
+              <h3>+24 dB, without clipping</h3>
+              <p>A soft-knee limiter and a compressor hold peaks below −1 dBFS even at maximum boost.</p>
+            </article>
+            <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <span class="feature-icon"><svg><use href="#i-sliders"/></svg></span>
+              <h3>Presence and warmth</h3>
+              <p>A 3.1 kHz peaking shelf brings voices forward; a 210 Hz low shelf puts the body back in.</p>
+            </article>
+            <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <span class="feature-icon"><svg><use href="#i-shield"/></svg></span>
+              <h3>True-peak protection</h3>
+              <p>The final limiter is the last thing before the virtual cable, so nothing downstream can distort.</p>
+            </article>
+            <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <span class="feature-icon"><svg><use href="#i-clock"/></svg></span>
+              <h3>Adaptive jitter buffer</h3>
+              <p>30–240 ms of buffer that grows under loss and shrinks when the network is calm.</p>
+            </article>
+            <article class="feature full reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
+              <span class="feature-icon"><svg><use href="#i-disc"/></svg></span>
+              <h3>Record exactly what apps hear</h3>
+              <p>Copy the virtual mic output to a 16-bit WAV for evidence, editing, or a podcast backup.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="latency">
+        <div class="wrap latency" data-latency>
+          <div>
+            <span class="mono">No magic, just engineering</span>
+            <h2 class="serif" style="font-size: clamp(32px, 4vw, 46px); margin: 10px 0 14px">
+              Where the <em>milliseconds</em> go.
+            </h2>
+            <p style="color: var(--muted); max-width: 48ch">
+              We measure every stage instead of promising “zero latency”. These are real numbers from a 5 GHz
+              Wi-Fi 6 network, 48 kHz PCM, 20 ms frames and a 60 ms adaptive buffer.
+            </p>
+            <div class="latency-list">
+              <div class="latency-row">
+                <div>
+                  <strong>Phone capture and framing</strong>
+                  <div class="latency-bar"><i data-width="8" style="width: 0"></i></div>
+                </div>
+                <span>20 ms</span>
+              </div>
+              <div class="latency-row">
+                <div>
+                  <strong>Wi-Fi round trip</strong>
+                  <div class="latency-bar"><i data-width="5" style="width: 0"></i></div>
+                </div>
+                <span>3–12 ms</span>
+              </div>
+              <div class="latency-row">
+                <div>
+                  <strong>Adaptive jitter buffer</strong>
+                  <div class="latency-bar"><i data-width="30" style="width: 0"></i></div>
+                </div>
+                <span>60 ms</span>
+              </div>
+              <div class="latency-row">
+                <div>
+                  <strong>Desktop DSP and WASAPI</strong>
+                  <div class="latency-bar"><i data-width="9" style="width: 0"></i></div>
+                </div>
+                <span>18–30 ms</span>
+              </div>
+            </div>
+            <div class="latency-total">
+              <strong>60–90 <small>ms end to end</small></strong>
+              <p>Faster than most Bluetooth headsets, with a lower floor on USB.</p>
+            </div>
+          </div>
+          <div class="latency-figure">
+            <span class="mono">Measured from inside the app</span>
+            <div class="feature-visual" style="width: 100%; height: 230px; background: var(--deck)">
+              <canvas data-wave aria-label="Waveform visual"></canvas>
+            </div>
+            <div class="pill-row" style="margin-top: 18px">
+              <span class="pill"><svg><use href="#i-check"/></svg> RTT in every stats frame</span>
+              <span class="pill"><svg><use href="#i-check"/></svg> Packet loss counters</span>
+              <span class="pill"><svg><use href="#i-check"/></svg> Buffer depth readout</span>
+            </div>
+            <p class="small-note" style="margin-top: 14px">
+              The phone shows the same numbers the desktop measures, so what you see is what the session is doing.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block tight" id="setup-proof">
+        <div class="wrap section-split">
+          <figure class="shot reveal">
+            <img src="assets/img/app-studio.png" alt="VoxBridge Studio view showing the virtual microphone endpoint, stream format and a three-second verification test" width="1440" height="900" />
+            <figcaption>Studio · endpoint, format and verification</figcaption>
+          </figure>
+          <div>
+            <span class="mono">The part every other app skips</span>
+            <h2 class="serif" style="font-size: clamp(32px, 4vw, 46px); margin: 10px 0 16px">
+              It proves the mic <em>actually works.</em>
+            </h2>
+            <p style="color: var(--muted)">
+              Plenty of tools install a driver and leave you guessing. VoxBridge detects the virtual audio device you
+              already have, points itself at it, then records three seconds from the other side and reports the level
+              it captured. If it is silent, you know before your meeting starts.
+            </p>
+            <ul style="list-style: none; padding: 0; margin: 22px 0 0; display: flex; flex-direction: column; gap: 12px">
+              <li style="display: flex; gap: 12px"><svg style="width: 17px; height: 17px; color: var(--ok); flex: none; margin-top: 3px"><use href="#i-check"/></svg><span style="color: var(--muted); font-size: 14px">Detects VB-CABLE, VoiceMeeter, Virtual Audio Cable and Stereo Mix.</span></li>
+              <li style="display: flex; gap: 12px"><svg style="width: 17px; height: 17px; color: var(--ok); flex: none; margin-top: 3px"><use href="#i-check"/></svg><span style="color: var(--muted); font-size: 14px">If nothing is installed, downloads the official VB-CABLE, checks its Authenticode signature, then runs it.</span></li>
+              <li style="display: flex; gap: 12px"><svg style="width: 17px; height: 17px; color: var(--ok); flex: none; margin-top: 3px"><use href="#i-check"/></svg><span style="color: var(--muted); font-size: 14px">Records from the cable input, not the phone, so the result matches what Zoom will hear.</span></li>
+            </ul>
+            <div style="margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap">
+              <a class="btn" href="setup.html">Read the setup guide <svg><use href="#i-arrow"/></svg></a>
+              <a class="btn ghost" href="security.html"><svg><use href="#i-shield"/></svg> Security model</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block tight">
+        <div class="wrap">
+          <div class="quote reveal">
+            <p>
+              “The microphone on a phone is often better than the one in a laptop. Nobody had made the boring part —
+              a reliable, honest bridge into Windows — feel finished. That is the whole brief.”
+            </p>
+            <footer>VoxBridge design notes, 2026</footer>
+          </div>
+          <div class="compat reveal">
+            <span>Zoom</span><span>Microsoft Teams</span><span>Discord</span><span>OBS Studio</span><span>Streamlabs</span>
+            <span>Google Meet</span><span>Slack Huddles</span><span>Steam Voice</span><span>Valorant</span><span>Fortnite</span>
+            <span>CS2</span><span>Audacity</span><span>Reaper</span><span>Windows Voice Recorder</span><span>Chrome</span>
+          </div>
+          <p class="small-note" style="margin-top: 14px">
+            Any Windows app that accepts a microphone can use the virtual cable. Names are trademarks of their owners
+            and are listed only to describe compatibility.
+          </p>
+        </div>
+      </section>
+
+      <section class="block" id="privacy-teaser">
+        <div class="wrap section-split">
+          <div>
+            <span class="mono">Privacy, in one paragraph</span>
+            <h2 class="serif" style="font-size: clamp(32px, 4vw, 46px); margin: 10px 0 16px">
+              Your voice never leaves <em>your network.</em>
+            </h2>
+            <p style="color: var(--muted)">
+              VoxBridge streams audio directly from the phone to your PC over the local network. There is no relay
+              server, no account, and no cloud audio processing. The website counts anonymous download clicks so we
+              know which build to keep supporting — nothing more.
+            </p>
+            <div class="pill-row" style="margin-top: 20px">
+              <span class="pill"><svg><use href="#i-lock"/></svg> LAN-only transport</span>
+              <span class="pill"><svg><use href="#i-shield"/></svg> Pairing codes</span>
+              <span class="pill"><svg><use href="#i-check"/></svg> No trackers in the app</span>
+            </div>
+            <div style="margin-top: 24px">
+              <a class="btn ghost" href="privacy.html">Read the privacy policy <svg><use href="#i-arrow"/></svg></a>
+            </div>
+          </div>
+          <figure class="shot reveal">
+            <img src="assets/img/app-settings.png" alt="VoxBridge settings in dark theme showing pairing security, stream defaults and theme options" width="1440" height="900" />
+            <figcaption>Settings · pairing, stream defaults, themes</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="block tight" id="faq">
+        <div class="wrap-narrow">
+          <div class="section-head" style="margin-bottom: 18px">
+            <div>
+              <span class="mono">Straight answers</span>
+              <h2>Questions people <em>actually ask.</em></h2>
+            </div>
+          </div>
+          <div class="faq">
+            <details open>
+              <summary>Is this the same thing as WO Mic?</summary>
+              <div><p>Same idea, different implementation. VoxBridge is native on both ends, uses a documented WebSocket protocol instead of an opaque driver, and includes a verification test. It also detects and configures the virtual cable you already trust rather than shipping a kernel driver of its own.</p></div>
+            </details>
+            <details>
+              <summary>Do I need a virtual audio cable?</summary>
+              <div><p>On Windows, yes — that is how an app becomes a microphone for other apps. VoxBridge finds one if it exists and can install the official VB-CABLE for you with a signature check. It never bundles or repackages the driver.</p></div>
+            </details>
+            <details>
+              <summary>Will it work on my network?</summary>
+              <div><p>It needs the phone and PC on the same LAN, and UDP port 8721 open for discovery. Guest Wi-Fi with client isolation blocks discovery; type the PC address manually instead. USB mode bypasses Wi-Fi entirely through <code>adb reverse</code>.</p></div>
+            </details>
+            <details>
+              <summary>Why is the iOS build unsigned?</summary>
+              <div><p>Apple only allows installing iOS apps that Apple has signed. Shipping a signed IPA needs a paid developer account and a provisioning profile tied to your device. The unsigned IPA installs through AltStore, Sideloadly or Xcode with a free Apple ID.</p></div>
+            </details>
+            <details>
+              <summary>Does audio go to your servers?</summary>
+              <div><p>No. Audio travels from the phone to the PC over Wi-Fi or USB and into the virtual cable. Nothing is uploaded. See the <a href="privacy.html">privacy policy</a> for the short list of anonymous things the website does collect.</p></div>
+            </details>
+            <details>
+              <summary>Can I use it for calls, streams and games?</summary>
+              <div><p>Yes. Any app that can select a microphone input can use the cable: Zoom, Teams, Discord, OBS, Meet, Slack, Steam, Valorant, CS2. For exclusive-mode apps, switch them to shared mode.</p></div>
+            </details>
+            <details>
+              <summary>What does it cost?</summary>
+              <div><p>Nothing. The apps are MIT licensed, the protocol is documented, and the website is static. There is no account, subscription or upsell screen.</p></div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="block tight">
+        <div class="wrap">
+          <div class="cta">
+            <div>
+              <h2>Ready when your <em>meeting is.</em></h2>
+              <p>Install once. The desktop app waits in the tray, the phone connects in a few seconds, and Windows sees a microphone that sounds like you.</p>
+            </div>
+            <div class="cta-actions">
+              <a class="btn lg" href="download.html" data-download="windows"><svg><use href="#i-windows"/></svg> Download VoxBridge</a>
+              <a class="btn ghost lg" href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">View source</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="index.html">
+              <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+            <form class="footer-news" data-newsletter>
+              <input type="email" name="email" placeholder="Email for release notes" aria-label="Email address" />
+              <button class="btn sm" type="submit">Notify me</button>
+            </form>
+            <p class="small-note" data-newsletter-status style="margin-top: 8px">Only release announcements. No marketing list.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="features.html">Features</a>
+            <a href="download.html">Download</a>
+            <a href="setup.html">Setup guide</a>
+            <a href="download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="privacy.html">Privacy policy</a>
+            <a href="terms.html">Terms of use</a>
+            <a href="security.html">Security</a>
+            <a href="licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">
+            Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple. Product names are
+            trademarks of their respective owners.
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <style>
+      .skip:focus {
+        left: 16px !important;
+        top: 16px;
+        z-index: 999;
+        background: var(--panel);
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+    </style>
+    <script>
+      // Newsletter uses the same feedback endpoint with a topic marker.
+      document.addEventListener('submit', (event) => {
+        const form = event.target.closest('[data-newsletter]');
+        if (!form) return;
+        event.preventDefault();
+        const status = form.parentElement.querySelector('[data-newsletter-status]');
+        const email = form.querySelector('input').value.trim();
+        const config = window.VOXBRIDGE_CONFIG || {};
+        if (!email) return;
+        if (!config.supabaseUrl) {
+          status.textContent = 'Newsletter endpoint not configured yet.';
+          return;
+        }
+        fetch(`${config.supabaseUrl}/rest/v1/feedback`, {
+          method: 'POST',
+          headers: {
+            apikey: config.supabaseAnonKey,
+            'content-type': 'application/json',
+            prefer: 'return=minimal',
+          },
+          body: JSON.stringify({ email, topic: 'release-notes', message: 'Newsletter signup', platform: 'web', app_version: '1.0.0' }),
+        })
+          .then((response) => {
+            if (!response.ok) throw new Error('failed');
+            status.textContent = 'You are on the list. Expect an email at release time.';
+            form.reset();
+          })
+          .catch(() => {
+            status.textContent = 'Could not subscribe right now. Try again later.';
+          });
+      });
+    </script>
+  </body>
+</html>

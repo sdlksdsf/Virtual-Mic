@@ -1,0 +1,207 @@
+Command line invocation:
+    /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/xcodebuild -project VoxBridge.xcodeproj -scheme VoxBridge -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= build
+
+Build settings from command line:
+    CODE_SIGN_IDENTITY = 
+    CODE_SIGNING_ALLOWED = NO
+    CODE_SIGNING_REQUIRED = NO
+    SDKROOT = iphoneos18.5
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:iOS, id:dvtdevice-DVTiPhonePlaceholder-iphoneos:placeholder, name:Any iOS Device }
+{ platform:macOS, arch:arm64, variant:Designed for [iPad,iPhone], id:1664b2aa95bbb420b4c02861edc83d917aedb0bf, name:My Mac }
+{ platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
+note: Using codesigning identity override: 
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (1 target)
+    Target 'VoxBridge' in project 'VoxBridge' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/actool --print-asset-tag-combinations --output-format xml1 /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Assets.xcassets
+
+ExecuteExternalTool /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 49ad0cde4d6053fc097e44bd34327b08
+Build description path: /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/XCBuildData/49ad0cde4d6053fc097e44bd34327b08.xcbuilddata
+CreateBuildDirectory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products
+
+CreateBuildDirectory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/SDKStatCaches.noindex/iphoneos18.5-22F76-a529daf784b3616c7c04a36aeb7f5c05.sdkstatcache
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/SDKStatCaches.noindex/iphoneos18.5-22F76-a529daf784b3616c7c04a36aeb7f5c05.sdkstatcache
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge-ca8df3f6638c88912f7234d8f4f018d1-VFS-iphoneos/all-product-headers.yaml
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge-ca8df3f6638c88912f7234d8f4f018d1-VFS-iphoneos/all-product-headers.yaml
+
+CreateBuildDirectory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos
+
+CreateBuildDirectory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge.xcodeproj
+    builtin-create-build-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/EagerLinkingTBDs/Release-iphoneos
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.DependencyStaticMetadataFileList (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.DependencyMetadataFileList (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge.DependencyMetadataFileList
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-project-headers.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-project-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-own-target-headers.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-own-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-generated-files.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-generated-files.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-target-headers.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-non-framework-target-headers.hmap (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge_const_extract_protocols.json (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge_const_extract_protocols.json
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftFileList (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftFileList
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftConstValuesFileList (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.LinkFileList (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.LinkFileList
+
+WriteAuxiliaryFile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-OutputFileMap.json (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    write-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-OutputFileMap.json
+
+MkDir /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/VoxBridge.app (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    /bin/mkdir -p /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/VoxBridge.app
+
+MkDir /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_output/thinned (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    /bin/mkdir -p /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_output/thinned
+
+MkDir /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_output/unthinned (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    /bin/mkdir -p /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_output/unthinned
+
+GenerateAssetSymbols /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Assets.xcassets (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/actool /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Assets.xcassets --compile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/VoxBridge.app --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_dependencies --output-partial-info-plist /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_generated_info.plist --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos --bundle-identifier app.voxbridge.mic --generate-swift-asset-symbol-extensions NO --generate-swift-asset-symbols /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.h
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CompileAssetCatalogVariant thinned /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/VoxBridge.app /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Assets.xcassets (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    /Applications/Xcode_16.4.app/Contents/Developer/usr/bin/actool /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Assets.xcassets --compile /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_dependencies_thinned --output-partial-info-plist /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --accent-color AccentColor --compress-pngs --enable-on-demand-resources YES --development-region en --target-device iphone --target-device ipad --minimum-deployment-target 16.0 --platform iphoneos
+
+SwiftDriver VoxBridge normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    builtin-SwiftDriver -- /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoxBridge -O -whole-module-optimization -enforce-exclusivity\=checked @/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -F /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/SDKStatCaches.noindex/iphoneos18.5-22F76-a529daf784b3616c7c04a36aeb7f5c05.sdkstatcache -output-file-map /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-generated-files.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-own-target-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-target-headers.hmap -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-project-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-Swift.h -working-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios -no-emit-module-separately-wmo
+
+SwiftCompile normal arm64 Compiling\ AudioEngine.swift,\ ContentView.swift,\ MicSession.swift,\ Protocol.swift,\ SettingsView.swift,\ StudioView.swift,\ Theme.swift,\ VoxBridgeApp.swift,\ GeneratedAssetSymbols.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/ContentView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/MicSession.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Protocol.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/SettingsView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/StudioView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Theme.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/VoxBridgeApp.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'VoxBridge' from project 'VoxBridge')
+Failed frontend command:
+/Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-frontend -frontend -c /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/ContentView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/MicSession.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Protocol.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/SettingsView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/StudioView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Theme.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/VoxBridgeApp.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.swift -supplementary-output-file-map /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/supplementaryOutputs-1 -target arm64-apple-ios16.0 -Xllvm -aarch64-use-tbi -enable-objc-interop -stack-check -sdk /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -I /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -F /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -no-color-diagnostics -g -debug-info-format\=dwarf -dwarf-version\=4 -module-cache-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex -swift-version 5 -enforce-exclusivity\=checked -O -serialize-debugging-options -const-gather-protocols-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge_const_extract_protocols.json -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -empty-abi-descriptor -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex/Session.modulevalidation -Xcc -working-directory -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios -resource-dir /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift -file-compilation-dir /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios -Xcc -ivfsstatcache -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/SDKStatCaches.noindex/iphoneos18.5-22F76-a529daf784b3616c7c04a36aeb7f5c05.sdkstatcache -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/swift-overrides.hmap -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-generated-files.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-own-target-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-target-headers.hmap -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-project-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources -module-name VoxBridge -frontend-parseable-output -disable-clang-spi -target-sdk-version 18.5 -target-sdk-name iphoneos18.5 -external-plugin-path /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins\#/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server -external-plugin-path /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/lib/swift/host/plugins\#/Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/swift-plugin-server -in-process-plugin-server-path /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/libSwiftInProcPluginServer.dylib -plugin-path /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins -plugin-path /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/lib/swift/host/plugins -enable-default-cmo -num-threads 3 -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/AudioEngine.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/ContentView.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/MicSession.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/Protocol.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/SettingsView.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/StudioView.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/Theme.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridgeApp.o -o /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/GeneratedAssetSymbols.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/AudioEngine.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/ContentView.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/MicSession.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/Protocol.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/SettingsView.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/StudioView.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/Theme.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridgeApp.o -index-unit-output-path /VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/GeneratedAssetSymbols.o
+
+CompileSwift normal arm64 (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:52: warning: cannot use inout expression here; argument 'realp' must be a pointer that outlives the call to 'init(realp:imagp:)'
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                   ^~~
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:52: note: implicit argument conversion from '[Float]' to 'UnsafeMutablePointer<Float>' produces a pointer valid only for the duration of the call to 'init(realp:imagp:)'
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                   ^~~
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:52: note: use the 'withUnsafeMutableBufferPointer' method on Array in order to explicitly convert argument to buffer pointer valid for a defined scope
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                   ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:64: warning: cannot use inout expression here; argument 'imagp' must be a pointer that outlives the call to 'init(realp:imagp:)'
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                               ^~~
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:64: note: implicit argument conversion from '[Float]' to 'UnsafeMutablePointer<Float>' produces a pointer valid only for the duration of the call to 'init(realp:imagp:)'
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                               ^~~
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:320:64: note: use the 'withUnsafeMutableBufferPointer' method on Array in order to explicitly convert argument to buffer pointer valid for a defined scope
+                var split = DSPSplitComplex(realp: &re, imagp: &im)
+                                                               ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:290:35: error: 'self' captured by a closure before all members were initialized
+        self.window = (0..<n).map { 0.5 - 0.5 * cos(2 * .pi * Float($0) / Float(n)) }
+                                  ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:276:17: note: 'self.window' not initialized
+    private var window: [Float]
+                ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:277:17: note: 'self.noise' not initialized
+    private var noise: [Float]
+                ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:278:17: note: 'self.gain' not initialized
+    private var gain: [Float]
+                ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:279:17: note: 'self.frame' not initialized
+    private var frame: [Float]
+                ^
+/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift:280:17: note: 'self.overlap' not initialized
+    private var overlap: [Float]
+                ^
+
+SwiftDriver\ Compilation VoxBridge normal arm64 com.apple.xcode.tools.swift.compiler (in target 'VoxBridge' from project 'VoxBridge')
+    cd /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios
+    builtin-Swift-Compilation -- /Applications/Xcode_16.4.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name VoxBridge -O -whole-module-optimization -enforce-exclusivity\=checked @/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.SwiftFileList -enable-bare-slash-regex -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode_16.4.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk -target arm64-apple-ios16.0 -g -module-cache-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex -Xfrontend -serialize-debugging-options -swift-version 5 -I /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -F /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos -c -num-threads 3 -Xcc -ivfsstatcache -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/SDKStatCaches.noindex/iphoneos18.5-22F76-a529daf784b3616c7c04a36aeb7f5c05.sdkstatcache -output-file-map /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-OutputFileMap.json -use-frontend-parseable-output -save-temps -no-color-diagnostics -serialize-diagnostics -emit-dependencies -emit-module -emit-module-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge.swiftmodule -validate-clang-modules-once -clang-build-session-file /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/ModuleCache.noindex/Session.modulevalidation -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/swift-overrides.hmap -emit-const-values -Xfrontend -const-gather-protocols-file -Xfrontend /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge_const_extract_protocols.json -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-generated-files.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-own-target-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-all-target-headers.hmap -Xcc -iquote -Xcc /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/VoxBridge-project-headers.hmap -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Products/Release-iphoneos/include -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources-normal/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/arm64 -Xcc -I/Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources -emit-objc-header -emit-objc-header-path /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/Objects-normal/arm64/VoxBridge-Swift.h -working-directory /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios -no-emit-module-separately-wmo
+
+note: Disabling previews because SWIFT_VERSION is set and SWIFT_OPTIMIZATION_LEVEL=-O, expected -Onone (in target 'VoxBridge' from project 'VoxBridge')
+** BUILD FAILED **
+
+
+The following build commands failed:
+	SwiftCompile normal arm64 Compiling\ AudioEngine.swift,\ ContentView.swift,\ MicSession.swift,\ Protocol.swift,\ SettingsView.swift,\ StudioView.swift,\ Theme.swift,\ VoxBridgeApp.swift,\ GeneratedAssetSymbols.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/AudioEngine.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/ContentView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/MicSession.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Protocol.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/SettingsView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/StudioView.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/Theme.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/VoxBridge/VoxBridgeApp.swift /Users/runner/work/Virtual-Mic/Virtual-Mic/apps/ios/build/Build/Intermediates.noindex/VoxBridge.build/Release-iphoneos/VoxBridge.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'VoxBridge' from project 'VoxBridge')
+	CompileSwift normal arm64 (in target 'VoxBridge' from project 'VoxBridge')
+	Building project VoxBridge with scheme VoxBridge and configuration Release
+(3 failures)

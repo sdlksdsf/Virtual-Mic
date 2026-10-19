@@ -1,0 +1,111 @@
+name: Android
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - 'apps/android/**'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'apps/android/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Toolchain versions
+        working-directory: apps/android
+        run: |
+          java -version 2>&1 | head -3
+          gradle --version | head -6
+          ls -la
+
+      - name: Assemble debug and release
+        working-directory: apps/android
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleDebug assembleRelease \
+            --stacktrace --no-build-cache 2>&1 | tee gradle.log | tail -40
+          status=$?
+          if [ $status -ne 0 ]; then
+            grep -E "(e: |error:|FAILURE:)" gradle.log | head -30 | sed 's/^/::error::/'
+          fi
+          exit $status
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p artifacts
+          find apps/android/app/build/outputs/apk -name '*.apk' -print
+          cp apps/android/app/build/outputs/apk/debug/*.apk artifacts/VoxBridge-1.0.0-debug.apk || true
+          cp apps/android/app/build/outputs/apk/release/*.apk artifacts/VoxBridge-1.0.0-android.apk || true
+          cd artifacts && sha256sum *.apk > SHA256SUMS.txt && ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxbridge-android
+          if-no-files-found: error
+          retention-days: 30
+          path: artifacts/*
+
+      - name: Publish APK to release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: VoxBridge 1.0.0
+          fail_on_unmatched_files: false
+          files: |
+            artifacts/VoxBridge-1.0.0-android.apk
+            artifacts/SHA256SUMS.txt
+
+      - name: Preserve build log
+        if: failure()
+        run: |
+          mkdir -p ci-logs
+          cp apps/android/gradle.log ci-logs/android-gradle.log 2>/dev/null || true
+          git config user.name "VoxBridge CI"
+          git config user.email "ci@voxbridge.app"
+          git add -f ci-logs
+          git commit -m "ci: android build log [skip ci]" || exit 0
+          git pull --rebase origin "${{ github.ref_name }}" || true
+          git push origin "HEAD:${{ github.ref_name }}"
+
+      - name: Report build log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          n=$(gh issue list --state open --search 'CI build logs in:title' --json number --jq '.[0].number // empty')
+          if [ -z "$n" ]; then
+            url=$(gh issue create --title "CI build logs" --body "Automated diagnostics from failed builds.")
+            n=${url##*/}
+          fi
+          {
+            echo "### Android build failure (run ${{ github.run_id }})"
+            echo '```'
+            grep -aE "^(e:|w: .*error)|^FAILURE:|^> Task .*FAILED|error:|ERROR:|Caused by:|What went wrong" apps/android/gradle.log 2>/dev/null | head -80
+            echo '--- tail ---'
+            tail -n 30 apps/android/gradle.log 2>/dev/null
+            echo '```'
+          } > /tmp/report.md
+          gh issue comment "$n" --body-file /tmp/report.md

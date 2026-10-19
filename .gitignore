@@ -1,0 +1,51 @@
+# dependencies
+node_modules/
+.pnp.*
+.yarn/
+
+# builds
+release/
+dist/
+out/
+build/service/
+apps/desktop/service-bin/
+apps/android/.gradle/
+apps/android/**/build/
+apps/android/local.properties
+apps/ios/build/
+apps/ios/DerivedData/
+apps/ios/*.xcodeproj
+apps/ios/*.xcworkspace
+
+# generated downloads (large binaries live in GitHub Releases)
+apps/web/downloads/*.exe
+apps/web/downloads/*.msi
+apps/web/downloads/*.apk
+apps/web/downloads/*.ipa
+apps/web/downloads/*.dmg
+apps/web/downloads/*.zip
+!apps/web/downloads/.gitkeep
+
+# env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+
+# editor / os
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+*.wav
+*.tmp
+
+# python tooling used during development
+.venv/
+__pycache__/
+
+# Website binaries live in the GitHub release, not in git.
+apps/web/downloads/

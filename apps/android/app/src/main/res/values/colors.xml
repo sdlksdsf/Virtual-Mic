@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="paper">#F4F1EA</color>
+    <color name="ink">#15150F</color>
+    <color name="accent">#FF5A2E</color>
+    <color name="icon_bg">#15150F</color>
+</resources>

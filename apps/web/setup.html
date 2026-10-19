@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Setup guide — VoxBridge</title>
+    <meta name="description" content="How to install VoxBridge on Windows, Android and iPhone, install the virtual cable, pair your phone and verify the microphone." />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/config.js" defer></script>
+    <script src="assets/js/icons.js" defer></script>
+    <script src="assets/js/site.js" defer></script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="index.html" aria-label="VoxBridge home">
+          <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="features.html">Features</a>
+          <a href="download.html">Download</a>
+          <a href="setup.html" aria-current="page">Setup</a>
+          <a href="security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="index.html">VoxBridge</a> / Setup</p>
+          <h1>Setup, start to <em>soundcheck.</em></h1>
+          <p>
+            Fifteen minutes if everything goes right, less if your PC already has a virtual cable. Every step below is
+            the same one the desktop app walks you through.
+          </p>
+        </div>
+      </section>
+
+      <section class="block tight">
+        <div class="wrap">
+          <div class="prose" style="max-width: 900px; padding-top: 0">
+            <div class="callout">
+              <strong>TL;DR</strong>
+              Install the Windows app. In Studio, press <b>Set up virtual mic</b>. Install the phone app, join the same
+              Wi-Fi, pair with the four digit code. In Zoom / Teams / Discord choose <b>CABLE Output</b>. Run
+              <b>Test what apps hear</b>. Done.
+            </div>
+
+            <h2>1. Install on Windows</h2>
+            <ol>
+              <li>Download <a href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe">VoxBridge-Setup-1.0.0-x64.exe</a> from the download page.</li>
+              <li>Run it. SmartScreen may show “Windows protected your PC” because the publisher is new — choose <b>More info → Run anyway</b> only if the file came from the official release page and the SHA-256 matches.</li>
+              <li>The installer asks where to put the app. Per-user install, no administrator prompt yet.</li>
+              <li>VoxBridge opens on the Live screen and starts listening. It also adds a tray icon.</li>
+            </ol>
+            <p class="small-note">Need a machine without installing? Use the portable build. It runs the same binary without an uninstaller or registry entries.</p>
+
+            <h2>2. Give Windows a virtual microphone</h2>
+            <p>
+              This is the only part that needs a driver, and it is the same driver every streaming setup already uses.
+              VoxBridge does not ship its own kernel driver — it detects and configures the virtual cable you have.
+            </p>
+            <h3>If a cable already exists</h3>
+            <p>Open <b>Studio</b>. If the endpoint card says a CABLE Input was found, you are done. Pick the exact device with the <b>Output device</b> dropdown if you have more than one.</p>
+            <h3>If nothing exists</h3>
+            <ol>
+              <li>Press <b>Set up virtual mic</b>.</li>
+              <li>VoxBridge downloads the official VB-CABLE package from <code>download.vb-audio.com</code>.</li>
+              <li>It verifies the Authenticode signature of the installer before anything runs.</li>
+              <li>Windows asks for administrator permission. Approve it.</li>
+              <li>Reboot if Windows asks. Then reopen VoxBridge; the endpoint should appear automatically.</li>
+            </ol>
+            <div class="callout">
+              <strong>What “CABLE Input” and “CABLE Output” mean</strong>
+              Apps listen to <b>CABLE Output</b>. VoxBridge writes into <b>CABLE Input</b>. In plain language: the
+              speaker end goes into VoxBridge, the microphone end comes out for Zoom.
+            </div>
+            <p>
+              Prefer to do it by hand? Use the <a href="https://vb-audio.com/Cable/" rel="noopener">official VB-Audio page</a>,
+              then return to Studio and press <b>Refresh</b>.
+            </p>
+
+            <h2 id="android">3. Install the Android app</h2>
+            <ol>
+              <li>Download <code>VoxBridge-1.0.0-android.apk</code> on the phone.</li>
+              <li>Open the file. Android asks to allow installs from this source; allow it for your browser or file manager.</li>
+              <li>Install, then open VoxBridge. Grant microphone permission and, on Android 13+, notification permission so the live controls appear.</li>
+              <li>If your phone aggressively manages background apps (Xiaomi, Samsung, OnePlus), set VoxBridge to <b>Unrestricted</b> in battery settings so the foreground service is not killed.</li>
+            </ol>
+
+            <h2 id="ios">4. Install on iPhone</h2>
+            <p>Apple does not allow installing an app that Apple has not signed. The IPA in the release is unsigned, so one of these tools must add a signature with your Apple ID:</p>
+            <ul>
+              <li><b>AltStore / SideStore</b> — installs through a computer with AltServer, renews weekly. Free Apple ID works.</li>
+              <li><b>Sideloadly</b> — Windows or macOS, sign with a free Apple ID, drag the IPA in.</li>
+              <li><b>Xcode</b> — build from source with your team selected, then run to the device.</li>
+            </ul>
+            <p>After installing, open VoxBridge and allow <b>Local Network</b> access. Without it, discovery silently fails on iOS.</p>
+
+            <h2>5. Pair</h2>
+            <ol>
+              <li>Both devices on the same Wi-Fi SSID and subnet. A guest network with client isolation will not work.</li>
+              <li>On the PC open <b>Pair</b>. A four digit code and a QR code appear.</li>
+              <li>On the phone, the PC appears in the list within a few seconds. Tap it and type the code.</li>
+              <li>On the desktop, allow VoxBridge through the firewall if Windows asks. Choose <b>Private networks</b>.</li>
+              <li>Optional: enable <b>Remember this device</b> on the phone so it reconnects without the code.</li>
+            </ol>
+            <p>
+              Nothing discovered? Open <b>Pair → Type an address</b> on the PC, then type that address in the phone app
+              under <b>Connect manually</b>. This bypasses discovery entirely; audio still flows directly.
+            </p>
+
+            <h2>6. Use it in an app</h2>
+            <p>Open the app that needs a microphone and select <b>CABLE Output (VB-Audio Virtual Cable)</b> as the input.</p>
+            <table>
+              <thead><tr><th>App</th><th>Where to change it</th></tr></thead>
+              <tbody>
+                <tr><td>Zoom</td><td>Settings → Audio → Microphone</td></tr>
+                <tr><td>Microsoft Teams</td><td>Settings → Devices → Microphone</td></tr>
+                <tr><td>Discord</td><td>User Settings → Voice &amp; Video → Input Device</td></tr>
+                <tr><td>OBS Studio</td><td>Audio Mixer → Mic/Aux → Properties → Device</td></tr>
+                <tr><td>Google Meet (Chrome)</td><td>Lock icon in address bar → Site settings → Microphone</td></tr>
+                <tr><td>Steam Voice</td><td>Settings → Voice → Input device</td></tr>
+              </tbody>
+            </table>
+
+            <h2>7. Verify, then tune</h2>
+            <p>
+              In VoxBridge press <b>Test what apps hear</b> and speak for three seconds. A pass means the cable is
+              receiving a signal, which is exactly what Zoom will get. If it fails, the troubleshoot section below has
+              the five usual causes.
+            </p>
+            <p>
+              Then set comfort levels: noise suppression around <b>Medium</b>, presence <b>+4</b>, warmth <b>+3</b>, and
+              boost at <b>0</b> unless you speak quietly. Leave the limiter on.
+            </p>
+
+            <h2>Troubleshooting</h2>
+            <h3>The phone does not find the PC</h3>
+            <ul>
+              <li>Are both on the same subnet? Mesh systems with a “guest” SSID usually isolate clients.</li>
+              <li>Windows firewall: allow VoxBridge on private networks. Check the network profile is Private.</li>
+              <li>VPNs on either device can capture local traffic. Disconnect and retry.</li>
+              <li>Use manual address entry as a workaround.</li>
+            </ul>
+            <h3>The test is silent</h3>
+            <ul>
+              <li>The endpoint might be wrong. Studio → Output device → pick the one containing “CABLE Input”.</li>
+              <li>Windows volume mixer can mute the cable. Settings → System → Sound → Volume mixer.</li>
+              <li>Reinstall the cable (Studio → Install VB-CABLE) and reboot once.</li>
+            </ul>
+            <h3>Audio is choppy or delayed</h3>
+            <ul>
+              <li>Lower the jitter buffer to 30–60 ms; raise it if loss is happening.</li>
+              <li>Use USB/ADB if the Wi-Fi is congested.</li>
+              <li>Turn off Bluetooth headsets as the capture device; they add 100–200 ms.</li>
+            </ul>
+            <h3>It sounds distorted</h3>
+            <ul>
+              <li>Drop boost to 0 dB and let auto gain work.</li>
+              <li>Move the phone 15–25 cm from your mouth, not 3 cm.</li>
+              <li>Turn noise suppression to Medium; Max can thin out loud consonants.</li>
+            </ul>
+            <h3>Apps list it but I cannot hear anything in my headphones</h3>
+            <ul>
+              <li>Correct — the cable carries audio to apps, not to your speakers. Turn on <b>Monitor on this PC</b> in Studio if you want to hear yourself, and use headphones to avoid feedback.</li>
+            </ul>
+
+            <h2>Uninstall</h2>
+            <p>Windows Settings → Apps → VoxBridge → Uninstall. Your recordings stay in Music. VB-CABLE is a separate driver with its own uninstaller in the VB-CABLE folder; removing VoxBridge does not remove the cable, which is deliberate so other apps keep working.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block tight">
+        <div class="wrap">
+          <div class="cta">
+            <div>
+              <h2>Stuck on a step? <em>Tell us exactly where.</em></h2>
+              <p>Send the diagnostics file from Studio → Export diagnostics. It is redacted and makes the answer take minutes instead of days.</p>
+            </div>
+            <div class="cta-actions">
+              <a class="btn lg" href="support.html">Contact support</a>
+              <a class="btn ghost lg" href="https://github.com/sdlksdsf/Virtual-Mic/issues/new" rel="noopener">Open an issue</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="index.html">
+              <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="features.html">Features</a>
+            <a href="download.html">Download</a>
+            <a href="setup.html">Setup guide</a>
+            <a href="download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="privacy.html">Privacy policy</a>
+            <a href="terms.html">Terms of use</a>
+            <a href="security.html">Security</a>
+            <a href="licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

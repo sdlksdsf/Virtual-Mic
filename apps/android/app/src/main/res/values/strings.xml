@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VoxBridge</string>
+    <string name="tagline">Your phone, now your best microphone</string>
+    <string name="channel_name">Microphone stream</string>
+    <string name="channel_description">Keeps the microphone connected to your PC while the screen is off.</string>
+    <string name="action_mute">Mute</string>
+    <string name="action_unmute">Unmute</string>
+    <string name="action_stop">Stop</string>
+    <string name="service_title">VoxBridge is live</string>
+    <string name="service_idle">Connecting…</string>
+</resources>

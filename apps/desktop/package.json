@@ -1,0 +1,32 @@
+{
+  "name": "voxbridge-desktop",
+  "productName": "VoxBridge",
+  "version": "1.0.0",
+  "description": "Use your phone as a studio-clean microphone on Windows.",
+  "author": {
+    "name": "VoxBridge",
+    "email": "hello@voxbridge.app"
+  },
+  "license": "MIT",
+  "main": "src/main/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env VOXBRIDGE_DEV=1 electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win nsis portable --x64",
+    "dist:mac": "electron-builder --mac dmg",
+    "lint": "node ../../scripts/lint.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

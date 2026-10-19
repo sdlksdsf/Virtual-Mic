@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- The audio transport is a plain WebSocket to a PC on the same network,
+         as specified in docs/PROTOCOL.md. Cleartext stays inside the LAN; the
+         app talks to nothing else over HTTP. -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
