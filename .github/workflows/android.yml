@@ -87,3 +87,22 @@ jobs:
           git commit -m "ci: android build log [skip ci]" || exit 0
           git pull --rebase origin "${{ github.ref_name }}" || true
           git push origin "HEAD:${{ github.ref_name }}"
+
+      - name: Report build log
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          n=$(gh issue list --state open --search 'CI build logs in:title' --json number --jq '.[0].number // empty')
+          if [ -z "$n" ]; then
+            url=$(gh issue create --title "CI build logs" --body "Automated diagnostics from failed builds.")
+            n=${url##*/}
+          fi
+          {
+            echo "### Android build failure (run ${{ github.run_id }})"
+            echo '```'
+            tail -n 160 apps/android/gradle.log 2>/dev/null
+            echo '```'
+          } > /tmp/report.md
+          gh issue comment "$n" --body-file /tmp/report.md
