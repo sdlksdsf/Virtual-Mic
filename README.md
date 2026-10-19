@@ -44,7 +44,7 @@ VoxBridge turns an Android phone, iPhone, or tablet into a studio-clean micropho
 | Audio | 48/32/24/16 kHz, PCM16 or IMA-ADPCM, adaptive jitter buffer, packet-loss concealment |
 | Cleaning | Spectral noise suppression, noise gate, auto gain, high-pass, presence EQ, warmth EQ, compressor, true-peak limiter |
 | Output | +24 dB boost with soft clip protection, monitor passthrough, 16-bit WAV session recording |
-| System | Native Windows service, virtual mic detection and verification, device picker, diagnostics, tray, autostart |
+| System | Native Windows service, virtual mic detection and verification, device picker, diagnostics, background operation, autostart |
 | Mobile | Foreground service, quick actions, live meters, quality stats, light/dark themes |
 
 ## Repository map
