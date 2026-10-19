@@ -16,5 +16,6 @@ D:\a\Virtual-Mic\Virtual-Mic\apps\desktop\service\src\vb_core.h(355,19): warning
 D:\a\Virtual-Mic\Virtual-Mic\apps\desktop\service\src\vb_core.h(355,19): warning C4267: '+=': conversion from 'size_t' to 'uint32_t', possible loss of data [D:\a\Virtual-Mic\Virtual-Mic\build\service\VoxBridgeMic.vcxproj]
   (compiling source file '../../apps/desktop/service/src/windows_audio.cpp')
   
-D:\a\Virtual-Mic\Virtual-Mic\apps\desktop\service\src\windows_audio.cpp(67,7): error C2065: 'PKEY_Device_FriendlyName': undeclared identifier [D:\a\Virtual-Mic\Virtual-Mic\build\service\VoxBridgeMic.vcxproj]
   Generating Code...
+CVTRES : fatal error CVT1100: duplicate resource.  type:MANIFEST, name:1, language:0x0409 [D:\a\Virtual-Mic\Virtual-Mic\build\service\VoxBridgeMic.vcxproj]
+LINK : fatal error LNK1123: failure during conversion to COFF: file invalid or corrupt [D:\a\Virtual-Mic\Virtual-Mic\build\service\VoxBridgeMic.vcxproj]
