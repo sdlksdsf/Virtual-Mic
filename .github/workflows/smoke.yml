@@ -5,6 +5,9 @@ on:
     branches: [main, 'arena/**']
     paths:
       - '.github/workflows/smoke.yml'
+  workflow_run:
+    workflows: ['Desktop (Windows)', 'Android', 'iOS']
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -14,6 +17,7 @@ permissions:
 jobs:
   smoke:
     name: Verify the live product
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
