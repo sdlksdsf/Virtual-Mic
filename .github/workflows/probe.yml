@@ -1,0 +1,16 @@
+name: probe
+on:
+  push:
+    branches: [arena/d9800f21-virtual-mic]
+permissions:
+  contents: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "actions alive" && uname -a && node -v
+      - run: |
+          mkdir -p probe-out
+          echo "ok at $(date -u)" > probe-out/probe.txt
+          cat probe-out/probe.txt
