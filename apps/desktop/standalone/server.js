@@ -18,7 +18,7 @@ const { WebSocketServer } = require('ws');
 
 const APP_VERSION = '1.0.0';
 const GITHUB_URL = 'https://github.com/sdlksdsf/Virtual-Mic';
-const SITE_URL = 'https://voxbridge.vercel.app';
+const SITE_URL = 'https://voxbridge-app-pi.vercel.app';
 const IS_WIN = process.platform === 'win32';
 const ROOT = path.resolve(__dirname, '..');
 const RENDERER = path.join(ROOT, 'src', 'renderer');
@@ -30,11 +30,41 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const ALLOWED_HOSTS = new Set([
   'github.com',
-  'voxbridge.vercel.app',
+  'voxbridge-app-pi.vercel.app',
   'vb-audio.com',
   'www.vb-audio.com',
   'download.vb-audio.com',
 ]);
+
+// Documentation screenshots are captured on Linux, where the native service
+// cannot run. This flag makes the preview report the Windows service shape so
+// the captured interface matches what a Windows user actually sees.
+const PREVIEW_NATIVE = process.env.VOXBRIDGE_PREVIEW_NATIVE === '1';
+const PREVIEW_DEVICES = {
+  native: true,
+  render: [
+    { name: 'CABLE Input (VB-Audio Virtual Cable)', default: true },
+    { name: 'Headphones (WH-1000XM5)', default: false },
+    { name: 'Speakers (Realtek(R) Audio)', default: false },
+  ],
+  capture: [
+    { name: 'CABLE Output (VB-Audio Virtual Cable)', default: true },
+    { name: 'Microphone Array (Intel Smart Sound)', default: false },
+  ],
+};
+const PREVIEW_SERVICE = {
+  mode: 'native',
+  status: 'ready',
+  device: 'CABLE Input (VB-Audio Virtual Cable)',
+  fallback: false,
+  rate: 48000,
+  bufferMs: 20,
+  prefillMs: 60,
+  lastError: '',
+  restarts: 0,
+  version: APP_VERSION,
+  binary: 'C:\\Program Files\\VoxBridge\\VoxBridgeMic.exe',
+};
 
 const logs = [];
 const setupState = { phase: 'idle', progress: 0, message: '', publisher: '', error: '' };
@@ -307,7 +337,7 @@ function statePayload() {
     },
     settings: store.get(),
     receiver: receiver ? receiver.status() : { running: false, code: '----', port: 8720 },
-    service: service ? service.info() : { mode: 'software', status: 'idle' },
+    service: PREVIEW_NATIVE ? { ...PREVIEW_SERVICE } : service ? service.info() : { mode: 'software', status: 'idle' },
     recorder: recorder ? recorder.status() : { recording: false },
     setup: setupState,
   };
@@ -439,7 +469,7 @@ const METHODS = {
     stopService();
     return true;
   },
-  listDevices: () => (service ? service.listDevices() : { native: false, render: [], capture: [] }),
+  listDevices: () => (PREVIEW_NATIVE ? { ...PREVIEW_DEVICES } : service ? service.listDevices() : { native: false, render: [], capture: [] }),
   restartService: () => {
     stopService();
     return startService();

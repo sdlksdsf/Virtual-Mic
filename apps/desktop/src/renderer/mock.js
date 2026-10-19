@@ -250,6 +250,7 @@
           site: 'https://voxbridge.vercel.app',
         },
         settings,
+        devices: { ...devices },
         receiver: { ...receiver },
         service: { ...service },
         recorder: { ...recorder },

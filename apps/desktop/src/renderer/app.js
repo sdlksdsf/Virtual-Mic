@@ -348,7 +348,7 @@
         : 'Your voice is <em>live.</em>'
       : 'Waiting for your <em>phone.</em>';
     $('#live-lede').textContent = phone
-      ? `${phone.name} over ${phone.address || 'Wi-Fi'} · ${(state.receiver.rate || 48000) / 1000} kHz · ${state.receiver.codec === 'adpcm' ? 'ADPCM' : 'PCM'}`
+      ? `${phone.name} over ${/^(127\.|::1|localhost)/.test(phone.address || '') ? 'USB' : phone.address || 'Wi-Fi'} · ${(state.receiver.rate || 48000) / 1000} kHz · ${state.receiver.codec === 'adpcm' ? 'ADPCM' : 'PCM'}`
       : 'Open VoxBridge on your phone. It shows up here on its own, no cables, no drivers to fight.';
 
     $('#source-name').textContent = phone ? phone.name : 'Nothing connected';
@@ -409,7 +409,7 @@
     found.innerHTML = phone
       ? `<div class="found-item">
            <div class="found-icon"><svg><use href="#i-phone" /></svg></div>
-           <div class="found-copy"><strong>${escapeHtml(phone.name)}</strong><span>${escapeHtml(phone.address || 'LAN')} · ${escapeHtml(phone.device || 'phone')}</span></div>
+           <div class="found-copy"><strong>${escapeHtml(phone.name)}</strong><span>${escapeHtml(/^(127\.|::1|localhost)/.test(phone.address || '') ? 'USB link' : phone.address || 'LAN')} · ${escapeHtml(phone.device || 'phone')}</span></div>
            <span class="status-chip ok">Connected</span>
          </div>`
       : `<div class="found-item">
