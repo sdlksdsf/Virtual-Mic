@@ -11,13 +11,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
   smoke:
     name: Verify the live product
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    concurrency:
+      group: release-verification
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,20 +41,25 @@ jobs:
           echo "download links present"
 
       - name: Release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           mkdir -p dl
           cd dl
-          base=https://github.com/sdlksdsf/Virtual-Mic/releases/download/v1.0.0
+          # Serialise with platform uploads, then refresh the checksum file so it
+          # always describes the exact bytes currently attached to the release.
           for file in \
             VoxBridge-Setup-1.0.0-x64.exe \
             VoxBridge-1.0.0-win64-portable.zip \
             VoxBridge-1.0.0-android.apk \
-            VoxBridge-1.0.0-unsigned.ipa \
-            SHA256SUMS.txt; do
-            curl -fsSL --retry 3 "$base/$file" -o "$file"
+            VoxBridge-1.0.0-unsigned.ipa; do
+            gh release download v1.0.0 --clobber --pattern "$file" --dir .
             echo "$file $(stat -c%s "$file") bytes"
           done
+          sha256sum VoxBridge-* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          gh release upload v1.0.0 SHA256SUMS.txt --clobber
           sha256sum -c SHA256SUMS.txt
           unzip -q VoxBridge-1.0.0-android.apk -d apk
           test -f apk/AndroidManifest.xml
