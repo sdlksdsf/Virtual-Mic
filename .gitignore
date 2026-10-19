@@ -49,3 +49,6 @@ __pycache__/
 
 # Website binaries live in the GitHub release, not in git.
 apps/web/downloads/
+
+# CI failure logs (uploaded to issues, kept out of the tree)
+ci-logs/
