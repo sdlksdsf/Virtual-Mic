@@ -31,15 +31,29 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build debug and release APK
+      - name: Toolchain versions
         working-directory: apps/android
         run: |
-          gradle --no-daemon assembleDebug
-          gradle --no-daemon assembleRelease
+          java -version 2>&1 | head -3
+          gradle --version | head -6
+          ls -la
+
+      - name: Assemble debug and release
+        working-directory: apps/android
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleDebug assembleRelease \
+            --stacktrace --no-build-cache 2>&1 | tee gradle.log | tail -40
+          status=$?
+          if [ $status -ne 0 ]; then
+            grep -E "(e: |error:|FAILURE:)" gradle.log | head -30 | sed 's/^/::error::/'
+          fi
+          exit $status
 
       - name: Collect artifacts
         run: |
           mkdir -p artifacts
+          find apps/android/app/build/outputs/apk -name '*.apk' -print
           cp apps/android/app/build/outputs/apk/debug/*.apk artifacts/VoxBridge-1.0.0-debug.apk || true
           cp apps/android/app/build/outputs/apk/release/*.apk artifacts/VoxBridge-1.0.0-android.apk || true
           cd artifacts && sha256sum *.apk > SHA256SUMS.txt && ls -lh

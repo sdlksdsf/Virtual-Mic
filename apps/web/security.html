@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Security model — VoxBridge</title>
+    <meta name="description" content="How VoxBridge pairs devices, what travels over the network, what the threat model covers and how to report a vulnerability." />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/site.css" />
+    <script src="/assets/js/config.js" defer></script>
+    <script src="/assets/js/icons.js" defer></script>
+    <script src="/assets/js/site.js" defer></script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label="VoxBridge home">
+          <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/features.html">Features</a>
+          <a href="/download.html">Download</a>
+          <a href="/setup.html">Setup</a>
+          <a href="/security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="/download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="/">VoxBridge</a> / Security</p>
+          <h1>Security, <em>shown not promised.</em></h1>
+          <p>No account, no relay, no recorded audio. Here is exactly what crosses the wire, what protects it, and what does not.</p>
+        </div>
+      </section>
+
+      <section class="prose wrap-narrow">
+
+        <p class="meta">Last reviewed 19 October 2026 · VoxBridge 1.0.0 · Protocol v1</p>
+
+        <p class="lead">
+          Most "phone as microphone" products route your voice through a cloud service. VoxBridge does not. The
+          transport is a WebSocket from your phone to a listener on your PC, on your own network. That design removes
+          a whole class of risk, and it creates a different one: anyone who can reach that listener can try to talk to
+          it. This page describes both sides honestly.
+        </p>
+
+        <h2>1. What is on the wire</h2>
+        <p>
+          Discovery is a single UDP broadcast every two seconds containing the PC's display name, the TCP port and a
+          pairing flag. Audio is a WebSocket stream of 12-byte framed PCM16 or IMA-ADPCM packets, 20 ms per frame, at
+          16–48 kHz. Control messages are JSON: hello, welcome, denied, config, mute, stats, ping, pong and bye. The
+          full specification is in
+          <a href="https://github.com/sdlksdsf/Virtual-Mic/blob/main/docs/PROTOCOL.md" rel="noopener">docs/PROTOCOL.md</a>.
+        </p>
+        <p>
+          Audio is <strong>not end-to-end encrypted by the protocol</strong>. It relies on the link layer — WPA2/WPA3
+          on Wi-Fi, or the point-to-point nature of USB tethering — for confidentiality. This is a deliberate
+          trade-off: encryption would add jitter to a latency-sensitive path, and the intended deployment is a home or
+          office network you control. On a network you do not trust, use USB tethering or a dedicated hotspot.
+        </p>
+
+        <h2>2. Threat model</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Scenario</th><th>What happens</th><th>Mitigation</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>Someone on the same Wi-Fi opens the receiver port</td>
+                <td>They see a WebSocket that requires a pairing code before audio is accepted.</td>
+                <td>Pairing is mandatory by default; five failed attempts close the socket with code 4429.</td>
+              </tr>
+              <tr>
+                <td>A passive sniffer on the LAN</td>
+                <td>Audio frames could be reassembled if the link layer is already compromised.</td>
+                <td>Use WPA3/WPA2, avoid open Wi-Fi, or use USB tethering for sensitive calls.</td>
+              </tr>
+              <tr>
+                <td>A stranger guesses the four-digit code</td>
+                <td>They would need to reach the port and stay within the attempt limit.</td>
+                <td>Codes rotate on every pairing window; the desktop shows the active code and connected devices.</td>
+              </tr>
+              <tr>
+                <td>An attacker replaces a download</td>
+                <td>They could ship modified code.</td>
+                <td>Every release publishes SHA256SUMS.txt; the repository history is public.</td>
+              </tr>
+              <tr>
+                <td>A dependency is compromised</td>
+                <td>Code could run with app privileges.</td>
+                <td>Lockfiles are committed and CI installs from them; the dependency surface is deliberately small.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>3. Pairing and device memory</h2>
+        <p>
+          The first time a phone connects, the desktop issues a short numeric code shown in the app window. The phone
+          sends it in the <code>hello</code> message. On success the desktop can issue a device token, which the phone
+          stores in its private app storage. Tokens are scoped to one PC and can be revoked by removing the device in
+          the desktop's Devices view. The phone never receives your Windows password, and the desktop never receives
+          your phone's files.
+        </p>
+
+        <h2>4. Data at rest</h2>
+        <ul>
+          <li>The phone stores settings in app-private storage: host address, display name, device ID, token and audio preferences.</li>
+          <li>The desktop stores settings and known devices in its app-data folder. On Windows this is <code>%APPDATA%\VoxBridge</code>.</li>
+          <li>Neither app records audio by default. The optional WAV capture is opt-in, written where you choose, and never uploaded.</li>
+          <li>Diagnostics are a small in-memory ring buffer. They are not sent anywhere automatically.</li>
+        </ul>
+
+        <h2>5. Platform protections we rely on</h2>
+        <ul>
+          <li><strong>Windows:</strong> the receiver binds to the local network only. The installer is per-user, so the audio path needs no administrator rights; installing a virtual cable does, and that installer is signed by VB-Audio.</li>
+          <li><strong>Android:</strong> capture runs in a foreground service with a persistent notification. The app targets Android 14, declares only microphone, network, notification and wake-lock permissions, and does not request storage access.</li>
+          <li><strong>iOS:</strong> the app uses the microphone usage description, runs audio in the background only while a session is active, and stores no recordings.</li>
+        </ul>
+
+        <h2>6. Supply chain</h2>
+        <p>
+          CI builds Windows and Android artifacts from tagged source on GitHub-hosted runners. <code>package-lock.json</code>
+          and the Gradle dependency graph are committed. Build logs are public. A release is only official if it
+          appears on the repository's releases page with a matching checksum entry.
+        </p>
+
+        <h2>7. What we do not protect against</h2>
+        <p>
+          We cannot defend a PC that is already compromised, a phone with a malicious keyboard or accessibility
+          service, or a network operator who controls the access point. If your threat model includes a hostile local
+          network, do not use Wi-Fi mode; use USB tethering, which never leaves the cable.
+        </p>
+
+        <h2>8. Reporting a vulnerability</h2>
+        <p>
+          Email <a href="mailto:security@voxbridge.app">security@voxbridge.app</a> with reproduction steps and the
+          version you tested. Please do not open a public issue for an exploitable bug. We aim to acknowledge within
+          72 hours and to publish a fix and credit (if you want it) in the next release. There is no bug bounty
+          budget; there is a genuine thank-you and a place in the changelog.
+        </p>
+
+        <h2>9. Supported versions</h2>
+        <p>
+          Security fixes land in the latest 1.x release. Older builds are not maintained. Check the
+          <a href="/download.html#changelog">changelog</a> for what changed.
+        </p>
+
+      </section>
+    </main>
+
+<footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="/">
+              <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="/features.html">Features</a>
+            <a href="/download.html">Download</a>
+            <a href="/setup.html">Setup guide</a>
+            <a href="/download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="/privacy.html">Privacy policy</a>
+            <a href="/terms.html">Terms of use</a>
+            <a href="/security.html">Security</a>
+            <a href="/licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="/support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

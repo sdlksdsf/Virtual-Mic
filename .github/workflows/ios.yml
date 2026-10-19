@@ -1,0 +1,73 @@
+name: iOS
+
+on:
+  push:
+    branches: [main, 'arena/**']
+    paths:
+      - 'apps/ios/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'apps/ios/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build unsigned IPA
+    runs-on: macos-14
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apps/ios
+        run: |
+          xcodegen generate 2>&1 | tee generate.log
+          test -d VoxBridge.xcodeproj || { tail -30 generate.log | sed 's/^/::error::/'; exit 1; }
+
+      - name: Build
+        working-directory: apps/ios
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project VoxBridge.xcodeproj \
+            -scheme VoxBridge \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tee build.log | tail -20
+          status=$?
+          if [ $status -ne 0 ]; then
+            grep -E "(error:|fatal error:)" build.log | head -20 | sed 's/^/::error::/'
+          fi
+          exit $status
+
+      - name: Package unsigned IPA
+        working-directory: apps/ios
+        run: |
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          test -n "$APP" || { echo "::error::no .app produced"; exit 1; }
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry VoxBridge-1.0.0-unsigned.ipa Payload
+          ls -lh VoxBridge-1.0.0-unsigned.ipa
+          shasum -a 256 VoxBridge-1.0.0-unsigned.ipa > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxbridge-ios
+          if-no-files-found: error
+          retention-days: 30
+          path: |
+            apps/ios/VoxBridge-1.0.0-unsigned.ipa
+            apps/ios/SHA256SUMS.txt

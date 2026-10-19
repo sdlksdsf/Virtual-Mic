@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy policy — VoxBridge</title>
+    <meta name="description" content="How VoxBridge handles audio, diagnostics, downloads and website analytics. Audio never leaves your network." />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/site.css" />
+    <script src="/assets/js/config.js" defer></script>
+    <script src="/assets/js/icons.js" defer></script>
+    <script src="/assets/js/site.js" defer></script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label="VoxBridge home">
+          <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/features.html">Features</a>
+          <a href="/download.html">Download</a>
+          <a href="/setup.html">Setup</a>
+          <a href="/security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="/download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="/">VoxBridge</a> / Privacy policy</p>
+          <h1>Privacy policy, <em>in full.</em></h1>
+          <p>Short version: your voice stays on your network. This page is the long version, written to be read.</p>
+        </div>
+      </section>
+
+      <section class="prose wrap-narrow">
+        <p class="meta">Effective 19 October 2026 · Version 1.0 · Applies to VoxBridge 1.0.0 and voxbridge.vercel.app</p>
+
+        <p class="lead">
+          VoxBridge is a local audio tool. The audio you speak is captured on your phone, transported directly to your
+          PC over your own network, and written to a virtual audio device on that PC. It is never sent to us and there
+          is no server in the path.
+        </p>
+
+        <h2>1. Who we are</h2>
+        <p>
+          VoxBridge is an independent open source project. References to “we”, “us” and “our” mean the VoxBridge
+          maintainers. References to “you” mean the person using the app or website. The project has no logins, no
+          customer database, and no advertising partners.
+        </p>
+        <p>Contact for privacy questions: <a href="mailto:privacy@voxbridge.app">privacy@voxbridge.app</a>.</p>
+
+        <h2>2. The audio path, exactly</h2>
+        <ol>
+          <li>The phone captures microphone audio with the operating system’s audio API.</li>
+          <li>Audio is processed on the device by the VoxBridge DSP chain (cleanup, tone, dynamics, protection).</li>
+          <li>It is framed and sent over a WebSocket to your PC on your local network — or, in USB mode, through a forwarded local port over the cable.</li>
+          <li>The desktop app decodes it, applies the desktop chain, and writes it to the virtual audio cable you configured.</li>
+          <li>Other applications on that PC, such as Zoom or OBS, read from the cable output.</li>
+        </ol>
+        <p>
+          <strong>Audio is never uploaded.</strong> There is no relay, no recording on a server, and no analytics that
+          receives a sample. Session recordings are written only where you choose on your own disk.
+        </p>
+
+        <h2>3. What the apps store on your device</h2>
+        <table>
+          <thead>
+            <tr><th>Data</th><th>Where</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Preferences (theme, codec, buffer, DSP levels, device choice)</td><td>Local settings file on the PC; app preferences on the phone</td><td>So the app behaves the way you set it up.</td></tr>
+            <tr><td>Remembered device tokens</td><td>PC only, stored as a SHA-256 hash</td><td>Skip the pairing code for devices you trust. The raw token never leaves the phone, and deleting the entry revokes access.</td></tr>
+            <tr><td>Recent connection history</td><td>Phone only</td><td>Make reconnecting quicker. Clearable in the app.</td></tr>
+            <tr><td>Diagnostics log</td><td>PC only, last 200 events, redacted</td><td>Only leaves the machine if you explicitly export and send it.</td></tr>
+            <tr><td>Session recordings</td><td>The folder you choose</td><td>Only created when you press Record.</td></tr>
+          </tbody>
+        </table>
+        <p>Uninstalling removes app data. Pairing tokens are also invalidated immediately when you press “Forget devices”.</p>
+
+        <h2>4. What the website collects</h2>
+        <p>The website is static, has no login, and sets no advertising cookies. It does three small things:</p>
+        <ul>
+          <li><b>Anonymous download counting.</b> When you click a download, we record the platform (Windows, Android or iOS), the app version and the source page. No IP address, no user agent, no identifier — the row is not linkable to you.</li>
+          <li><b>Optional feedback.</b> If you send a message or subscribe to release notes, we store the email address you typed plus the message. That is the only personal data we knowingly hold.</li>
+          <li><b>Local theme preference.</b> Light or dark is stored in your browser’s local storage. It never reaches a server.</li>
+        </ul>
+        <p>
+          Hosting is provided by Vercel and the database by Supabase. Like any web host, they process standard request
+          metadata (IP address, timestamp, requested path) to deliver and protect the site. We do not combine that
+          metadata with the anonymous download counter.
+        </p>
+
+        <h2>5. What the apps never do</h2>
+        <ul>
+          <li>No account, sign-in, email verification or advertising identifier.</li>
+          <li>No crash reporting or analytics SDK is embedded in the desktop or mobile apps.</li>
+          <li>No access to contacts, photos, files, location, camera, clipboard or SMS.</li>
+          <li>No microphone use while the app is idle. Android shows the active microphone indicator whenever capture is running, and the foreground notification is always visible.</li>
+          <li>No hidden background network calls. The phone app only connects to the PC you paired with.</li>
+        </ul>
+
+        <h2>6. Permissions and why they exist</h2>
+        <table>
+          <thead><tr><th>Platform</th><th>Permission</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>Android</td><td>RECORD_AUDIO</td><td>Capture the microphone.</td></tr>
+            <tr><td>Android</td><td>FOREGROUND_SERVICE, FOREGROUND_SERVICE_MICROPHONE, POST_NOTIFICATIONS</td><td>Keep the stream alive and show the mute/gain controls while the screen is off.</td></tr>
+            <tr><td>Android</td><td>INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE</td><td>Reach your PC and show connection quality.</td></tr>
+            <tr><td>iOS</td><td>Microphone, Local Network, Background audio</td><td>The same three functions.</td></tr>
+            <tr><td>Windows</td><td>Microphone / audio device access, firewall prompt</td><td>Open the virtual endpoint and accept connections from your phone on the local network.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>7. Security of local sessions</h2>
+        <p>
+          Sessions require a four digit pairing code that rotates after every connection, or a remembered token stored
+          as a hash. Failed attempts are rate limited. The listener binds to your LAN only; it is not reachable from the
+          internet unless you deliberately forward a port, which we do not recommend.
+        </p>
+
+        <h2>8. Children</h2>
+        <p>VoxBridge is a general-purpose audio utility and is not directed at children under 13. We do not knowingly collect data from anyone under 13; the app has no account system to do so.</p>
+
+        <h2>9. Your rights</h2>
+        <p>
+          Because the project holds almost no personal data, most requests are simple. You can ask us to export or
+          delete any feedback or release-notes email you sent. Depending on where you live (for example under GDPR or
+          CCPA), you may also have the right to object to processing, request correction, or lodge a complaint with
+          your supervisory authority. Email <a href="mailto:privacy@voxbridge.app">privacy@voxbridge.app</a>; we answer
+          within 30 days.
+        </p>
+
+        <h2>10. Retention</h2>
+        <ul>
+          <li>Feedback messages and release-note addresses: kept until the conversation is closed or you ask us to delete them, whichever comes first.</li>
+          <li>Anonymous download counters: aggregate only, retained indefinitely because they cannot identify a person.</li>
+          <li>Server request logs at our hosts: subject to their standard short retention policies.</li>
+        </ul>
+
+        <h2>11. International transfers</h2>
+        <p>
+          Website hosting and the feedback database may process data in regions outside your country, including the
+          United States and the European Union, under the standard contractual terms those providers offer. Audio is not
+          part of any transfer because it never leaves your devices.
+        </p>
+
+        <h2>12. Third parties</h2>
+        <ul>
+          <li><b>Vercel</b> — static hosting and CDN.</li>
+          <li><b>Supabase</b> — feedback and anonymous download counters, protected by row-level security.</li>
+          <li><b>GitHub</b> — source code, release downloads and build logs. Downloading a release file is served by GitHub under its own privacy policy.</li>
+          <li><b>VB-Audio</b> — only if you choose the guided virtual cable install. Your browser or the app requests the installer from <code>vb-audio.com</code>; we do not proxy or track it.</li>
+        </ul>
+        <p>We do not sell, rent or share personal data with advertisers or data brokers. Ever.</p>
+
+        <h2>13. Changes to this policy</h2>
+        <p>
+          Material changes will be published on this page with a new effective date and noted in the release notes. If
+          a change would involve sending audio anywhere, it will be opt-in and off by default — that is a commitment,
+          not a promise we can quietly reverse.
+        </p>
+
+        <h2>14. Contact</h2>
+        <p>
+          Privacy: <a href="mailto:privacy@voxbridge.app">privacy@voxbridge.app</a><br />
+          Security reports: <a href="mailto:security@voxbridge.app">security@voxbridge.app</a><br />
+          Everything else: <a href="/support.html">support page</a>
+        </p>
+        <p class="small-note" style="margin-top: 30px">
+          This policy is provided in plain language for clarity. If a translated version conflicts with this English
+          text, this text governs.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="/">
+              <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="/features.html">Features</a>
+            <a href="/download.html">Download</a>
+            <a href="/setup.html">Setup guide</a>
+            <a href="/download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="/privacy.html">Privacy policy</a>
+            <a href="/terms.html">Terms of use</a>
+            <a href="/security.html">Security</a>
+            <a href="/licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="/support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

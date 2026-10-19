@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /og-card.html
+
+Sitemap: https://voxbridge.vercel.app/sitemap.xml

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terms of use — VoxBridge</title>
+    <meta name="description" content="The terms that cover installing and using the VoxBridge desktop, Android and iOS apps and this website." />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/site.css" />
+    <script src="/assets/js/config.js" defer></script>
+    <script src="/assets/js/icons.js" defer></script>
+    <script src="/assets/js/site.js" defer></script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label="VoxBridge home">
+          <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/features.html">Features</a>
+          <a href="/download.html">Download</a>
+          <a href="/setup.html">Setup</a>
+          <a href="/security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="/download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="/">VoxBridge</a> / Terms of use</p>
+          <h1>Terms, <em>plainly put.</em></h1>
+          <p>The deal: MIT-licensed software, no account, no warranty, and a short list of things we ask of you.</p>
+        </div>
+      </section>
+
+      <section class="prose wrap-narrow">
+
+        <p class="meta">Effective 19 October 2026 · Version 1.0 · Applies to VoxBridge 1.0.0</p>
+
+        <p class="lead">
+          VoxBridge is free, open-source software that carries microphone audio from your phone to your PC over your
+          own network. These terms are intentionally short. By installing or using VoxBridge you agree to them.
+        </p>
+
+        <h2>1. The software is yours to use and inspect</h2>
+        <p>
+          VoxBridge is released under the MIT licence. That means you may use, copy, modify, merge, publish,
+          distribute, sublicense and sell copies of the software, provided you keep the copyright notice and
+          permission notice with it. The full text ships with every build and lives in the
+          <a href="https://github.com/sdlksdsf/Virtual-Mic/blob/main/LICENSE" rel="noopener">repository</a>.
+        </p>
+
+        <h2>2. What VoxBridge does</h2>
+        <p>
+          The phone app captures audio with the microphone permission you grant. The desktop app receives that audio
+          and writes it to an audio device you choose. When you pair a phone with a PC, the desktop may remember the
+          device so you do not have to enter a code every time. Nothing is uploaded to us; there is no VoxBridge
+          account and no VoxBridge relay in the audio path.
+        </p>
+        <p>
+          The website at voxbridge.vercel.app is a marketing and documentation site. It stores anonymous download
+          counters and messages you choose to send through the contact form. See the
+          <a href="/privacy.html">privacy policy</a> for the details.
+        </p>
+
+        <h2>3. Consent and lawful use</h2>
+        <p>
+          Recording laws differ by country, state and situation. You are responsible for having any consent required
+          before you capture another person's voice, whether in a call, a meeting, a classroom or a public space.
+          VoxBridge is a microphone, not a hidden recorder: it does not start on its own, and both the phone and the
+          desktop show a live indicator while audio is flowing. Do not use it to deceive people about being
+          recorded.
+        </p>
+
+        <h2>4. The virtual audio cable is a separate product</h2>
+        <p>
+          VoxBridge can route audio into any virtual audio cable already installed on your PC. Our setup guide
+          recommends <a href="https://vb-audio.com/Cable/" rel="noopener">VB-CABLE</a>, which is created and licensed
+          by VB-Audio Software, not by us. It is donationware: free for personal use, with its own licence terms for
+          commercial use. VoxBridge does not ship VB-CABLE inside its installer; the app links to the official
+          download and verifies that the device is present. Your relationship with VB-Audio is governed by their
+          terms.
+        </p>
+
+        <h2>5. Downloads, checksums and unsigned builds</h2>
+        <p>
+          Builds are published on the project's
+          <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">GitHub releases</a> page together
+          with a <code>SHA256SUMS.txt</code> file. Verify the hash before running an installer if your threat model
+          calls for it. Unless stated otherwise on the release, Windows builds are not code-signed, so SmartScreen may
+          show a "Windows protected your PC" prompt. iOS builds are unsigned development archives and require your own
+          Apple signing identity to install. Do not install a build from a source that is not this repository.
+        </p>
+
+        <h2>6. Updates</h2>
+        <p>
+          The app may check GitHub for a newer release and tell you about it. It does not install updates silently
+          without your action. You may run any version you like, but security fixes only land in newer releases.
+        </p>
+
+        <h2>7. No warranty</h2>
+        <p>
+          The software is provided "as is", without warranty of any kind, express or implied, including but not
+          limited to the warranties of merchantability, fitness for a particular purpose and non-infringement. Audio
+          software interacts with drivers, network stacks and operating systems we do not control; we cannot promise
+          that it will work on every machine or that it will never drop a packet.
+        </p>
+
+        <h2>8. Limitation of liability</h2>
+        <p>
+          To the maximum extent permitted by law, the authors and contributors are not liable for any claim, damages
+          or other liability arising from the use of the software. This includes lost recordings, missed meetings and
+          damage to audio hardware. Where liability cannot be excluded, it is limited to the amount you paid for
+          VoxBridge, which is zero.
+        </p>
+
+        <h2>9. Trademarks and affiliation</h2>
+        <p>
+          VoxBridge is an independent project. It is not affiliated with, endorsed by or sponsored by VB-Audio,
+          Microsoft, Google, Apple, Zoom, Discord or OBS. Product names are used descriptively and remain the
+          trademarks of their owners.
+        </p>
+
+        <h2>10. Contributions</h2>
+        <p>
+          Issues and pull requests are welcome on GitHub. By contributing you agree that your contribution is
+          licensed under the same MIT terms and that you have the right to submit it.
+        </p>
+
+        <h2>11. Changes to these terms</h2>
+        <p>
+          If these terms change materially we will update this page, change the effective date and mention it in the
+          release notes. Continuing to use a new version after a change means you accept the updated terms.
+        </p>
+
+        <h2>12. Contact</h2>
+        <p>
+          Questions about these terms: <a href="mailto:hello@voxbridge.app">hello@voxbridge.app</a><br />
+          Security reports: <a href="mailto:security@voxbridge.app">security@voxbridge.app</a><br />
+          Or use the <a href="/support.html">support page</a>.
+        </p>
+        <p class="small-note" style="margin-top: 30px">
+          This is a plain-language summary written for a small open-source project. It is not legal advice, and it
+          does not create rights beyond those in the MIT licence.
+        </p>
+
+      </section>
+    </main>
+
+<footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="/">
+              <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="/features.html">Features</a>
+            <a href="/download.html">Download</a>
+            <a href="/setup.html">Setup guide</a>
+            <a href="/download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="/privacy.html">Privacy policy</a>
+            <a href="/terms.html">Terms of use</a>
+            <a href="/security.html">Security</a>
+            <a href="/licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="/support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -16,7 +16,7 @@
     "pack": "electron-builder --dir",
     "dist": "electron-builder --win nsis portable --x64",
     "dist:mac": "electron-builder --mac dmg",
-    "lint": "node scripts/lint.js"
+    "lint": "node ../../scripts/lint.js"
   },
   "dependencies": {
     "ws": "^8.18.0"

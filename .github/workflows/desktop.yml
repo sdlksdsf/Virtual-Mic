@@ -28,25 +28,58 @@ jobs:
           cache: npm
           cache-dependency-path: apps/desktop/package-lock.json
 
+      - name: Toolchain versions
+        shell: pwsh
+        run: |
+          cmake --version
+          node --version
+          npm --version
+          Get-ChildItem apps/desktop -Name
+
       - name: Configure native service
-        run: cmake -S apps/desktop/service -B build/service -A x64
+        shell: pwsh
+        run: |
+          cmake -S apps/desktop/service -B build/service -A x64 2>&1 | Tee-Object -FilePath build/configure.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content build/configure.log -Tail 25 | ForEach-Object { "::error::$_" }
+            exit 1
+          }
 
       - name: Build native service
-        run: cmake --build build/service --config Release --parallel
+        shell: pwsh
+        run: |
+          cmake --build build/service --config Release --parallel 2>&1 | Tee-Object -FilePath build/compile.log
+          if ($LASTEXITCODE -ne 0) {
+            Get-Content build/compile.log -Tail 40 | ForEach-Object { "::error::$_" }
+            exit 1
+          }
+          Get-ChildItem build/service/Release | Select-Object Name, Length | Format-Table
 
       - name: Run portable core tests
-        run: build/service/Release/voxbridge_coretest.exe
+        shell: pwsh
+        run: |
+          $test = Get-ChildItem build/service/Release -Filter 'voxbridge_coretest.exe' -Recurse | Select-Object -First 1
+          if (-not $test) { "::error::coretest binary was not produced"; exit 1 }
+          & $test.FullName
+          if ($LASTEXITCODE -ne 0) { "::error::core self-test failed"; exit 1 }
 
       - name: Stage service binary
+        shell: pwsh
         run: |
           New-Item -ItemType Directory -Force apps/desktop/service-bin | Out-Null
-          Copy-Item build/service/Release/VoxBridgeMic.exe apps/desktop/service-bin/
+          $exe = Get-ChildItem build/service/Release -Filter 'VoxBridgeMic.exe' -Recurse | Select-Object -First 1
+          if (-not $exe) { "::error::VoxBridgeMic.exe was not produced"; exit 1 }
+          Copy-Item $exe.FullName apps/desktop/service-bin/
           Copy-Item build/service/Release/voxbridge_coretest.exe apps/desktop/service-bin/
           Get-Item apps/desktop/service-bin/VoxBridgeMic.exe | Select-Object Name, Length
 
       - name: Install desktop dependencies
         working-directory: apps/desktop
         run: npm ci
+
+      - name: Lint main and renderer
+        working-directory: apps/desktop
+        run: npm run lint
 
       - name: Build installer and portable build
         working-directory: apps/desktop
@@ -56,6 +89,7 @@ jobs:
 
       - name: Checksums
         working-directory: release
+        shell: pwsh
         run: |
           Get-ChildItem -Filter *.exe | ForEach-Object {
             $h = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower()

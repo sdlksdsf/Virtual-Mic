@@ -33,6 +33,34 @@ function check(file) {
   }
 }
 
+function checkSite() {
+  const site = path.join(root, 'apps', 'web');
+  if (!fs.existsSync(site)) return;
+  const pages = fs.readdirSync(site).filter((name) => name.endsWith('.html'));
+  for (const name of pages) {
+    const file = path.join(site, name);
+    const html = fs.readFileSync(file, 'utf8');
+    const refs = [...html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)].map((m) => m[1]);
+    for (const ref of new Set(refs)) {
+      if (ref === '/' || /\.(html|xml|txt)$/.test(ref)) {
+        const local = path.join(site, ref === '/' ? 'index.html' : ref);
+        if (!fs.existsSync(local)) {
+          failures += 1;
+          console.error(`missing page: ${name} -> ${ref}`);
+        }
+        continue;
+      }
+      const local = path.join(site, decodeURIComponent(ref));
+      if (!fs.existsSync(local)) {
+        failures += 1;
+        console.error(`missing asset: ${name} -> ${ref}`);
+      }
+    }
+  }
+  console.log(`checked ${pages.length} website pages`);
+}
+
 walk(root);
+checkSite();
 console.log(`checked ${files} javascript files, ${failures} failure(s)`);
 process.exit(failures ? 1 : 0);

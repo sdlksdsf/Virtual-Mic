@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Support — VoxBridge</title>
+    <meta name="description" content="Get help with VoxBridge: setup checks, logs, contact form and security reporting." />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/css/site.css" />
+    <script src="/assets/js/config.js" defer></script>
+    <script src="/assets/js/icons.js" defer></script>
+    <script src="/assets/js/site.js" defer></script>
+      <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label="VoxBridge home">
+          <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="/features.html">Features</a>
+          <a href="/download.html">Download</a>
+          <a href="/setup.html">Setup</a>
+          <a href="/security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="/download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="/">VoxBridge</a> / Support</p>
+          <h1>Help, <em>from a human.</em></h1>
+          <p>Most problems are a virtual cable that is not installed, a firewall prompt that was dismissed, or a phone on a different network. Start there.</p>
+        </div>
+      </section>
+      <section class="prose wrap-narrow">
+        <p class="meta">VoxBridge 1.0.0 · replies usually within two working days</p>
+
+        <p class="lead">
+          VoxBridge is maintained by a small group of contributors. There is no call centre and no ticket robot. The
+          checklist below resolves most cases in under a minute; if it does not, the form reaches a person.
+        </p>
+
+        <h2>Before you write</h2>
+        <ol>
+          <li><strong>Is a virtual cable installed?</strong> Windows needs one before any app can select VoxBridge. Follow <a href="/setup.html#windows">step 2 of the setup guide</a> and reboot after installing it.</li>
+          <li><strong>Did Windows Firewall ask?</strong> The first launch prompts for network access. Allow it on private networks. If you dismissed the prompt, open Windows Security → Firewall → Allow an app and enable VoxBridge.</li>
+          <li><strong>Are both devices on the same network?</strong> Guest Wi-Fi and VLANs often block device-to-device traffic. Try USB tethering: enable it on the phone, then connect to the PC's new network adapter.</li>
+          <li><strong>Did pairing fail?</strong> The code changes each time the desktop pairing window opens. Enter the code shown right now, not the one from yesterday.</li>
+          <li><strong>Is the meter moving on the phone?</strong> If the phone meter is flat, the issue is the microphone permission, not the network.</li>
+        </ol>
+
+        <h2>Diagnostics we may ask for</h2>
+        <ul>
+          <li><strong>Windows:</strong> VoxBridge → Settings → Diagnostics → "Copy report". It includes the app version, selected device, sample rate and the last 200 log lines. It never includes audio.</li>
+          <li><strong>Android:</strong> Settings → Diagnostics → "Share log", or <code>adb logcat -s VoxBridge</code> if you have a cable and platform tools.</li>
+          <li><strong>iOS:</strong> Settings → Diagnostics → "Export log" produces a text file through the share sheet.</li>
+        </ul>
+
+        <h2>Send a message</h2>
+        <form class="support-form" data-feedback>
+          <div class="field-row">
+            <label>Email <span>(optional, so we can reply)</span>
+              <input type="email" name="email" autocomplete="email" placeholder="you@example.com" />
+            </label>
+            <label>Topic
+              <select name="topic">
+                <option value="setup">Setup or connection</option>
+                <option value="bug">Bug report</option>
+                <option value="feature">Feature request</option>
+                <option value="security">Security</option>
+                <option value="privacy">Privacy</option>
+                <option value="general">Something else</option>
+              </select>
+            </label>
+          </div>
+          <label>Message
+            <textarea name="message" rows="6" required minlength="5" placeholder="What were you doing, what happened, and what did you expect?"></textarea>
+          </label>
+          <div class="form-actions">
+            <button class="btn primary" type="submit">Send message</button>
+            <span class="small-note" data-feedback-status aria-live="polite">Goes to the project inbox, not a CRM.</span>
+          </div>
+        </form>
+
+        <h2>Direct email</h2>
+        <p>
+          Setup and general: <a href="mailto:hello@voxbridge.app">hello@voxbridge.app</a><br />
+          Privacy: <a href="mailto:privacy@voxbridge.app">privacy@voxbridge.app</a><br />
+          Security: <a href="mailto:security@voxbridge.app">security@voxbridge.app</a> — please read the
+          <a href="/security.html">security model</a> first and do not file public issues for exploitable bugs.
+        </p>
+
+        <h2>Bugs and feature requests</h2>
+        <p>
+          Public issues are welcome at
+          <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">github.com/sdlksdsf/Virtual-Mic/issues</a>.
+          A good report includes the operating system version, the phone model, the connection mode (Wi-Fi, USB or
+          Bluetooth), and the exact text of any error. Screenshots of the diagnostics panel help more than you would
+          expect.
+        </p>
+
+        <h2>Business and licensing</h2>
+        <p>
+          VoxBridge itself is MIT licensed and free for commercial use. If you bundle it into a product or need a
+          signed enterprise build, write to <a href="mailto:hello@voxbridge.app">hello@voxbridge.app</a> with
+          "commercial" in the subject. VB-CABLE has separate commercial terms from VB-Audio.
+        </p>
+
+        <h2>Response times</h2>
+        <p>
+          Security reports: acknowledged within 72 hours. Everything else: usually two working days, longer around
+          release weeks. If a message needs an answer you can act on, say so in the first line.
+        </p>
+      </section>
+    </main>
+
+<footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="/">
+              <img src="/assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="/features.html">Features</a>
+            <a href="/download.html">Download</a>
+            <a href="/setup.html">Setup guide</a>
+            <a href="/download.html#changelog">Changelog</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="/privacy.html">Privacy policy</a>
+            <a href="/terms.html">Terms of use</a>
+            <a href="/security.html">Security</a>
+            <a href="/licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="/support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
