@@ -209,7 +209,7 @@
       const key = link.dataset.download;
       const target = DOWNLOADS[key];
       if (!target) return;
-      let url = `downloads/${target.file}`;
+      let url = `https://github.com/${REPO}/releases/latest/download/${target.file}`;
       let size = target.size;
       let available = null;
       if (release && release.assets) {
