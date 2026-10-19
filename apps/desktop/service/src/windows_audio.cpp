@@ -15,11 +15,6 @@
 
 #include <audioclient.h>
 #include <mmdeviceapi.h>
-#ifndef _MSC_VER
-// The Windows SDK's mmdeviceapi.h already defines the device property keys
-// when building with MSVC; including the header again triggers C2374.
-#include <functiondiscoverykeys_devpkey.h>
-#endif
 #include <softpub.h>
 #include <wintrust.h>
 
@@ -31,6 +26,13 @@ using Microsoft::WRL::ComPtr;
 
 namespace vbwin {
 namespace {
+
+// {a45c254e-df1c-4efd-8020-67d146a850e0}, 14 — the friendly-name property.
+// Declared locally so the same source builds with MSVC and mingw-w64, whose
+// <functiondiscoverykeys_devpkey.h> guards differ.
+constexpr PROPERTYKEY kDeviceFriendlyName = {
+    {0xa45c254e, 0xdf1c, 0x4efd, {0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0}},
+    14};
 
 std::string narrow(const wchar_t* value) {
   if (!value) return {};
@@ -64,7 +66,7 @@ std::string friendlyName(IMMDevice* device) {
   PROPVARIANT value;
   PropVariantInit(&value);
   std::string name;
-  if (SUCCEEDED(props->GetValue(PKEY_Device_FriendlyName, &value)) && value.vt == VT_LPWSTR) {
+  if (SUCCEEDED(props->GetValue(kDeviceFriendlyName, &value)) && value.vt == VT_LPWSTR) {
     name = narrow(value.pwszVal);
   }
   PropVariantClear(&value);
