@@ -111,8 +111,9 @@ jobs:
           {
             echo "### iOS build failure (run ${{ github.run_id }})"
             echo '```'
-            tail -n 80 apps/ios/generate.log 2>/dev/null
-            tail -n 120 apps/ios/build.log 2>/dev/null
+            grep -E "error:|warning:" apps/ios/build.log 2>/dev/null | head -60
+            echo '--- tail ---'
+            tail -n 40 apps/ios/build.log 2>/dev/null
             echo '```'
           } > /tmp/report.md
           gh issue comment "$n" --body-file /tmp/report.md

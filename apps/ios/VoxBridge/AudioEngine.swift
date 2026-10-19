@@ -284,14 +284,16 @@ final class SpectralGate {
     private var warmup = 0
 
     init(strength: Double) {
+        let points = 512
+        let lg = vDSP_Length(log2(Double(points)))
         self.strength = Float(strength)
-        self.log2n = vDSP_Length(log2(Double(n)))
-        self.setup = vDSP_create_fftsetup(log2n, FFTRadix(kFFTRadix2))!
-        self.window = (0..<n).map { 0.5 - 0.5 * cos(2 * .pi * Float($0) / Float(n)) }
-        self.noise = [Float](repeating: 0, count: n / 2)
-        self.gain = [Float](repeating: 1, count: n / 2)
-        self.frame = [Float](repeating: 0, count: n)
-        self.overlap = [Float](repeating: 0, count: n)
+        self.log2n = lg
+        self.setup = vDSP_create_fftsetup(lg, FFTRadix(kFFTRadix2))!
+        self.window = (0..<points).map { 0.5 - 0.5 * cos(2 * .pi * Float($0) / Float(points)) }
+        self.noise = [Float](repeating: 0, count: points / 2)
+        self.gain = [Float](repeating: 1, count: points / 2)
+        self.frame = [Float](repeating: 0, count: points)
+        self.overlap = [Float](repeating: 0, count: points)
     }
 
     deinit { vDSP_destroy_fftsetup(setup) }
@@ -317,9 +319,13 @@ final class SpectralGate {
         for i in 0..<n { frame[i] *= window[i] }
         frame.withUnsafeBufferPointer { pointer in
             pointer.baseAddress!.withMemoryRebound(to: DSPComplex.self, capacity: n / 2) { complex in
-                var split = DSPSplitComplex(realp: &re, imagp: &im)
-                vDSP_ctoz(complex, 2, &split, 1, vDSP_Length(n / 2))
-                vDSP_fft_zrip(setup, &split, 1, log2n, FFTDirection(FFT_FORWARD))
+                re.withUnsafeMutableBufferPointer { realBuffer in
+                    im.withUnsafeMutableBufferPointer { imagBuffer in
+                        var split = DSPSplitComplex(realp: realBuffer.baseAddress!, imagp: imagBuffer.baseAddress!)
+                        vDSP_ctoz(complex, 2, &split, 1, vDSP_Length(n / 2))
+                        vDSP_fft_zrip(setup, &split, 1, log2n, FFTDirection(FFT_FORWARD))
+                    }
+                }
             }
         }
         var magnitudes = [Float](repeating: 0, count: n / 2)

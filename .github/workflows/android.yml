@@ -103,7 +103,9 @@ jobs:
           {
             echo "### Android build failure (run ${{ github.run_id }})"
             echo '```'
-            tail -n 160 apps/android/gradle.log 2>/dev/null
+            grep -aE "^(e:|w: .*error)|^FAILURE:|^> Task .*FAILED|error:|ERROR:|Caused by:|What went wrong" apps/android/gradle.log 2>/dev/null | head -80
+            echo '--- tail ---'
+            tail -n 30 apps/android/gradle.log 2>/dev/null
             echo '```'
           } > /tmp/report.md
           gh issue comment "$n" --body-file /tmp/report.md
