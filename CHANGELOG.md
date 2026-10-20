@@ -2,10 +2,12 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
-## [1.0.1] — 2026-10-20
+## [1.0.0 rebuild] — 2026-10-20
 
-Audio, pairing and clarity fixes on top of 1.0.0. The release assets for 1.0.0
-were rebuilt from this commit, so a fresh download already contains all of it.
+Audio, pairing and clarity fixes on top of the 1.0.0 tag. The release assets
+were rebuilt from this commit, so a fresh download of 1.0.0 already contains
+all of it. The protocol and file layout are unchanged, which is why the
+version number stays put.
 
 ### Audio
 - Rebuilt the voice chain: the denoiser now uses a smoothed periodogram with
