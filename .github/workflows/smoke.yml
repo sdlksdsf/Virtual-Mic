@@ -1,5 +1,7 @@
 name: Release smoke test
 
+# Runs after every platform build, and on any push that touches this file.
+# It checks production, so give Vercel a minute before reading a failure as a bug.
 on:
   push:
     branches: [main, 'arena/**']
