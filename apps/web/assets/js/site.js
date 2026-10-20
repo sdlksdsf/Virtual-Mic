@@ -296,6 +296,29 @@
   // Anonymous page counting ---------------------------------------------------
   // One row per page load: path, referring site and campaign tag only. No cookie,
   // no identifier, no IP address — the same privacy stance as the download counter.
+  // `view_id` is random per page load and exists only so a duplicated beacon
+  // (browser retry, double-mounted frame) collapses instead of inflating counts.
+  function viewId() {
+    if (window.__voxbridgeViewId) return window.__voxbridgeViewId;
+    let id = '';
+    try {
+      if (window.crypto?.randomUUID) {
+        id = window.crypto.randomUUID();
+      } else {
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+        id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+      }
+    } catch {
+      id = '';
+    }
+    if (id) window.__voxbridgeViewId = id;
+    return id;
+  }
+
   function trackPageview() {
     const endpoint = window.VOXBRIDGE_CONFIG?.supabaseUrl;
     const key = window.VOXBRIDGE_CONFIG?.supabaseAnonKey;
@@ -318,6 +341,7 @@
       campaign = '';
     }
     const payload = {
+      view_id: viewId() || null,
       path: (window.location.pathname || '/').slice(0, 160),
       referrer: referrer.slice(0, 160),
       campaign,
