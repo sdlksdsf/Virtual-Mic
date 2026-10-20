@@ -83,9 +83,81 @@ std::string endpointId(IMMDevice* device) {
   return out;
 }
 
+// Normalise a device name for comparison: lowercase, alphanumerics only, so
+// "CABLE Input (VB-Audio Virtual Cable)" and "cable input  vb audio virtual
+// cable" compare equal even across locales and driver versions.
+std::string normalise(const std::string& value) {
+  std::string out;
+  out.reserve(value.size());
+  for (unsigned char c : value) {
+    if (std::isalnum(c)) out.push_back(static_cast<char>(std::tolower(c)));
+  }
+  return out;
+}
+
+// Score how well a device name matches the requested text. Exact normalised
+// equality wins, then substring, then token overlap. This replaces a brittle
+// substring test that silently routed audio to the speakers whenever VB-CABLE
+// registered under a slightly different display name.
+int matchScore(IMMDevice* device, const std::string& requested) {
+  const std::string name = friendlyName(device);
+  if (name.empty() || requested.empty()) return 0;
+  const std::string n = normalise(name);
+  const std::string r = normalise(requested);
+  if (n.empty() || r.empty()) return 0;
+  if (n == r) return 1000;
+  if (n.find(r) != std::string::npos) return 700 + static_cast<int>(r.size());
+  if (r.find(n) != std::string::npos) return 600 + static_cast<int>(n.size());
+
+  // Token overlap on whole words, which tolerates "(VB-Audio Virtual Cable)"
+  // being appended or a trailing driver suffix being dropped.
+  const std::string rl = lower(requested);
+  const std::string nl = lower(name);
+  int hits = 0;
+  std::size_t start = 0;
+  while (start < rl.size()) {
+    std::size_t end = rl.find_first_not_of(" ()[]-_/\\,", start);
+    if (end == std::string::npos) break;
+    std::size_t stop = rl.find_first_of(" ()[]-_/\\,", end);
+    const std::string token = rl.substr(end, stop == std::string::npos ? std::string::npos
+                                                                     : stop - end);
+    if (token.size() >= 3 && nl.find(token) != std::string::npos) hits += 1;
+    if (stop == std::string::npos) break;
+    start = stop;
+  }
+  return hits > 0 ? 100 * hits : 0;
+}
+
+// {870af99c-171d-4f9e-af0d-e63df40c2bc9}
+constexpr CLSID kPolicyConfigClient = {
+    0x870af99c, 0x171d, 0x4f9e, {0xaf, 0x0d, 0xe6, 0x3d, 0xf4, 0x0c, 0x2b, 0xc9}};
+// {f8679f50-850a-40c9-928d-4c22d0b8e09c}
+constexpr IID kIPolicyConfig = {
+    0xf8679f50, 0x850a, 0x40c9, {0x92, 0x8d, 0x4c, 0x22, 0xd0, 0xb8, 0xe0, 0x9c}};
+
+// Undocumented but stable since Windows 7 and still present on Windows 11:
+// IPolicyConfig::SetDefaultEndpoint is the only way to change the default
+// audio device without an interactive Settings trip.
+struct IPolicyConfig : public IUnknown {
+  // Declared pure so the compiler never emits a stub for a slot it cannot
+  // define. We only ever hold a pointer to the real COM implementation, whose
+  // vtable has these methods at exactly these offsets.
+  virtual HRESULT STDMETHODCALLTYPE GetMixFormat(PCWSTR, void**) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceFormat(PCWSTR, INT, void**) = 0;
+  virtual HRESULT STDMETHODCALLTYPE ResetDeviceFormat(PCWSTR) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetDeviceFormat(PCWSTR, void*, void*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetProcessingPeriod(PCWSTR, INT, void*, void*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetProcessingPeriod(PCWSTR, void*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetShareMode(PCWSTR, void*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetShareMode(PCWSTR, void*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetPropertyValue(PCWSTR, const PROPERTYKEY&, PROPVARIANT*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetPropertyValue(PCWSTR, const PROPERTYKEY&, PROPVARIANT*) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetDefaultEndpoint(PCWSTR deviceId, int role) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetEndpointVisibility(PCWSTR deviceId, INT visible) = 0;
+};
+
 bool containsMatch(IMMDevice* device, const std::string& matchLower) {
-  const std::string name = lower(friendlyName(device));
-  return !name.empty() && name.find(matchLower) != std::string::npos;
+  return matchScore(device, matchLower) > 0;
 }
 
 std::vector<Device> collect(bool capture, IMMDevice* defaultDevice) {
@@ -131,6 +203,50 @@ std::vector<Device> listDevices(bool capture) {
   ComPtr<IMMDevice> def;
   enumerator->GetDefaultAudioEndpoint(capture ? eCapture : eRender, eConsole, &def);
   return collect(capture, def.Get());
+}
+
+std::string defaultCaptureId() {
+  ComPtr<IMMDeviceEnumerator> enumerator;
+  if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                              IID_PPV_ARGS(&enumerator)))) {
+    return {};
+  }
+  ComPtr<IMMDevice> device;
+  if (FAILED(enumerator->GetDefaultAudioEndpoint(eCapture, eConsole, &device))) return {};
+  return endpointId(device.Get());
+}
+
+bool setDefaultCapture(const std::string& deviceId) {
+  if (deviceId.empty()) return false;
+  ComPtr<IPolicyConfig> policy;
+  if (FAILED(CoCreateInstance(kPolicyConfigClient, nullptr, CLSCTX_ALL, kIPolicyConfig,
+                              reinterpret_cast<void**>(policy.GetAddressOf())))) {
+    return false;
+  }
+  const std::wstring id = widen(deviceId);
+  if (id.empty()) return false;
+  // eConsole, eMultimedia and eCommunications are the three roles Windows
+  // keeps separate; Discord and Chrome read the console/multimedia role while
+  // VoIP apps read the communications role, so set all of them.
+  HRESULT first = S_OK;
+  for (int role = 0; role <= 2; ++role) {
+    const HRESULT hr = policy->SetDefaultEndpoint(id.c_str(), role);
+    if (role == 0) first = hr;
+  }
+  return SUCCEEDED(first);
+}
+
+bool isVirtualCaptureName(const std::string& name) {
+  const std::string n = normalise(name);
+  if (n.empty()) return false;
+  static const char* const kMarkers[] = {
+      "cableoutput", "vboutput", "voicemeeter", "virtualaudiocable",
+      "virtualcable", "vac", "virtualmic", "stereo mix", "stereomix",
+  };
+  for (const char* marker : kMarkers) {
+    if (n.find(marker) != std::string::npos) return true;
+  }
+  return false;
 }
 
 bool verifySignature(const std::wstring& path, std::string* detail) {
@@ -221,10 +337,13 @@ bool Renderer::open(const std::string& deviceMatch, std::uint32_t sampleRate, in
                                                         &collection))) {
       UINT count = 0;
       collection->GetCount(&count);
-      for (UINT i = 0; i < count && !chosen; ++i) {
+      int bestScore = 0;
+      for (UINT i = 0; i < count; ++i) {
         ComPtr<IMMDevice> candidate;
         if (FAILED(collection->Item(i, &candidate))) continue;
-        if (containsMatch(candidate.Get(), match)) {
+        const int score = matchScore(candidate.Get(), match);
+        if (score > bestScore) {
+          bestScore = score;
           chosen = candidate;
           deviceName_ = friendlyName(candidate.Get());
         }

@@ -17,7 +17,7 @@ import kotlin.math.sqrt
  * state except the output arrays, which are pooled at the call site.
  */
 class Dsp(
-    sampleRate: Int,
+    private val sampleRate: Int,
     denoise: Int,
     private val gateOn: Boolean,
     private val agcOn: Boolean,
@@ -26,20 +26,40 @@ class Dsp(
 ) {
     private val denoiser = if (denoise > 0) Denoiser(denoise / 4.0) else null
 
-    private val highpass = Biquad.highpass(sampleRate.toDouble(), 78.0, 0.707)
+    private val highpass = Biquad.highpass(sampleRate.toDouble(), 80.0, 0.707)
     private val presence = Biquad.peaking(sampleRate.toDouble(), 3150.0, 0.9, 3.0)
     private val warmth = Biquad.lowshelf(sampleRate.toDouble(), 210.0, 2.5)
 
     private var inputGain = 10.0.pow(gainDb.coerceIn(-12, 24) / 20.0).toFloat()
 
     private var envelope = 0f
-    private var holdCounter = 0
+    private var holdSamples = 0
     private var gateGain = 1f
+    private var gateTarget = 1f
     private var agcGain = 1f
     private var agcEnv = 0f
     private var compEnv = 0f
+    private var compGain = 1f
     private var limitGain = 1f
     private var scratch = FloatArray(0)
+
+    private var need = FloatArray(0)
+    private var lookMin = FloatArray(0)
+    private var dq = IntArray(0)
+
+    private val dt = 1.0 / sampleRate
+    private val envAttack = (1.0 - Math.exp(-dt / 0.002)).toFloat()
+    private val envRelease = (1.0 - Math.exp(-dt / 0.180)).toFloat()
+    private val agcAttack = (1.0 - Math.exp(-dt / 0.030)).toFloat()
+    private val agcRelease = (1.0 - Math.exp(-dt / 0.400)).toFloat()
+    private val gateAttack = (1.0 - Math.exp(-dt / 0.005)).toFloat()
+    private val gateRelease = (1.0 - Math.exp(-dt / 0.150)).toFloat()
+    private val compAttack = (1.0 - Math.exp(-dt / 0.003)).toFloat()
+    private val compRelease = (1.0 - Math.exp(-dt / 0.120)).toFloat()
+    private val limitRelease = (1.0 - Math.exp(-dt / 0.120)).toFloat()
+    private val agcGlide = (1.0 - Math.exp(-dt / 0.600)).toFloat()
+    private val lookahead = maxOf(8, sampleRate / 1000)
+    private val holdFrames = (0.120 * sampleRate).toInt()
 
     fun setGainDb(db: Int) {
         inputGain = 10.0.pow(db.coerceIn(-12, 24) / 20.0).toFloat()
@@ -51,7 +71,10 @@ class Dsp(
         val floats = scratch
         for (i in 0 until length) floats[i] = buffer[i] / 32768f
 
-        if (denoiser != null) denoiser.process(floats, length)
+        denoiser?.process(floats, length)
+
+        val gateOpen = 0.0063f   // -44 dBFS
+        val gateClose = 0.0032f  // -50 dBFS
 
         for (i in 0 until length) {
             var x = floats[i]
@@ -59,106 +82,163 @@ class Dsp(
             x = presence.process(x)
             x = warmth.process(x)
 
-            if (gateOn) {
-                val a = abs(x)
-                envelope = if (a > envelope) {
-                    envelope + (a - envelope) * 0.004f
-                } else {
-                    envelope * 0.9991f
-                }
-                if (envelope > 0.0032f) holdCounter = 8
-                else if (holdCounter > 0) holdCounter -= 1
-                val target = if (envelope > 0.0032f || holdCounter > 0) 1f else 0.0006f
-                gateGain += (target - gateGain) * (if (target > gateGain) 0.02f else 0.0015f)
-                x *= gateGain
-            }
+            val raw = abs(x)
 
+            // Auto gain rides the level slowly and freezes during silence, so
+            // it cannot wind up and amplify the room between phrases.
             if (agcOn) {
-                agcEnv += (abs(x) - agcEnv) * 0.0006f
-                if (agcEnv > 0.002f) {
-                    val currentDb = 20.0 * log10((agcEnv + 1e-9).toDouble())
-                    val desired = (-19.0 - currentDb).coerceIn(-3.0, 18.0)
-                    val currentGainDb = 20.0 * log10((agcGain + 1e-9).toDouble())
-                    val step = ((desired - currentGainDb) * 0.35).coerceIn(-0.6, 0.6)
-                    agcGain = (agcGain * 10.0.pow(step / 20.0)).toFloat().coerceIn(0.35f, 8f)
+                if (raw > gateOpen) {
+                    agcEnv += (raw - agcEnv) * (if (raw > agcEnv) agcAttack else agcRelease)
+                }
+                if (agcEnv > 0.0016f) {
+                    val currentDb = 20.0 * log10((agcEnv + 1e-9f).toDouble())
+                    val targetGain = 10.0.pow(((-20.0 - currentDb) / 20.0).coerceIn(-6.0, 12.0))
+                        .toFloat().coerceIn(0.5f, 4f)
+                    agcGain += (targetGain - agcGain) * agcGlide
                 }
                 x *= agcGain
             }
 
-            compEnv = if (abs(x) > compEnv) {
-                compEnv + (abs(x) - compEnv) * 0.06f
-            } else {
-                compEnv * 0.9992f
-            }
-            if (compEnv > 0.125f) {
-                val over = 20.0 * log10((compEnv / 0.125f).toDouble())
-                x *= 10.0.pow((-over * 0.66) / 20.0).toFloat()
+            // Hysteresis gate with a hold and a slow release. The previous gate
+            // released in milliseconds and chattered on every consonant.
+            if (gateOn) {
+                envelope += (raw - envelope) * (if (raw > envelope) envAttack else envRelease)
+                if (envelope > gateOpen) {
+                    holdSamples = holdFrames
+                    gateTarget = 1f
+                } else if (envelope < gateClose) {
+                    if (holdSamples > 0) holdSamples -= 1 else gateTarget = 0.0005f
+                }
+                gateGain += (gateTarget - gateGain) *
+                    (if (gateTarget > gateGain) gateAttack else gateRelease)
+                x *= gateGain
             }
 
+            // User gain before the compressor, so a hot signal is compressed
+            // with a 3:1 ratio instead of being crushed by the limiter.
             x *= inputGain
 
-            if (limiterOn) {
-                val ceiling = 0.891f
-                val a = abs(x)
-                val target = if (a > ceiling) ceiling / a else 1f
-                limitGain = if (target < limitGain) target else limitGain + (1f - limitGain) * 0.0009f
-                x *= limitGain
+            val level = abs(x)
+            compEnv += (level - compEnv) * (if (level > compEnv) compAttack else compRelease)
+            val levelDb = 20.0 * log10((compEnv + 1e-9f).toDouble())
+            val threshold = -14.0
+            val knee = 6.0
+            var reduction = 0.0
+            if (levelDb > threshold + knee) {
+                reduction = (levelDb - threshold) * (1.0 - 1.0 / 3.0)
+            } else if (levelDb > threshold - knee) {
+                val t = (levelDb - (threshold - knee)) / (2 * knee)
+                reduction = t * t * knee * (1.0 - 1.0 / 3.0)
             }
+            val targetComp = 10.0.pow(-reduction / 20.0).toFloat()
+            compGain += (targetComp - compGain) *
+                (if (targetComp < compGain) compAttack else compRelease)
+            x *= compGain
 
-            val clamped = x.coerceIn(-0.999f, 0.999f)
-            buffer[i] = (clamped * 32767f).toInt().coerceIn(-32768, 32767).toShort()
+            floats[i] = x
         }
+
+        if (limiterOn) applyLimiter(floats, length)
+
+        for (i in 0 until length) {
+            val clamped = floats[i].coerceIn(-0.999f, 0.999f)
+            buffer[i] = (clamped * 32767f).toInt().toShort()
+        }
+    }
+
+    /**
+     * Lookahead limiter. Each sample's required attenuation is computed from a
+     * one-millisecond window reaching *forward* in time, so a transient is
+     * already attenuated when it arrives instead of being clamped after the
+     * fact. Release is 120 ms, slow enough to avoid pumping.
+     */
+    private fun applyLimiter(block: FloatArray, length: Int) {
+        if (need.size < length) {
+            need = FloatArray(length)
+            lookMin = FloatArray(length)
+            dq = IntArray(length)
+        }
+        val ceiling = 0.891f
+        for (i in 0 until length) {
+            val a = abs(block[i])
+            need[i] = if (a > ceiling) ceiling / a else 1f
+        }
+        // Sliding minimum over [i, i + lookahead], scanned right to left.
+        var head = 0
+        var tail = 0
+        var i = length - 1
+        while (i >= 0) {
+            while (tail > head && need[dq[tail - 1]] >= need[i]) tail -= 1
+            dq[tail] = i
+            tail += 1
+            while (dq[head] > i + lookahead) head += 1
+            lookMin[i] = need[dq[head]]
+            i -= 1
+        }
+        var g = limitGain
+        for (k in 0 until length) {
+            val target = lookMin[k]
+            g = if (target < g) target else g + (target - g) * limitRelease
+            block[k] *= g
+        }
+        limitGain = g
     }
 }
 
 /**
- * Spectral subtraction with a learned noise floor. Adds exactly [HOP] samples of
- * latency, which is accounted for by the streaming FIFO inside [process].
+ * Spectral denoiser with decision-directed a priori SNR estimation
+ * (Ephraim-Malah style). Keeps consonants intact and produces far less musical
+ * noise than plain spectral subtraction.
+ *
+ * Overlap-add uses a square-root Hann window for analysis and synthesis. The
+ * product is a Hann window, which sums to exactly 1.0 at 50% overlap; using
+ * Hann twice would modulate the output at the frame rate and sound buzzy.
+ *
+ * Adds exactly [HOP] samples of latency, accounted for by the streaming FIFO.
  */
 class Denoiser(private val strength: Double) {
     private val fft = Fft(FFT_SIZE)
     private val window = FloatArray(FFT_SIZE) { i ->
-        (0.5 - 0.5 * cos(2.0 * Math.PI * i / FFT_SIZE)).toFloat()
+        sqrt(0.5 - 0.5 * cos(2.0 * Math.PI * i / FFT_SIZE)).toFloat()
     }
     private val frame = FloatArray(FFT_SIZE)
     private val overlap = FloatArray(FFT_SIZE)
-    private val noise = FloatArray(BINS)
-    private val gain = FloatArray(BINS) { 1f }
+    private val power = FloatArray(BINS)
+    private val minCur = FloatArray(BINS)
+    private val minPrev = FloatArray(BINS)
+    private val smooth = FloatArray(BINS)
+    private val prevGain = FloatArray(BINS) { 1f }
+    private val prevGamma = FloatArray(BINS) { 1f }
     private val pending = FloatArray(HOP)
     private var pendingFill = 0
     private var warmup = 0
-    private val fifo = ArrayList<FloatArray>()
+    private var windowCount = 0
+    private var seeded = false
+    private val fifo = ArrayDeque<FloatArray>()
     private var fifoOffset = 0
-    private var fifoCount = 0
 
     fun process(samples: FloatArray, length: Int) {
-        var consumed = 0
-        while (consumed < length) {
-            val take = min(HOP - pendingFill, length - consumed)
-            System.arraycopy(samples, consumed, pending, pendingFill, take)
+        var read = 0
+        while (read < length) {
+            val take = minOf(HOP - pendingFill, length - read)
+            System.arraycopy(samples, read, pending, pendingFill, take)
             pendingFill += take
-            consumed += take
-            if (pendingFill == HOP) {
+            read += take
+            if (pendingFill >= HOP) {
                 pendingFill = 0
-                val hop = renderHop()
-                fifo.add(hop)
-                fifoCount += hop.size
+                fifo.addLast(renderHop())
             }
         }
-
-        // Emit the same number of samples we received. The initial latency of
-        // one hop arrives with the next call; the worklet behaves the same.
         var written = 0
         while (written < length && fifo.isNotEmpty()) {
-            val head = fifo[0]
+            val head = fifo.first()
             val avail = head.size - fifoOffset
-            val take = min(avail, length - written)
+            val take = minOf(avail, length - written)
             System.arraycopy(head, fifoOffset, samples, written, take)
             written += take
             fifoOffset += take
-            fifoCount -= take
             if (fifoOffset >= head.size) {
-                fifo.removeAt(0)
+                fifo.removeFirst()
                 fifoOffset = 0
             }
         }
@@ -180,22 +260,63 @@ class Denoiser(private val strength: Double) {
         }
         fft.forward()
 
-        for (i in 0 until BINS) {
-            val mag = sqrt(re[i] * re[i] + im[i] * im[i])
-            if (warmup < 18) {
-                noise[i] = maxOf(noise[i] * 0.92f, mag * 0.82f)
-                gain[i] = 1f
-            } else {
-                if (mag < noise[i]) noise[i] = noise[i] * 0.9f + mag * 0.1f
-                else noise[i] = noise[i] * 0.9995f + mag * 0.0005f
-                var g = if (mag > 1e-7f) ((mag - strength.toFloat() * noise[i] * 1.45f) / mag) else 0f
-                g = g.coerceIn(0f, 1f)
-                val floor = (1.0 - 0.9 * strength).toFloat()
-                if (g < floor) g = floor
-                gain[i] = gain[i] * 0.5f + g * 0.5f
+        val floorGain = (0.5 - 0.44 * strength).toFloat()
+        val alphaDD = 0.92f
+        val seeding = warmup < 30
+
+        windowCount += 1
+        if (windowCount >= 240) {
+            windowCount = 0
+            for (i in 0 until BINS) {
+                minPrev[i] = minCur[i]
+                minCur[i] = Float.MAX_VALUE
             }
-            re[i] *= gain[i]
-            im[i] *= gain[i]
+        }
+
+        for (i in 0 until BINS) {
+            val raw = re[i] * re[i] + im[i] * im[i]
+            // Smooth the periodogram: raw FFT power has variance as large as
+            // its mean, so a minimum taken directly on it collapses far below
+            // the true noise floor and the suppressor stops working.
+            power[i] += (raw - power[i]) * 0.25f
+            val ps = power[i]
+
+            if (!seeded) {
+                minCur[i] = ps
+                minPrev[i] = ps
+            } else if (ps < minCur[i]) {
+                minCur[i] = ps
+            }
+            val floorPower = minOf(minCur[i], minPrev[i]) * 1.6f + 1e-12f
+
+            if (seeding) {
+                smooth[i] = 1f
+                prevGain[i] = 1f
+                prevGamma[i] = 1f
+                continue
+            }
+
+            val gamma = ps / floorPower
+            val xi = alphaDD * (prevGain[i] * prevGain[i]) * prevGamma[i] +
+                (1f - alphaDD) * maxOf(gamma - 1f, 0f)
+            var g = xi / (1f + xi)
+            if (g < floorGain) g = floorGain
+            if (g > 1f) g = 1f
+            smooth[i] = g
+            prevGamma[i] = gamma
+            prevGain[i] = g
+        }
+        if (!seeded) seeded = true
+
+        for (i in 0 until BINS) {
+            // Three-tap smoothing across neighbouring bins removes the isolated
+            // "musical noise" spikes that make denoised speech sound metallic.
+            var g = smooth[i]
+            if (!seeding && i > 0 && i < BINS - 1) {
+                g = 0.25f * smooth[i - 1] + 0.5f * smooth[i] + 0.25f * smooth[i + 1]
+            }
+            re[i] *= g
+            im[i] *= g
         }
         for (i in 1 until BINS - 1) {
             re[FFT_SIZE - i] = re[i]
@@ -203,7 +324,9 @@ class Denoiser(private val strength: Double) {
         }
         fft.inverse()
 
-        for (i in 0 until FFT_SIZE) overlap[i] += re[i] * window[i] / 1.5f
+        // sqrt-Hann analysis x sqrt-Hann synthesis = Hann, exactly unity-sum at
+        // 50% overlap, so no normalisation gain is applied.
+        for (i in 0 until FFT_SIZE) overlap[i] += re[i] * window[i]
         val hop = FloatArray(HOP)
         System.arraycopy(overlap, 0, hop, 0, HOP)
         overlap.copyInto(overlap, 0, HOP, FFT_SIZE)

@@ -22,6 +22,18 @@ std::string utf8(const std::wstring& value);
 std::vector<Device> listDevices(bool capture);
 bool verifySignature(const std::wstring& path, std::string* detail);
 
+// Returns the endpoint id of the current default capture device, or an empty
+// string when Windows cannot report one.
+std::string defaultCaptureId();
+
+// Makes the given capture endpoint the system default so that Discord, Chrome,
+// Teams and every other app pick it up without being configured by hand.
+bool setDefaultCapture(const std::string& deviceId);
+
+// True when the friendly name looks like a virtual cable that apps can record
+// from (VB-CABLE, VoiceMeeter, Virtual Audio Cable).
+bool isVirtualCaptureName(const std::string& name);
+
 class Renderer {
  public:
   Renderer();

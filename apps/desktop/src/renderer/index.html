@@ -262,6 +262,15 @@
               </div>
             </div>
 
+            <div class="notice" id="audio-notice" hidden data-action="resume-audio" role="button" tabindex="0">
+              <svg><use href="#i-bolt" /></svg>
+              <div>
+                <strong>Sound is paused</strong>
+                <p id="audio-notice-body">Click to start the audio engine.</p>
+              </div>
+              <button class="btn sm" data-action="resume-audio">Resume</button>
+            </div>
+
             <div class="notice" id="service-notice" hidden>
               <svg><use href="#i-bolt" /></svg>
               <div>
@@ -271,12 +280,12 @@
               <button class="btn sm" data-action="go-studio">Fix it</button>
             </div>
 
-            <div class="lower-grid">
+            <div class="live-simple">
               <section class="card">
                 <header class="card-head">
                   <div>
-                    <p class="mono-label">Chain 01</p>
-                    <h2>Voice <em>cleanup</em></h2>
+                    <p class="mono-label">Sound</p>
+                    <h2>How you <em>sound</em></h2>
                   </div>
                   <span class="status-chip" id="chain-chip">Active</span>
                 </header>
@@ -287,30 +296,25 @@
                     <span class="ticks"><i>Off</i><i>Light</i><i>Medium</i><i>Strong</i><i>Max</i></span>
                   </label>
                   <label class="control">
-                    <span class="control-label">Presence <b id="presence-val">+4 dB</b></span>
-                    <input type="range" id="presence" min="0" max="8" step="1" value="4" />
+                    <span class="control-label">Output boost <b id="boost-val">0 dB</b></span>
+                    <input type="range" id="boost" min="0" max="24" step="1" value="0" />
                   </label>
-                  <label class="control">
-                    <span class="control-label">Warmth <b id="warmth-val">+3 dB</b></span>
-                    <input type="range" id="warmth" min="0" max="8" step="1" value="3" />
-                  </label>
-                  <div class="switch-row">
-                    <label class="switch"><input type="checkbox" id="gate" checked /><span></span>Noise gate</label>
-                    <label class="switch"><input type="checkbox" id="agc" checked /><span></span>Auto gain</label>
-                    <label class="switch"><input type="checkbox" id="limiter" checked /><span></span>Limiter</label>
+                  <div class="toggle-line">
+                    <label class="switch"><input type="checkbox" id="monitor" /><span></span>Monitor on this PC</label>
+                    <output class="mono" id="monitor-state">Off</output>
                   </div>
                 </div>
                 <footer class="card-foot">
-                  <span class="mono">Broadcast-grade, tuned for speech</span>
-                  <button class="link-btn" data-action="preset-clean">Reset to clean</button>
+                  <span class="mono">Limiter and compressor protect your voice</span>
+                  <button class="link-btn" data-action="go-studio">Fine-tune in Studio</button>
                 </footer>
               </section>
 
               <section class="card">
                 <header class="card-head">
                   <div>
-                    <p class="mono-label">Chain 02</p>
-                    <h2>Virtual <em>microphone</em></h2>
+                    <p class="mono-label">Microphone</p>
+                    <h2>What apps <em>hear</em></h2>
                   </div>
                   <span class="status-chip ok" id="virtual-chip">Checking</span>
                 </header>
@@ -321,11 +325,12 @@
                     <span id="virtual-sub">Audio endpoint used by your apps</span>
                   </div>
                 </div>
+                <div class="toggle-line">
+                  <label class="switch"><input type="checkbox" id="claim-default" checked /><span></span>Keep it as Windows default mic</label>
+                  <output class="mono" id="claim-state">On</output>
+                </div>
                 <button class="btn block" data-action="setup-virtual" id="virtual-cta">
                   <svg><use href="#i-download" /></svg><span>Set up virtual mic</span>
-                </button>
-                <button class="btn ghost block" data-action="test-virtual" id="virtual-test">
-                  <svg><use href="#i-wave" /></svg><span>Test what apps hear</span>
                 </button>
                 <div class="setup-progress" id="setup-progress" hidden>
                   <div class="bar"><span id="setup-bar"></span></div>
@@ -333,33 +338,8 @@
                 </div>
                 <footer class="card-foot">
                   <span class="mono" id="virtual-foot">One-time setup · no restart</span>
+                  <button class="link-btn" data-action="test-virtual" id="virtual-test">Test</button>
                 </footer>
-              </section>
-
-              <section class="card">
-                <header class="card-head">
-                  <div>
-                    <p class="mono-label">Chain 03</p>
-                    <h2>Session <em>output</em></h2>
-                  </div>
-                  <span class="status-chip" id="quality-chip">Balanced</span>
-                </header>
-                <label class="control">
-                  <span class="control-label">Jitter buffer <b id="buffer-val">60 ms</b></span>
-                  <input type="range" id="buffer" min="20" max="200" step="10" value="60" />
-                </label>
-                <div class="seg" id="quality-seg" role="group" aria-label="Quality preset">
-                  <button data-quality="low">Low<br /><small>30 ms</small></button>
-                  <button data-quality="balanced" class="is-active">Balanced<br /><small>60 ms</small></button>
-                  <button data-quality="ultra">Ultra<br /><small>100 ms</small></button>
-                </div>
-                <div class="toggle-line">
-                  <label class="switch"><input type="checkbox" id="monitor" /><span></span>Monitor on this PC</label>
-                  <output class="mono" id="monitor-state">Off</output>
-                </div>
-                <button class="btn ghost block" data-action="open-recordings">
-                  <svg><use href="#i-folder" /></svg><span>Open recordings</span>
-                </button>
               </section>
             </div>
 
@@ -533,10 +513,10 @@
                   </label>
                 </div>
                 <div class="button-row">
-                  <button class="btn" data-action="setup-virtual">
+                  <button class="btn" data-action="setup-virtual" id="studio-cable-cta">
                     <svg><use href="#i-download" /></svg><span>Install VB-CABLE</span>
                   </button>
-                  <button class="btn ghost" data-action="open-virtual-download">
+                  <button class="btn ghost" data-action="open-virtual-download" id="studio-cable-page">
                     <svg><use href="#i-external" /></svg><span>Official page</span>
                   </button>
                   <button class="btn ghost" data-action="restart-service">
@@ -644,6 +624,50 @@
                   <button class="btn ghost" data-action="restart-service">
                     <svg><use href="#i-refresh" /></svg><span>Restart service</span>
                   </button>
+                </div>
+              </section>
+
+              <section class="card span-2">
+                <header class="card-head">
+                  <div>
+                    <p class="mono-label">Studio</p>
+                    <h2>Fine <em>tuning</em></h2>
+                  </div>
+                  <div class="head-actions">
+                    <span class="status-chip" id="quality-chip">Balanced</span>
+                    <button class="link-btn" data-action="preset-clean">Reset to clean</button>
+                  </div>
+                </header>
+                <div class="fine-grid">
+                  <div class="control-list">
+                    <label class="control">
+                      <span class="control-label">Presence <b id="presence-val">+4 dB</b></span>
+                      <input type="range" id="presence" min="0" max="8" step="1" value="4" />
+                    </label>
+                    <label class="control">
+                      <span class="control-label">Warmth <b id="warmth-val">+3 dB</b></span>
+                      <input type="range" id="warmth" min="0" max="8" step="1" value="3" />
+                    </label>
+                    <div class="switch-row">
+                      <label class="switch"><input type="checkbox" id="gate" checked /><span></span>Noise gate</label>
+                      <label class="switch"><input type="checkbox" id="agc" checked /><span></span>Auto gain</label>
+                      <label class="switch"><input type="checkbox" id="limiter" checked /><span></span>Limiter</label>
+                    </div>
+                  </div>
+                  <div class="control-list">
+                    <label class="control">
+                      <span class="control-label">Jitter buffer <b id="buffer-val">60 ms</b></span>
+                      <input type="range" id="buffer" min="20" max="200" step="10" value="60" />
+                    </label>
+                    <div class="seg" id="quality-seg" role="group" aria-label="Quality preset">
+                      <button data-quality="low">Low<br /><small>30 ms</small></button>
+                      <button data-quality="balanced" class="is-active">Balanced<br /><small>60 ms</small></button>
+                      <button data-quality="ultra">Ultra<br /><small>100 ms</small></button>
+                    </div>
+                    <button class="btn ghost block" data-action="open-recordings">
+                      <svg><use href="#i-folder" /></svg><span>Open recordings</span>
+                    </button>
+                  </div>
                 </div>
               </section>
             </div>

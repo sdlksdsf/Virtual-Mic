@@ -290,11 +290,13 @@ private fun ConnectScreen(
     var manualHost by remember { mutableStateOf(prefs.lastHost ?: "") }
     var manualCode by remember { mutableStateOf(prefs.lastCode ?: "") }
     var pairing by remember { mutableStateOf<DiscoveredHost?>(null) }
+    var scanning by remember { mutableStateOf(false) }
     val stats by Session.stats.collectAsState()
     val connected = Session.connection == ConnectionState.Connected
     val connecting = Session.connection == ConnectionState.Connecting
     val displayName = Session.hostName.ifBlank { Session.targetName.ifBlank { "Your PC" } }
 
+    Box(Modifier.fillMaxSize()) {
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
@@ -426,6 +428,8 @@ private fun ConnectScreen(
         }
 
         Spacer(Modifier.height(22.dp))
+        BigButton(text = "Scan the QR code on your PC", accent = true, onClick = { scanning = true })
+        Spacer(Modifier.height(18.dp))
         SectionLabel("Connect by address")
         VoxCard {
             Column {
@@ -491,6 +495,19 @@ private fun ConnectScreen(
             }
         }
         Spacer(Modifier.height(26.dp))
+    }
+
+    if (scanning) {
+        QrScannerOverlay(
+            onResult = { payload ->
+                scanning = false
+                manualHost = payload.host
+                if (payload.code != null) manualCode = payload.code
+                onConnect(payload.host, payload.port, payload.code, payload.host)
+            },
+            onCancel = { scanning = false },
+        )
+    }
     }
 
     if (pairing != null) {

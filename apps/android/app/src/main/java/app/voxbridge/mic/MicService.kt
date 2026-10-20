@@ -172,6 +172,26 @@ class MicService : Service() {
         }
     }
 
+    private fun openRecorder(
+        source: Int,
+        rate: Int,
+        bufferBytes: Int,
+    ): AudioRecord? = try {
+        val candidate = AudioRecord(
+            source,
+            rate,
+            AudioFormat.CHANNEL_IN_MONO,
+            AudioFormat.ENCODING_PCM_16BIT,
+            bufferBytes,
+        )
+        if (candidate.state == AudioRecord.STATE_INITIALIZED) candidate else {
+            candidate.release()
+            null
+        }
+    } catch (_: Exception) {
+        null
+    }
+
     private fun startCapture(force: Boolean = false) {
         if (captureJob?.isActive == true && !force) return
         captureJob?.cancel()
@@ -201,18 +221,16 @@ class MicService : Service() {
             Session.emitState()
             return
         }
-        val source = if (prefs.headsetMic) MediaRecorder.AudioSource.VOICE_COMMUNICATION
-        else MediaRecorder.AudioSource.MIC
-        val recorder = try {
-            AudioRecord(
-                source,
-                rate,
-                AudioFormat.CHANNEL_IN_MONO,
-                AudioFormat.ENCODING_PCM_16BIT,
-                maxOf(minBuffer * 2, frameSamples * 4 * 2),
-            )
-        } catch (error: Exception) {
-            Session.detail = error.message ?: "Capture failed"
+        // Never use VOICE_COMMUNICATION: it enables the platform's echo
+        // canceller, noise suppressor and AGC, which fight our own chain and
+        // are the main reason phone capture sounds robotic. UNPROCESSED gives
+        // the raw capsule where the firmware offers it, so try it first and
+        // fall back to the plain microphone.
+        val bufferBytes = maxOf(minBuffer * 2, frameSamples * 4 * 2)
+        val recorder = openRecorder(MediaRecorder.AudioSource.UNPROCESSED, rate, bufferBytes)
+            ?: openRecorder(MediaRecorder.AudioSource.MIC, rate, bufferBytes)
+        if (recorder == null) {
+            Session.detail = "Capture failed"
             Session.emitState()
             return
         }
@@ -224,16 +242,19 @@ class MicService : Service() {
         }
         record = recorder
 
-        // Hardware effects are optional accelerators; the DSP chain runs anyway.
+        // Deliberately leave every platform effect switched off. Running the
+        // system suppressor and AGC *and* our own chain applies two different
+        // noise models in series, which hollows out the voice and re-injects
+        // the pumping the software chain just removed.
         try {
             if (NoiseSuppressor.isAvailable()) {
-                hwDenoise = NoiseSuppressor.create(recorder.audioSessionId)?.apply { enabled = true }
+                hwDenoise = NoiseSuppressor.create(recorder.audioSessionId)?.apply { enabled = false }
             }
             if (AutomaticGainControl.isAvailable()) {
                 hwAgc = AutomaticGainControl.create(recorder.audioSessionId)?.apply { enabled = false }
             }
             if (AcousticEchoCanceler.isAvailable()) {
-                hwAec = AcousticEchoCanceler.create(recorder.audioSessionId)?.apply { enabled = prefs.headsetMic }
+                hwAec = AcousticEchoCanceler.create(recorder.audioSessionId)?.apply { enabled = false }
             }
         } catch (_: Exception) {
             // ignored by design

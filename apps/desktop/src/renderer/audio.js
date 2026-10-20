@@ -89,25 +89,43 @@
       }
     }
 
+    // Spectral denoiser with decision-directed a priori SNR estimation
+    // (Ephraim-Malah style). Compared with plain spectral subtraction this
+    // keeps consonants intact and produces far less musical noise.
+    //
+    // Overlap-add uses a square-root Hann window for both analysis and
+    // synthesis. The product is a Hann window, which sums to exactly 1.0 at
+    // 50% overlap; using Hann twice would modulate the output at the frame
+    // rate and sound buzzy.
     class Denoiser {
       constructor(strength) {
         this.strength = Math.max(0, Math.min(1, strength));
         this.fft = new FFT(FFT_N);
         this.window = new Float32Array(FFT_N);
         for (let i = 0; i < FFT_N; i += 1) {
-          this.window[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / FFT_N);
+          this.window[i] = Math.sqrt(0.5 - 0.5 * Math.cos((2 * Math.PI * i) / FFT_N));
         }
         this.frame = new Float32Array(FFT_N);
         this.pending = new Float32Array(HOP);
         this.pendingFill = 0;
         this.ola = new Float32Array(FFT_N);
-        this.ready = new Float32Array(HOP * 2);
+        this.ready = new Float32Array(HOP * 4);
         this.readyLen = 0;
         this.readyPos = 0;
-        this.mag = new Float32Array(FFT_N / 2 + 1);
-        this.noise = new Float32Array(FFT_N / 2 + 1);
-        this.gain = new Float32Array(FFT_N / 2 + 1);
+        const bins = (FFT_N >> 1) + 1;
+        this.power = new Float32Array(bins);
+        this.noise = new Float32Array(bins);
+        this.minCur = new Float32Array(bins);
+        this.minPrev = new Float32Array(bins);
+        this.gain = new Float32Array(bins);
+        this.smooth = new Float32Array(bins);
+        this.prevGain = new Float32Array(bins);
+        this.prevGamma = new Float32Array(bins);
         this.initFrames = 0;
+        this.initTarget = 30;  // ~160 ms of room tone before suppression starts
+        this.windowFrames = 240; // ~1.3 s sliding minimum
+        this.windowCount = 0;
+        this.seeded = false;
       }
 
       setStrength(value) {
@@ -151,25 +169,69 @@
 
         const bins = (FFT_N >> 1) + 1;
         const strength = this.strength;
-        const floor = 1 - 0.9 * strength;
+        const floorGain = 0.5 - 0.44 * strength;
+        const alphaDD = 0.92;
+        const seeding = this.initFrames < this.initTarget;
+
+        // Slide the minimum-statistics window.
+        this.windowCount += 1;
+        if (this.windowCount >= this.windowFrames) {
+          this.windowCount = 0;
+          for (let i = 0; i < bins; i += 1) {
+            this.minPrev[i] = this.minCur[i];
+            this.minCur[i] = Infinity;
+          }
+        }
 
         for (let i = 0; i < bins; i += 1) {
-          const mag = Math.sqrt(re[i] * re[i] + im[i] * im[i]);
-          this.mag[i] = mag;
-          if (this.initFrames < 18) {
-            this.noise[i] = Math.max(this.noise[i] * 0.92, mag * 0.82);
-            this.gain[i] = 1;
-          } else {
-            if (mag < this.noise[i]) this.noise[i] = this.noise[i] * 0.9 + mag * 0.1;
-            else this.noise[i] = this.noise[i] * 0.9995 + mag * 0.0005;
-            let g = mag > 1e-7 ? (mag - strength * this.noise[i] * 1.45) / mag : 0;
-            if (g < floor) g = floor;
-            if (g > 1) g = 1;
-            this.gain[i] = this.gain[i] * 0.5 + g * 0.5;
+          const raw = re[i] * re[i] + im[i] * im[i];
+
+          // Smooth the periodogram first. Raw FFT power has a variance as
+          // large as its mean, so a minimum taken on it collapses far below
+          // the true floor and the suppressor stops working entirely.
+          this.power[i] += (raw - this.power[i]) * 0.25;
+          const ps = this.power[i];
+
+          if (!this.seeded) {
+            this.minCur[i] = ps;
+            this.minPrev[i] = ps;
+          } else if (ps < this.minCur[i]) {
+            this.minCur[i] = ps;
           }
-          re[i] *= this.gain[i];
-          im[i] *= this.gain[i];
+          const floorPower = Math.min(this.minCur[i], this.minPrev[i]) * 1.6 + 1e-12;
+          this.noise[i] = floorPower;
+
+          if (seeding) {
+            this.smooth[i] = 1;
+            this.prevGain[i] = 1;
+            this.prevGamma[i] = 1;
+            continue;
+          }
+
+          const gamma = ps / floorPower;
+          const xi = alphaDD * (this.prevGain[i] * this.prevGain[i]) * this.prevGamma[i]
+            + (1 - alphaDD) * Math.max(gamma - 1, 0);
+          let g = xi / (1 + xi);
+          if (g < floorGain) g = floorGain;
+          if (g > 1) g = 1;
+          this.smooth[i] = g;
+          this.prevGamma[i] = gamma;
+          this.prevGain[i] = g;
         }
+        if (!this.seeded) this.seeded = true;
+
+        for (let i = 0; i < bins; i += 1) {
+          // Three-tap smoothing across neighbouring bins removes the isolated
+          // "musical noise" spikes that make denoised speech sound metallic.
+          let g = this.smooth[i];
+          if (!seeding && i > 0 && i < bins - 1) {
+            g = 0.25 * this.smooth[i - 1] + 0.5 * this.smooth[i] + 0.25 * this.smooth[i + 1];
+          }
+          this.gain[i] = g;
+          re[i] *= g;
+          im[i] *= g;
+        }
+
         for (let i = 1; i < FFT_N / 2; i += 1) {
           re[FFT_N - i] = re[i];
           im[FFT_N - i] = -im[i];
@@ -181,19 +243,21 @@
           this.ola[i] += re[i] * this.window[i];
         }
         if (this.readyLen + HOP > this.ready.length) {
-          const grown = new Float32Array(this.ready.length * 2 + HOP);
+          const grown = new Float32Array(this.ready.length * 2);
           grown.set(this.ready.subarray(this.readyPos, this.readyLen));
           this.ready = grown;
           this.readyLen -= this.readyPos;
           this.readyPos = 0;
         }
         for (let i = 0; i < HOP; i += 1) {
-          this.ready[this.readyLen + i] = this.ola[i] / 1.5;
+          // sqrt-Hann analysis x sqrt-Hann synthesis = Hann, which is exactly
+          // unity-sum at 50% overlap. No normalisation gain is needed.
+          this.ready[this.readyLen + i] = this.ola[i];
         }
         this.readyLen += HOP;
         this.ola.copyWithin(0, HOP);
         this.ola.fill(0, FFT_N - HOP);
-        if (this.initFrames < 1000) this.initFrames += 1;
+        if (this.initFrames < 100000) this.initFrames += 1;
       }
     }
 
@@ -259,6 +323,66 @@
       }
     }
 
+    // Block-based lookahead limiter. The output block is one buffer behind the
+    // input, so the gain needed for an incoming transient is already applied
+    // when that transient reaches the output. Without lookahead a peak passes
+    // at full level and is only clamped afterwards, which is the crunchy
+    // distortion you hear when the boost is high.
+    class LookaheadLimiter {
+      constructor(rate, ceilingDb) {
+        this.ceiling = dbToGain(ceilingDb);
+        this.delay = new Float32Array(128);
+        this.prevGain = 1;
+        this.gain = 1;
+        this.release = 1 - Math.exp(-1 / (rate * 0.12));
+      }
+
+      reset() {
+        this.delay.fill(0);
+        this.prevGain = 1;
+        this.gain = 1;
+      }
+
+      process(block, out) {
+        const n = block.length;
+        if (this.delay.length !== n) this.delay = new Float32Array(n);
+
+        let peakIn = 0;
+        for (let i = 0; i < n; i += 1) {
+          const a = block[i] < 0 ? -block[i] : block[i];
+          if (a > peakIn) peakIn = a;
+        }
+        let peakOut = 0;
+        for (let i = 0; i < n; i += 1) {
+          const a = this.delay[i] < 0 ? -this.delay[i] : this.delay[i];
+          if (a > peakOut) peakOut = a;
+        }
+
+        // Be ready for the block that is arriving and keep the block leaving
+        // under the ceiling.
+        let target = 1;
+        if (peakIn > this.ceiling) target = this.ceiling / peakIn;
+        if (peakOut > this.ceiling) target = Math.min(target, this.ceiling / peakOut);
+
+        if (target < this.gain) this.gain = target; // instant attack
+        else this.gain += (target - this.gain) * this.release; // smooth release
+
+        const startGain = this.prevGain;
+        const attacking = this.gain < startGain;
+        const step = (this.gain - startGain) / n;
+
+        for (let i = 0; i < n; i += 1) {
+          const g = attacking ? this.gain : startGain + step * i;
+          let x = this.delay[i] * g;
+          if (x > this.ceiling) x = this.ceiling;
+          if (x < -this.ceiling) x = -this.ceiling;
+          out[i] = x;
+          this.delay[i] = block[i];
+        }
+        this.prevGain = this.gain;
+      }
+    }
+
     class VoxBridgeProcessor extends AudioWorkletProcessor {
       constructor() {
         super();
@@ -302,12 +426,15 @@
 
         this.env = 0;
         this.gateGain = 1;
+        this.gateTarget = 1;
         this.gateHold = 0;
         this.agcGain = 1;
         this.agcEnv = 0;
         this.compEnv = 0;
-        this.limitGain = 1;
+        this.compGain = 1;
         this.mutedGain = 1;
+        this.mix = new Float32Array(128);
+        this.limiter = new LookaheadLimiter(this.rate, -1);
 
         this.chunk = new Int16Array(Math.round(this.rate * 0.02));
         this.chunkFill = 0;
@@ -347,9 +474,15 @@
         this.presence.reset();
         this.warmth.reset();
         this.agcGain = 1;
-        this.limitGain = 1;
+        this.agcEnv = 0;
+        this.compGain = 1;
+        this.compEnv = 0;
         this.gateGain = 1;
+        this.gateTarget = 1;
+        this.gateHold = 0;
+        this.env = 0;
         this.mutedGain = 1;
+        this.limiter.reset();
       }
 
       applyConfig(config) {
@@ -504,8 +637,27 @@
           this.denoiser.processBlock(inputBuf, block);
         }
 
-        const boost = Math.pow(10, this.runtime.boostDb / 20);
-        const muted = this.config.muted;
+        // ---- voice chain -------------------------------------------------
+        // Stage order matters: EQ -> auto gain -> gate -> user boost ->
+        // compressor -> lookahead limiter. The boost sits *before* the
+        // compressor so a hot signal is compressed with a 3:1 ratio instead of
+        // being slammed into the limiter ceiling, which is what made the old
+        // chain sound distorted at high gain.
+        if (this.mix.length < frames) this.mix = new Float32Array(frames);
+        const mix = this.mix;
+        const dt = 1 / this.rate;
+        const boost = dbToGain(this.runtime.boostDb);
+        const gateOpen = 0.0063;  // -44 dBFS
+        const gateClose = 0.0032; // -50 dBFS
+        const envAttack = 1 - Math.exp(-dt / 0.002);
+        const envRelease = 1 - Math.exp(-dt / 0.180);
+        const agcAttack = 1 - Math.exp(-dt / 0.030);
+        const agcRelease = 1 - Math.exp(-dt / 0.400);
+        const gateAttack = 1 - Math.exp(-dt / 0.005);
+        const gateRelease = 1 - Math.exp(-dt / 0.150);
+        const compAttack = 1 - Math.exp(-dt / 0.003);
+        const compRelease = 1 - Math.exp(-dt / 0.120);
+
         for (let i = 0; i < frames; i += 1) {
           let x = i < got ? block[i] : channel[i];
 
@@ -513,67 +665,89 @@
           x = this.presence.process(x);
           x = this.warmth.process(x);
 
-          if (this.config.gate) {
-            const abs = Math.abs(x);
-            this.env = abs > this.env ? this.env + (abs - this.env) * 0.004 : this.env - this.env * 0.0009;
-            if (this.env > 0.0032) this.gateHold = 0.08;
-            else this.gateHold = Math.max(0, this.gateHold - frames / this.rate);
-            const target = this.env > 0.0032 || this.gateHold > 0 ? 1 : 0.0006;
-            this.gateGain += (target - this.gateGain) * (target > this.gateGain ? 0.02 : 0.0015);
-            x *= this.gateGain;
-          }
+          const raw = Math.abs(x);
 
+          // Auto gain rides the level slowly and freezes during silence, so it
+          // cannot wind up and amplify the noise floor between phrases.
           if (this.config.agc) {
-            this.agcEnv += (Math.abs(x) - this.agcEnv) * 0.0006;
-            if (this.agcEnv > 0.002) {
+            if (raw > gateOpen) {
+              this.agcEnv += (raw - this.agcEnv)
+                * (raw > this.agcEnv ? agcAttack : agcRelease);
+            }
+            if (this.agcEnv > 0.0016) {
               const currentDb = 20 * Math.log10(this.agcEnv + 1e-9);
-              const desired = Math.max(-3, Math.min(18, -19 - currentDb));
-              const maxStepDb = (frames / this.rate) * 26;
-              const currentGainDb = 20 * Math.log10(this.agcGain + 1e-9);
-              const delta = Math.max(-maxStepDb, Math.min(maxStepDb, desired - currentGainDb));
-              this.agcGain *= Math.pow(10, (delta * 0.35) / 20);
-              this.agcGain = Math.max(0.35, Math.min(8, this.agcGain));
+              const targetGain = Math.max(0.5, Math.min(4, dbToGain(-20 - currentDb)));
+              const glide = 1 - Math.exp(-dt / 0.600);
+              this.agcGain += (targetGain - this.agcGain) * glide;
             }
             x *= this.agcGain;
           }
 
-          if (this.config.compressor) {
-            const abs = Math.abs(x);
-            this.compEnv = abs > this.compEnv ? this.compEnv + (abs - this.compEnv) * 0.06 : this.compEnv * 0.9992;
-            const threshold = 0.125;
-            if (this.compEnv > threshold) {
-              const over = 20 * Math.log10(this.compEnv / threshold);
-              x *= Math.pow(10, (-over * (1 - 1 / 3)) / 20);
+          // Hysteresis gate with a hold and a slow release. The old gate
+          // released in milliseconds and chattered on every consonant.
+          if (this.config.gate) {
+            this.env += (raw - this.env) * (raw > this.env ? envAttack : envRelease);
+            if (this.env > gateOpen) {
+              this.gateHold = 0.120;
+              this.gateTarget = 1;
+            } else if (this.env < gateClose) {
+              this.gateHold -= dt;
+              if (this.gateHold <= 0) this.gateTarget = 0.0005;
             }
-            x *= Math.pow(10, 1.2 / 20);
+            this.gateGain += (this.gateTarget - this.gateGain)
+              * (this.gateTarget > this.gateGain ? gateAttack : gateRelease);
+            x *= this.gateGain;
           }
 
           x *= boost;
 
-          if (this.config.limiter) {
-            const ceiling = 0.891;
-            const abs = Math.abs(x);
-            const targetGain = abs > ceiling ? ceiling / abs : 1;
-            if (targetGain < this.limitGain) this.limitGain = targetGain;
-            else this.limitGain += (1 - this.limitGain) * 0.0009;
-            x *= this.limitGain;
-            if (x > 0.999) x = 0.999;
-            if (x < -0.999) x = -0.999;
+          // Soft-knee 3:1 compressor. Unchanged signal below the knee, so a
+          // low boost stays completely transparent.
+          if (this.config.compressor) {
+            const level = Math.abs(x);
+            this.compEnv += (level - this.compEnv)
+              * (level > this.compEnv ? compAttack : compRelease);
+            const levelDb = 20 * Math.log10(this.compEnv + 1e-9);
+            const threshold = -14;
+            const knee = 6;
+            let reduction = 0;
+            if (levelDb > threshold + knee) {
+              reduction = (levelDb - threshold) * (1 - 1 / 3);
+            } else if (levelDb > threshold - knee) {
+              const t = (levelDb - (threshold - knee)) / (2 * knee);
+              reduction = t * t * knee * (1 - 1 / 3);
+            }
+            const targetGain = dbToGain(-reduction);
+            this.compGain += (targetGain - this.compGain)
+              * (targetGain < this.compGain ? compAttack : compRelease);
+            x *= this.compGain;
           }
 
-          this.mutedGain += ((muted ? 0 : 1) - this.mutedGain) * 0.0015;
-          x *= this.mutedGain;
+          mix[i] = x;
+        }
 
+        // Lookahead limiting, then mute ramp, meters and 20 ms framing on the
+        // final signal so what is measured is exactly what the cable receives.
+        this.limiter.process(mix, channel);
+
+        const muted = this.config.muted;
+        const muteStep = 1 - Math.exp(-dt / 0.012);
+        for (let i = 0; i < frames; i += 1) {
+          this.mutedGain += ((muted ? 0 : 1) - this.mutedGain) * muteStep;
+          const x = channel[i] * this.mutedGain;
           channel[i] = x;
 
           this.meterInAcc += inputBuf[i] * inputBuf[i];
           this.meterOutAcc += x * x;
-          const p = Math.abs(x);
+          const p = x < 0 ? -x : x;
           if (p > this.meterPeak) this.meterPeak = p;
           this.meterCount += 1;
 
           if (this.chunkFill < this.chunk.length) {
-            this.chunk[this.chunkFill++] = Math.max(-32768, Math.min(32767, Math.round(x * 32767)));
+            let q = Math.round(x * 32767);
+            if (q > 32767) q = 32767;
+            else if (q < -32768) q = -32768;
+            this.chunk[this.chunkFill++] = q;
             if (this.chunkFill >= this.chunk.length) {
               const finished = this.chunk;
               this.chunk = new Int16Array(finished.length);
@@ -769,6 +943,7 @@
       this.startedAt = 0;
       this.lastPacketAt = 0;
       this.packets = 0;
+      this.lastResumeTry = 0;
     }
 
     async init() {
@@ -798,9 +973,32 @@
     }
 
     async resume() {
-      if (this.context && this.context.state === 'suspended') {
-        await this.context.resume();
+      if (this.context && this.context.state !== 'running') {
+        try {
+          await this.context.resume();
+        } catch {
+          /* blocked until a gesture; retried on the next packet */
+        }
       }
+      return this.context ? this.context.state === 'running' : false;
+    }
+
+    // Called on every inbound packet. If the context is suspended the worklet
+    // is not running, which means nothing is reaching the virtual microphone.
+    // Retry at most once a second so a stubborn policy does not spin the main
+    // thread, and expose the state so the UI can warn the user.
+    ensureRunning() {
+      if (!this.context) return false;
+      if (this.context.state === 'running') return true;
+      const now = Date.now();
+      if (now - (this.lastResumeTry || 0) < 1000) return false;
+      this.lastResumeTry = now;
+      this.resume();
+      return false;
+    }
+
+    get running() {
+      return Boolean(this.context && this.context.state === 'running');
     }
 
     configPayload() {
@@ -868,6 +1066,7 @@
         samples = out;
       }
       if (!samples.length) return false;
+      this.ensureRunning();
       const floats = new Float32Array(samples.length);
       for (let i = 0; i < samples.length; i += 1) floats[i] = samples[i] / 32768;
       this.node?.port.postMessage({ type: 'audio', buffer: floats.buffer, seq: packet.seq }, [

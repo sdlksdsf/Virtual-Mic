@@ -531,7 +531,13 @@
   function renderVirtualStatus() {
     const render = state.devices?.render || [];
     const device = pickVirtualDevice(render) || (state.service.device ? { name: state.service.device } : null);
-    const installed = Boolean(device && /cable input|voicemeeter|virtual audio cable|voxbridge/i.test(device.name));
+    // The server reports the truth for both directions: a cable is only usable
+    // when Windows exposes a *recording* endpoint for it. Fall back to the old
+    // name heuristic when talking to an older build.
+    const reported = state.virtual;
+    const installed = reported
+      ? Boolean(reported.present || reported.installed)
+      : Boolean(device && /cable input|voicemeeter|virtual audio cable|voxbridge/i.test(device.name));
     const chip = $('#virtual-chip');
     const studioChip = $('#studio-virtual-chip');
     const badge = $('#endpoint-badge');
@@ -539,7 +545,7 @@
     const endpointSub = $('#endpoint-sub');
 
     if (installed) {
-      chip.textContent = 'Detected';
+      chip.textContent = 'Installed';
       chip.className = 'status-chip ok';
       studioChip.textContent = 'Ready';
       studioChip.className = 'status-chip ok';
@@ -547,10 +553,18 @@
       endpointName.textContent = device.name;
       endpointSub.textContent = 'Apps should select “CABLE Output” as their microphone.';
       $('#virtual-device').textContent = device.name;
-      $('#virtual-sub').textContent = 'Verified virtual audio endpoint';
-      $('#virtual-foot').textContent = 'One-time setup · verified signature';
-      $('#virtual-cta').innerHTML =
-        '<svg><use href="#i-check" /></svg><span>Reinstall or repair cable</span>';
+      $('#virtual-sub').textContent = 'Installed and ready — Windows apps can record from this now';
+      $('#virtual-foot').textContent = 'Verified signature · nothing else to do';
+      // Once it is installed and detected, there is nothing to download. The
+      // repair action moves out of the way instead of asking again on every
+      // launch, which is what made the app feel like it had forgotten.
+      const cta = $('#virtual-cta');
+      cta.hidden = true;
+      cta.disabled = true;
+      const studioCta = $('#studio-cable-cta');
+      if (studioCta) studioCta.hidden = true;
+      const studioPage = $('#studio-cable-page');
+      if (studioPage) studioPage.hidden = true;
     } else {
       chip.textContent = state.service.mode === 'native' ? 'Missing' : 'Unavailable';
       chip.className = 'status-chip warn';
@@ -562,9 +576,24 @@
       $('#virtual-device').textContent = 'No virtual cable found';
       $('#virtual-sub').textContent = 'Setup takes about a minute';
       $('#virtual-foot').textContent = 'Official VB-Audio download';
-      $('#virtual-cta').innerHTML = '<svg><use href="#i-download" /></svg><span>Set up virtual mic</span>';
+      const cta = $('#virtual-cta');
+      cta.hidden = false;
+      cta.disabled = false;
+      cta.innerHTML = '<svg><use href="#i-download" /></svg><span>Set up virtual mic</span>';
+      const studioCta = $('#studio-cable-cta');
+      if (studioCta) studioCta.hidden = false;
+      const studioPage = $('#studio-cable-page');
+      if (studioPage) studioPage.hidden = false;
     }
     $('#virtual-test').disabled = !state.service || state.service.mode !== 'native';
+
+    const claim = $('#claim-default');
+    if (claim) {
+      const on = state.settings?.claimDefaultInput !== false;
+      claim.checked = on;
+      const label = $('#claim-state');
+      if (label) label.textContent = on ? 'On' : 'Off';
+    }
     $('#test-btn-label').textContent = suiteTestLabel();
     $('#record-folder').textContent = shortPath(state.app.recordingDir || 'Music / VoxBridge');
   }
@@ -670,7 +699,21 @@
     $('#wave-peak').textContent = peak > 0.001 ? `${(20 * Math.log10(peak)).toFixed(1)} dB` : '−∞ dB';
   }
 
+  // A suspended AudioContext is the one failure that looks like "connected but
+  // silent". Surface it plainly instead of showing a dead meter.
+  function renderAudioHealth() {
+    const notice = $('#audio-notice');
+    if (!notice) return;
+    const stalled = Boolean(pipeline && !pipeline.running && pipeline.packets > 8);
+    notice.hidden = !stalled;
+    if (stalled) {
+      $('#audio-notice-body').textContent =
+        'Windows is holding the audio engine paused. Click here once and sound will resume immediately.';
+    }
+  }
+
   function updateMeter(meter) {
+    renderAudioHealth();
     const level = Math.max(0, Math.min(1, (meter.outRms || 0) * 2.4));
     meterLevel = meter.outRms || 0;
     meterPeak = meter.peak || 0;
@@ -865,6 +908,11 @@
           renderRemembered();
           toast('ok', 'Remembered devices cleared');
           break;
+        case 'resume-audio':
+          await pipeline?.resume();
+          renderAudioHealth();
+          if (pipeline?.running) toast('ok', 'Audio resumed', 'Your voice is reaching the virtual microphone.');
+          break;
         case 'setup-virtual':
           setupVirtual();
           break;
@@ -971,6 +1019,14 @@
     bindCheck('#monitor2', (checked) => {
       update({ monitor: checked });
       pipeline?.setMonitor(checked, state.settings.monitorGain ?? 0.8);
+    });
+    bindCheck('#claim-default', (checked) => {
+      const label = $('#claim-state');
+      if (label) label.textContent = checked ? 'On' : 'Off';
+      // Restarting the service is what actually re-points Windows at the cable.
+      update({ claimDefaultInput: checked }).then(() => {
+        if (bridge.restartService) bridge.restartService().catch(() => {});
+      });
     });
     bindCheck('#tray-toggle', (checked) => update({ tray: checked }, { audio: false }));
     bindCheck('#autostart-toggle', (checked) => update({ autoStart: checked }, { audio: false }));

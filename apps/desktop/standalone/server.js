@@ -237,6 +237,61 @@ const CABLE_URLS = [
   'https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack46.zip',
 ];
 
+// Names that identify a virtual cable the user can *record* from. Matching is
+// loose because every driver version and locale names these slightly
+// differently.
+const CABLE_MARKERS = ['cable output', 'vb-audio', 'voicemeeter', 'virtual audio cable', 'vb-cable'];
+
+function normaliseName(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function isCableName(name) {
+  const plain = String(name || '').toLowerCase();
+  return CABLE_MARKERS.some((marker) => plain.includes(marker));
+}
+
+// Reads the live device list and reports whether a usable virtual microphone is
+// actually present, rather than trusting a flag written weeks ago.
+function detectCable() {
+  const devices = PREVIEW_NATIVE
+    ? PREVIEW_DEVICES
+    : service
+      ? service.listDevices()
+      : { render: [], capture: [] };
+  const render = (devices.render || []).find((d) => isCableName(d.name)) || null;
+  const capture = (devices.capture || []).find((d) => isCableName(d.name)) || null;
+  return {
+    present: Boolean(render && capture),
+    render: render ? render.name : '',
+    capture: capture ? capture.name : '',
+  };
+}
+
+// Persist the install so a returning user sees "installed" instead of being
+// asked to download the driver again on every launch.
+function refreshCableState() {
+  const detected = detectCable();
+  const remembered = Boolean(store && store.get('cableInstalled'));
+  if (store && detected.present && !remembered) {
+    store.set({
+      cableInstalled: true,
+      cableInstalledAt: new Date().toISOString(),
+      cableDevice: detected.capture,
+    });
+    log('info', `Virtual microphone detected: ${detected.capture}`);
+  }
+  return {
+    ...detected,
+    installed: detected.present || remembered,
+    verified: detected.present,
+    installedAt: store ? store.get('cableInstalledAt') || null : null,
+    device: detected.capture || (store ? store.get('cableDevice') || '' : ''),
+  };
+}
+
 function updateSetup(patch) {
   Object.assign(setupState, patch);
   broadcast('app:setup', { ...setupState });
@@ -248,6 +303,20 @@ async function setupVirtualMicrophone() {
     return setupState;
   }
   if (setupState.phase === 'downloading' || setupState.phase === 'installing') return setupState;
+
+  // Already installed and visible to Windows: never ask again.
+  const existing = refreshCableState();
+  if (existing.present) {
+    updateSetup({
+      phase: 'done',
+      progress: 100,
+      message: `${existing.capture} is already installed and ready.`,
+      error: '',
+      installed: true,
+    });
+    return setupState;
+  }
+
   updateSetup({ phase: 'downloading', progress: 2, message: 'Contacting VB-Audio', error: '', publisher: '' });
 
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'voxbridge-cable-'));
@@ -304,7 +373,15 @@ async function setupVirtualMicrophone() {
 
   try {
     await powershell(`Start-Process -FilePath '${installer}' -Verb RunAs -Wait`, 300000);
-    updateSetup({ phase: 'done', progress: 100, message: 'Driver installer finished. Restart Windows if the device does not appear.' });
+    const installed = refreshCableState();
+    updateSetup({
+      phase: 'done',
+      progress: 100,
+      installed: installed.installed,
+      message: installed.present
+        ? 'Virtual microphone installed and detected.'
+        : 'Installer finished. Restart Windows once so the cable appears.',
+    });
     log('info', 'VB-CABLE installer finished');
   } catch (error) {
     updateSetup({
@@ -340,6 +417,7 @@ function statePayload() {
     service: PREVIEW_NATIVE ? { ...PREVIEW_SERVICE } : service ? service.info() : { mode: 'software', status: 'idle' },
     recorder: recorder ? recorder.status() : { recording: false },
     setup: setupState,
+    virtual: refreshCableState(),
   };
 }
 
@@ -404,6 +482,7 @@ function startService() {
     prefillMs: store.get('prefillMs') || 80,
     wavOut: '',
     diagnostics: store.get('diagnostics'),
+    claimDefault: store.get('claimDefaultInput') !== false,
   });
 }
 
@@ -521,7 +600,7 @@ const METHODS = {
   },
 
   setupVirtualMic: () => setupVirtualMicrophone(),
-  virtualState: () => ({ ...setupState }),
+  virtualState: () => ({ ...setupState, ...refreshCableState() }),
   openVirtualDownload: () => openExternal('https://vb-audio.com/Cable/'),
   verifySignature: (file) => (service ? service.verifySignature(file) : { valid: false, detail: 'service-missing' }),
 
@@ -695,6 +774,10 @@ function openUi(port) {
       '--window-size=1280,840',
       '--no-first-run',
       '--no-default-browser-check',
+      // Without this the page's AudioContext starts suspended: the worklet
+      // never runs, so no processed audio is ever handed to the capture
+      // service and the virtual microphone stays silent until the user clicks.
+      '--autoplay-policy=no-user-gesture-required',
       `--user-data-dir=${path.join(DATA_DIR, 'browser-profile')}`,
     ], { detached: true, stdio: 'ignore' }).unref();
     return true;

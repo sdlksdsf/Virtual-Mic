@@ -111,6 +111,7 @@ class CaptureService extends EventEmitter {
       prefillMs = 80,
       wavOut = '',
       diagnostics = false,
+      claimDefault = true,
     } = options;
 
     this.state.rate = rate;
@@ -143,6 +144,10 @@ class CaptureService extends EventEmitter {
       '--prefill-ms',
       String(prefillMs),
     ];
+    // Apps record the *system default* input, not the endpoint we render into.
+    // Claiming it is what makes Discord, Chrome and Teams pick the cable up
+    // without the user configuring anything.
+    if (claimDefault) args.push('--claim-default');
     if (wavOut) args.push('--wav-out', wavOut);
     if (diagnostics) {
       const logPath = path.join(os.tmpdir(), 'voxbridge-service.log');

@@ -966,11 +966,37 @@ html[data-theme='dark'] .btn.primary {
 .notice p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
 .notice .btn { margin-left: auto; flex: none; }
 
-.lower-grid {
+.live-simple {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   gap: 16px;
   margin-top: 16px;
+}
+
+.fine-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+/* The live screen is deliberately sparse: two cards, three controls. The
+   full chain lives in Studio where people who want it will look. */
+.live-simple .card {
+  display: flex;
+  flex-direction: column;
+}
+.live-simple .card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+}
+.live-simple .control-list { flex: 1; }
+
+@media (max-width: 1080px) {
+  .live-simple { grid-template-columns: minmax(0, 1fr); }
+  .fine-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 .card {
@@ -2057,8 +2083,6 @@ body.demo .hide-desktop { display: inline-flex; }
 .is-hidden { display: none !important; }
 
 @media (max-width: 1180px) {
-  .lower-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lower-grid .card:last-child { grid-column: span 2; }
   .deck-grid { grid-template-columns: minmax(170px, 0.8fr) minmax(220px, 1.4fr); }
   .deck-stats {
     grid-column: span 2;
