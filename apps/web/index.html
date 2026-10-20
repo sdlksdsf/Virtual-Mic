@@ -269,18 +269,21 @@
                 <span class="feature-icon"><svg><use href="#i-wave"/></svg></span>
                 <h3>Noise suppression that keeps consonants</h3>
                 <p>
-                  A spectral subtraction stage estimates the room once per second and subtracts it with a floor, then
-                  a gate handles the gaps. Four strengths, from off to aggressive, with a smooth transition so words
-                  do not click.
+                  A decision-directed spectral estimator learns the room from your first moments of silence and
+                  subtracts only what it has actually heard. Consonants survive, the "underwater" artefact of plain
+                  subtraction never appears, and the gate releases slowly enough that words do not chop.
                 </p>
-                <span class="mono">512-point STFT · adaptive noise floor · 4 levels</span>
+                <span class="mono">512-point STFT · minimum statistics · 4 levels</span>
               </div>
               <div class="feature-visual"><canvas data-wave aria-label="Animated audio waveform"></canvas></div>
             </article>
             <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
               <span class="feature-icon"><svg><use href="#i-volume"/></svg></span>
               <h3>+24 dB, without clipping</h3>
-              <p>A soft-knee limiter and a compressor hold peaks below −1 dBFS even at maximum boost.</p>
+              <p>
+                Boost happens before the compressor, and a lookahead limiter turns a transient down before it
+                arrives. Peaks stay under −1 dBFS at maximum gain instead of being crushed after the fact.
+              </p>
             </article>
             <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
               <span class="feature-icon"><svg><use href="#i-sliders"/></svg></span>
@@ -289,8 +292,8 @@
             </article>
             <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
               <span class="feature-icon"><svg><use href="#i-shield"/></svg></span>
-              <h3>True-peak protection</h3>
-              <p>The final limiter is the last thing before the virtual cable, so nothing downstream can distort.</p>
+              <h3>Peak protection with lookahead</h3>
+              <p>The limiter is the last stage before the cable and works one buffer ahead, so it never clips.</p>
             </article>
             <article class="feature reveal" style="background: var(--deck-2); border-color: rgba(244,241,232,0.08)">
               <span class="feature-icon"><svg><use href="#i-clock"/></svg></span>
@@ -365,6 +368,36 @@
             <p class="small-note" style="margin-top: 14px">
               The phone shows the same numbers the desktop measures, so what you see is what the session is doing.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="phone">
+        <div class="wrap phone-split">
+          <div class="phone-copy">
+            <span class="mono">On the phone</span>
+            <h2>Fits in a pocket. <em>Reads at a glance.</em></h2>
+            <p>
+              One screen shows whether you are on air, what the level is, and how healthy the link is. No account, no
+              menus to dig through. Scan the code on your PC and you are streaming; the app remembers that PC next
+              time.
+            </p>
+            <ul class="phone-points">
+              <li><svg><use href="#i-check"/></svg><span>Foreground service keeps the mic alive with the screen off.</span></li>
+              <li><svg><use href="#i-check"/></svg><span>QR pairing, nearby PCs, manual address, or USB for the flattest path.</span></li>
+              <li><svg><use href="#i-check"/></svg><span>Light and dark themes that follow your system setting.</span></li>
+            </ul>
+            <div class="download-row">
+              <a class="btn primary" data-download="android" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk">Get the Android app <svg><use href="#i-arrow"/></svg></a>
+              <a class="btn ghost" data-download="ios" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa">iPhone build</a>
+            </div>
+          </div>
+          <div class="phone-frames reveal">
+            <figure class="phone-frame">
+              <img class="phone-shot-light" src="assets/img/phone-pair.png" alt="VoxBridge on Android showing a live session with latency, buffer and jitter readouts, nearby PCs and a QR pairing button" width="390" height="844" loading="lazy" />
+              <img class="phone-shot-dark" src="assets/img/phone-pair-dark.png" alt="The same VoxBridge phone screen in dark theme" width="390" height="844" loading="lazy" />
+              <figcaption class="mono">Live session · 48 kHz · 17 ms</figcaption>
+            </figure>
           </div>
         </div>
       </section>
