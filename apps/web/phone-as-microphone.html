@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How to use your phone as a microphone on Windows — VoxBridge</title>
+    <meta
+      name="description"
+      content="A complete, honest guide to using an Android phone or iPhone as a microphone in Windows: what works, what adds latency, and the exact steps for a free, local-only setup with VoxBridge."
+    />
+    <meta name="theme-color" content="#f4f1ea" />
+    <link rel="canonical" href="https://voxbridge-app-pi.vercel.app/phone-as-microphone" />
+    <meta property="og:site_name" content="VoxBridge" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://voxbridge-app-pi.vercel.app/phone-as-microphone" />
+    <meta property="og:title" content="How to use your phone as a microphone on Windows" />
+    <meta property="og:description" content="Three ways to get a phone microphone into Windows, the latency each one adds, and a free local-only setup that any app can record." />
+    <meta property="og:image" content="https://voxbridge-app-pi.vercel.app/assets/img/og.png" />
+    <meta property="og:image:alt" content="VoxBridge running a live session on Windows with a phone connected as the microphone" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="How to use your phone as a microphone on Windows" />
+    <meta name="twitter:description" content="Three ways to get a phone microphone into Windows, the latency each one adds, and a free local-only setup." />
+    <meta name="twitter:image" content="https://voxbridge-app-pi.vercel.app/assets/img/og.png" />
+    <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
+    <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/config.js" defer></script>
+    <script src="assets/js/icons.js" defer></script>
+    <script src="assets/js/site.js" defer></script>
+    <noscript><style>.reveal{opacity:1 !important;transform:none !important}</style></noscript>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "HowTo",
+            "name": "Use your phone as a microphone on Windows",
+            "description": "Turn an Android phone or iPhone into a microphone that Zoom, Teams, Discord, OBS and every other Windows app can record.",
+            "totalTime": "PT10M",
+            "supply": [
+              { "@type": "HowToSupply", "name": "A Windows 10 or 11 PC" },
+              { "@type": "HowToSupply", "name": "An Android phone (8.0+) or iPhone (iOS 16+)" },
+              { "@type": "HowToSupply", "name": "Both devices on the same Wi-Fi network" }
+            ],
+            "step": [
+              { "@type": "HowToStep", "name": "Install the Windows app", "text": "Download VoxBridge for Windows and run the installer. It opens on the Live screen and makes a virtual microphone available to Windows." },
+              { "@type": "HowToStep", "name": "Give Windows a virtual cable", "text": "Press Set up virtual mic in Studio. VoxBridge downloads the official VB-CABLE driver, verifies its signature, and installs it." },
+              { "@type": "HowToStep", "name": "Install the phone app", "text": "Install the Android APK or sideload the unsigned iOS build with AltStore, Sideloadly or Xcode." },
+              { "@type": "HowToStep", "name": "Pair the phone", "text": "The phone finds the PC automatically. Tap it and enter the four-digit code shown on the desktop, or scan the QR code." },
+              { "@type": "HowToStep", "name": "Pick the microphone in your app", "text": "Choose CABLE Output in Zoom, Teams, Discord or OBS. Apps set to the Windows default already work, because VoxBridge makes the cable the default recording device." }
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Does using my phone as a microphone work without internet?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. VoxBridge sends audio over your local network, from the phone to the PC, and never through the internet. A router is enough; an internet connection is not required. Wi-Fi or a USB cable both work." }
+              },
+              {
+                "@type": "Question",
+                "name": "How much latency does a phone microphone add?",
+                "acceptedAnswer": { "@type": "Answer", "text": "With VoxBridge on 5 GHz Wi-Fi and 20 ms frames, end-to-end latency is about 60–90 ms including the jitter buffer. Bluetooth headsets add 100–200 ms on top, and cloud relay apps add whatever the round trip to their server costs." }
+              },
+              {
+                "@type": "Question",
+                "name": "Will Zoom, Teams and Discord see it as a normal microphone?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes. The phone audio is rendered into a virtual audio cable, which appears to Windows as an ordinary recording device. Any application that can record a microphone can use it, including Zoom, Teams, Discord, OBS, Google Meet, Steam and Audacity." }
+              },
+              {
+                "@type": "Question",
+                "name": "Do both devices have to be on the same Wi-Fi?",
+                "acceptedAnswer": { "@type": "Answer", "text": "Yes for the wireless mode — and a guest network with client isolation will block discovery. If the network isolates clients, plug the phone in and use USB with adb reverse, which VoxBridge supports." }
+              },
+              {
+                "@type": "Question",
+                "name": "Is it free?",
+                "acceptedAnswer": { "@type": "Answer", "text": "VoxBridge is free and MIT licensed. The Windows app, the Android APK and the iOS build are all published from the same public repository, with no account, no subscription and no audio leaving your network." }
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap header-inner">
+        <a class="brand" href="index.html" aria-label="VoxBridge home">
+          <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+          <span>VoxBridge<small>phone as microphone</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Main">
+          <a href="features.html">Features</a>
+          <a href="download.html">Download</a>
+          <a href="setup.html">Setup</a>
+          <a href="security.html">Security</a>
+          <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">Source</a>
+        </nav>
+        <div class="header-actions">
+          <button class="icon-button" data-theme-toggle aria-label="Toggle theme">
+            <svg class="theme-sun"><use href="#i-sun"/></svg>
+            <svg class="theme-moon"><use href="#i-moon"/></svg>
+          </button>
+          <a class="btn primary sm" href="download.html">Download</a>
+          <button class="icon-button menu-button" data-menu-toggle aria-label="Menu" aria-expanded="false">
+            <svg><use href="#i-menu"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="doc">
+      <section class="page-head">
+        <div class="wrap">
+          <p class="breadcrumbs"><a href="index.html">VoxBridge</a> / Guide</p>
+          <h1>Your phone is already the <em>best microphone</em> you own.</h1>
+          <p>
+            Laptop microphones sit behind a keyboard and pick up the room. The phone in your pocket has a
+            directional capsule, a noise-cancelling array and a better preamp. This guide covers every practical
+            way to use it as a Windows microphone — and the latency each one costs.
+          </p>
+          <div class="pill-row" style="margin-top: 22px">
+            <span class="pill"><svg><use href="#i-check"/></svg> Works offline</span>
+            <span class="pill"><svg><use href="#i-check"/></svg> No account</span>
+            <span class="pill"><svg><use href="#i-check"/></svg> Free and MIT licensed</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="prose wrap-narrow">
+        <p class="lead">
+          A microphone is an analogue component with a digital handshake. Windows apps cannot record from a phone
+          directly: they record from a <em>recording endpoint</em>. Every method below is a different way of
+          manufacturing that endpoint. The differences are latency, reliability and what you have to install.
+        </p>
+
+        <h2>Three ways, honestly compared</h2>
+
+        <table>
+          <thead>
+            <tr><th>Approach</th><th>Latency</th><th>Needs</th><th>Verdict</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>App over Wi-Fi + virtual cable</b></td>
+              <td>60–90 ms</td>
+              <td>Two apps and a driver</td>
+              <td>Best quality per euro. Local-only, works in every app.</td>
+            </tr>
+            <tr>
+              <td><b>USB cable + same app</b></td>
+              <td>30–60 ms</td>
+              <td><code>adb</code> on the PC</td>
+              <td>The flattest path. No radio, no jitter, no discovery.</td>
+            </tr>
+            <tr>
+              <td><b>Bluetooth headset as the mic</b></td>
+              <td>150–250 ms</td>
+              <td>Pairing only</td>
+              <td>Fine for calls, bad for live monitoring and music.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>
+          Cloud-relay apps — the kind that ask you to install a browser extension and “join a session” — add a
+          server round trip and an account, and they stop working when the vendor does. If your audio never leaves
+          the room, there is nothing to relay and nothing to trust.
+        </p>
+
+        <h2>Set it up with VoxBridge (10 minutes)</h2>
+
+        <h3>1. Install the Windows app</h3>
+        <p>
+          Download the installer from the <a href="download.html">download page</a> and run it. It is per-user, so
+          no administrator prompt appears until the optional driver step. <b>SmartScreen</b> will warn once
+          because the build is not code-signed — check the SHA-256 on the download page and choose
+          <i>More info → Run anyway</i>.
+        </p>
+
+        <h3>2. Give Windows a virtual microphone</h3>
+        <p>
+          Windows applications only see endpoints. VoxBridge renders into <a href="https://vb-audio.com/Cable/" rel="noopener">VB-CABLE</a>,
+          a well-known virtual audio device, and then points Windows at it. Press <b>Set up virtual mic</b> in
+          Studio: VoxBridge downloads the official installer from <code>vb-audio.com</code>, verifies its
+          Authenticode signature, and runs it. No kernel driver of our own is involved.
+        </p>
+
+        <h3>3. Install the phone app</h3>
+        <p>
+          On Android, install the APK — the <a href="setup.html#android">setup guide</a> walks through the
+          “allow this source” prompt. On iPhone the IPA is unsigned on purpose; install it with AltStore,
+          Sideloadly or Xcode using your own Apple ID.
+        </p>
+
+        <h3>4. Pair the phone</h3>
+        <p>
+          Put both devices on the same Wi-Fi. The phone lists nearby PCs within a few seconds; tap yours and type
+          the four-digit code shown on the desktop, or scan the QR code. Enable <b>Remember this device</b> and
+          the phone reconnects on its own next time.
+        </p>
+
+        <h3>5. Pick it in the app you care about</h3>
+        <p>
+          VoxBridge makes the cable the Windows default recording device while it is connected, so apps left on
+          <i>Default</i> need no change. If an app pins a device:
+        </p>
+        <ul>
+          <li><b>Zoom</b> — Settings → Audio → Microphone → <code>CABLE Output</code></li>
+          <li><b>Teams</b> — Settings → Devices → Microphone → <code>CABLE Output</code></li>
+          <li><b>Discord</b> — Voice &amp; Video → Input Device → <code>CABLE Output</code></li>
+          <li><b>OBS</b> — Audio Mixer → Mic/Aux → Properties → Device</li>
+          <li><b>Chrome / Meet</b> — lock icon in the address bar → Site settings → Microphone</li>
+        </ul>
+
+        <div class="callout">
+          <strong>Prove it before the meeting.</strong>
+          Studio → <b>Test what apps hear</b> records three seconds from the cable's output — exactly what Zoom
+          will receive — and reports the level. If it is silent, you know now, not when someone says “you're
+          muted”.
+        </div>
+
+        <h2>Getting the sound right</h2>
+        <p>
+          Hold the phone 15–25 cm away and slightly below your mouth. Closer than 5 cm and plosives dominate;
+          further than 40 cm and the room arrives with your voice. Set noise suppression to <b>Medium</b>, presence
+          <b>+4</b>, warmth <b>+3</b>, boost <b>0</b>, and leave the limiter on. If you use headphones, flip
+          <b>Monitor</b> in the Live header to hear yourself — never with speakers, or the phone will re-record
+          them.
+        </p>
+
+        <h2>When it goes wrong</h2>
+        <h3>The phone does not see the PC</h3>
+        <p>
+          Check the subnet first: guest networks and some mesh systems isolate clients. Then allow VoxBridge on
+          <i>Private</i> networks in Windows Firewall. VPNs on either device also capture local traffic. Still
+          stuck? Use USB with <code>adb reverse</code>, or type the address manually.
+        </p>
+        <h3>Audio is choppy</h3>
+        <p>
+          Raise the jitter buffer to 60–80 ms, move to 5 GHz, and turn off anything saturating the link. If the
+          desktop and router are far apart, USB is the honest answer.
+        </p>
+        <h3>It sounds thin or harsh</h3>
+        <p>
+          Drop suppression to Medium, keep boost at 0 dB and let auto gain work. Move the phone back a little; the
+          capsule is tuned for 15–25 cm, not for talking directly into it.
+        </p>
+
+        <h2>A shorter version</h2>
+        <p>
+          Install the Windows app, install the phone app, put them on the same Wi-Fi, pair with the four-digit
+          code, choose <code>CABLE Output</code> in the app that needs a microphone. About ten minutes, no
+          account, and the audio never leaves your network.
+        </p>
+
+        <div class="cta" style="margin-top: 40px">
+          <div>
+            <h2>Ready when <em>you are.</em></h2>
+            <p>Free, MIT licensed, built in public by GitHub Actions. Windows, Android and iPhone.</p>
+          </div>
+          <div class="cta-actions">
+            <a class="btn primary lg" href="download.html">Download VoxBridge</a>
+            <a class="btn ghost lg" href="features.html">See what it does</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <a class="brand" href="index.html">
+              <img src="assets/img/mark.svg" alt="" width="34" height="34" />
+              <span>VoxBridge<small>phone as microphone</small></span>
+            </a>
+            <p>A native bridge between the microphone in your pocket and the apps on your PC. Built in the open.</p>
+          </div>
+          <div class="footer-col">
+            <h4>Product</h4>
+            <a href="features.html">Features</a>
+            <a href="download.html">Download</a>
+            <a href="setup.html">Setup guide</a>
+            <a href="phone-as-microphone.html">Phone mic guide</a>
+          </div>
+          <div class="footer-col">
+            <h4>Trust</h4>
+            <a href="privacy.html">Privacy policy</a>
+            <a href="terms.html">Terms of use</a>
+            <a href="security.html">Security</a>
+            <a href="licenses.html">Licenses</a>
+          </div>
+          <div class="footer-col">
+            <h4>Project</h4>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic" rel="noopener">GitHub repository</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases" rel="noopener">Releases</a>
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/issues" rel="noopener">Report a bug</a>
+            <a href="support.html">Contact</a>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© <span data-year>2026</span> VoxBridge contributors · MIT licensed</span>
+          <span class="disclaimer">Independent project. Not affiliated with VB-Audio, WO Mic, Microsoft, Google or Apple.</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
