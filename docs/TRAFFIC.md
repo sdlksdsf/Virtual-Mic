@@ -119,7 +119,7 @@ These are where people look when they have already decided to install something.
 **Package managers** (biggest long-tail win — `winget install` is now the default way Windows users
 find CLI/utility apps):
 
-- **winget**: run `wingetcreate new https://github.com/sdlksdsf/Virtual-Mic/releases/download/v1.0.1/VoxBridge-Setup-1.0.1-x64.exe`
+- **winget**: run `wingetcreate new https://github.com/sdlksdsf/VoxBridge/releases/download/v1.0.1/VoxBridge-Setup-1.0.1-x64.exe`
   on a Windows box, then submit the generated PR to `microsoft/winget-pkgs`. First submission is
   reviewed by a human (a few days).
 - **Scoop**: a bucket manifest can be installed straight from a raw URL before any bucket accepts
