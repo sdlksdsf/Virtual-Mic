@@ -67,6 +67,7 @@ const FILES = [
   'index.html',
   'licenses.html',
   'og-card.html',
+  'phone-as-microphone.html',
   'privacy.html',
   'robots.txt',
   'security.html',
