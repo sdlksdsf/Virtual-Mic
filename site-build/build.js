@@ -178,6 +178,26 @@ async function downloadAsset(asset) {
   return buffer;
 }
 
+/**
+ * Build machines share GitHub's rate limits and the CDN occasionally drops a
+ * 40 MB transfer mid-stream. One flaky download used to publish a site missing
+ * the portable build, so each artifact is retried and a persistent failure
+ * fails the build instead — the previous (complete) deployment keeps serving.
+ */
+async function downloadAssetWithRetry(asset, attempts = 3) {
+  let lastError;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await downloadAsset(asset);
+    } catch (error) {
+      lastError = error;
+      console.warn(`downloads: ${asset.name} attempt ${attempt}/${attempts} failed (${error.message})`);
+      if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, attempt * 2_000));
+    }
+  }
+  throw lastError;
+}
+
 function versionFromName(name) {
   const match = String(name).match(/(\d+\.\d+\.\d+)/);
   return match ? match[1] : '';
@@ -226,10 +246,10 @@ async function mirrorDownloads(out) {
           return;
         }
         try {
-          const buffer = await downloadAsset(asset);
+          const buffer = await downloadAssetWithRetry(asset);
           sources.set(target.key, { name: asset.name, buffer });
         } catch (error) {
-          console.warn(`downloads: ${asset.name} failed (${error.message}); leaving the GitHub link in place`);
+          throw new Error(`${asset.name} could not be mirrored after 3 attempts (${error.message})`);
         }
       }),
     );
@@ -263,9 +283,14 @@ async function mirrorDownloads(out) {
 
   fs.writeFileSync(path.join(directory, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
+  const mirrored = TARGETS.filter((target) => manifest.files[target.key]).length;
+  if (mirrored !== TARGETS.length) {
+    throw new Error(`downloads: mirrored ${mirrored}/${TARGETS.length} artifacts — refusing to publish a partial site`);
+  }
   if (!manifest.files.android || !manifest.files.ios) {
     console.warn('downloads: the phone builds are missing — the page will fall back to GitHub for them');
   }
+  console.log(`downloads: mirrored ${mirrored}/${TARGETS.length} artifacts`);
 }
 
 async function main() {
