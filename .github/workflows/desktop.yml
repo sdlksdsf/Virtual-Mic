@@ -66,7 +66,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import struct, zlib
-          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe'
+          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.0.1-x64.exe'
           data = open(path, 'rb').read()
           assert data[-24:-16] == b'VBXPAY1\x00'
           offset, size = struct.unpack('<QQ', data[-16:])
@@ -106,13 +106,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh release view v1.0.0 >/dev/null 2>&1 || \
-            gh release create v1.0.0 --title "VoxBridge 1.0.0" --notes "VoxBridge 1.0.0"
+          gh release view v1.0.1 >/dev/null 2>&1 || \
+            gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
           ok=0
           for attempt in 1 2 3 4 5; do
-            if gh release upload v1.0.0 \
-              apps/desktop/standalone/dist/VoxBridge-Setup-1.0.0-x64.exe \
-              apps/desktop/standalone/dist/VoxBridge-1.0.0-win64-portable.zip \
+            if gh release upload v1.0.1 \
+              apps/desktop/standalone/dist/VoxBridge-Setup-1.0.1-x64.exe \
+              apps/desktop/standalone/dist/VoxBridge-1.0.1-win64-portable.zip \
               --clobber; then ok=1; break; fi
             echo "upload attempt $attempt failed; retrying"
             sleep $((attempt * 10))
@@ -126,10 +126,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p assets && cd assets
-          gh release download v1.0.0 --dir . --clobber --pattern 'VoxBridge-*'
+          gh release download v1.0.1 --dir . --clobber --pattern 'VoxBridge-*'
           sha256sum VoxBridge-* > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          gh release upload v1.0.0 SHA256SUMS.txt --clobber
+          gh release upload v1.0.1 SHA256SUMS.txt --clobber
 
       - name: Report build log
         if: failure()

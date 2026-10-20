@@ -47,7 +47,7 @@
           <p class="breadcrumbs"><a href="index.html">VoxBridge</a> / Download</p>
           <h1>Everything you need, <em>nothing you don’t.</em></h1>
           <p>
-            Version <b data-version>1.0.0</b>. Free, MIT licensed, built by GitHub Actions from the public repository.
+            Version <b data-version>1.0.1</b>. Free, MIT licensed, built by GitHub Actions from the public repository.
             Windows ships an installer and a portable build, Android ships an APK, and the iPhone build is an unsigned IPA
             because Apple requires a signature only you can generate.
           </p>
@@ -93,7 +93,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-android.apk</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="android">≈ 2 MB</b></div>
               <div class="dl-spec"><span>Platform</span><b>Android 8.0 or newer</b></div>
               <p class="dl-aside-note">
@@ -125,7 +125,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-ios.ipa</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="ios">≈ 0.3 MB</b></div>
               <div class="dl-spec"><span>Installer</span><b>AltStore · Sideloadly · Xcode</b></div>
               <p class="dl-aside-note">
@@ -157,7 +157,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-windows-setup.exe</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="windows">≈ 40 MB</b></div>
               <div class="dl-spec"><span>Platform</span><b>Windows 10 1809+ · 11 · x64</b></div>
               <p class="dl-aside-note">
@@ -352,11 +352,18 @@
           <div class="section-head">
             <div>
               <span class="mono">Release notes</span>
-              <h2>Version <em>1.0.0.</em></h2>
+              <h2>Version <em>1.0.1.</em></h2>
             </div>
           </div>
           <div class="prose" style="padding-top: 0">
-            <h3>Windows</h3>
+            <h3>1.0.1 — 20 October 2026</h3>
+            <ul>
+              <li><b>Android:</b> the stream survives the lock screen. A session-scoped wake lock and Wi-Fi lock, a 15-second socket ping, automatic reconnect with backoff, an instant retry when the network returns, and a sticky restart that resumes the last session. Settings → Background shows whether Android may still freeze the app.</li>
+              <li><b>Downloads:</b> every file is served from this site with a real length, resume support and the correct MIME type. Phones get the Android APK instead of the Windows installer, and in-app browsers say so instead of hanging.</li>
+              <li><b>Fixes carried from 1.0.0:</b> out-of-order audio frames are rejected (no more repeated words), the noise tracker freezes while you speak, and the Monitor switch is off by default.</li>
+            </ul>
+            <h3>1.0.0 — 19 October 2026</h3>
+            <h4>Windows</h4>
             <ul>
               <li>Native capture service with WASAPI shared mode, automatic rate conversion and device hot-swap.</li>
               <li>Virtual microphone detection plus a one-click, signature-checked VB-CABLE setup.</li>
@@ -364,18 +371,18 @@
               <li>Three-second verification test that records from the cable input and reports the level.</li>
               <li>16-bit WAV session recording, background operation, autostart, diagnostics export.</li>
             </ul>
-            <h3>Android</h3>
+            <h4>Android</h4>
             <ul>
               <li>Foreground service with mute and gain quick actions, live notification and remember-device pairing.</li>
               <li>48 / 32 / 24 / 16 kHz capture, PCM16 and IMA ADPCM, 10 or 20 ms frames.</li>
               <li>Automatic discovery plus manual address and USB/ADB modes.</li>
             </ul>
-            <h3>iOS</h3>
+            <h4>iOS</h4>
             <ul>
               <li>SwiftUI app with the same protocol, background audio session and local network permission handling.</li>
               <li>Accelerate-based resampling and the same DSP presets as Android.</li>
             </ul>
-            <h3>Website and infrastructure</h3>
+            <h4>Website and infrastructure</h4>
             <ul>
               <li>New site with light and dark themes, download hub, setup guides and legal pages.</li>
               <li>Anonymous download counters and feedback storage in Supabase, with row-level security.</li>

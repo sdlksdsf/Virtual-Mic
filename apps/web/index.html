@@ -618,7 +618,7 @@
             'content-type': 'application/json',
             prefer: 'return=minimal',
           },
-          body: JSON.stringify({ email, topic: 'release-notes', message: 'Newsletter signup', platform: 'web', app_version: '1.0.0' }),
+          body: JSON.stringify({ email, topic: 'release-notes', message: 'Newsletter signup', platform: 'web', app_version: '1.0.1' }),
         })
           .then((response) => {
             if (!response.ok) throw new Error('failed');

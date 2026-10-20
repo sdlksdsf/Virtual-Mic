@@ -41,7 +41,7 @@
 
 namespace {
 
-constexpr const char* kServiceVersion = "1.0.0";
+constexpr const char* kServiceVersion = "1.0.1";
 constexpr const char* kDefaultDevices[] = {"cable input", "voxbridge virtual microphone",
                                            "voicemeeter input", "virtual audio cable", "line 1 ("};
 

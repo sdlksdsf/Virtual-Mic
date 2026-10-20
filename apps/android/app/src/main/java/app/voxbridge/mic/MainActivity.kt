@@ -1041,7 +1041,7 @@ private fun SettingsScreen(
         }
         Spacer(Modifier.height(12.dp))
         Text(
-            "VoxBridge 1.0.0 · made for people who sound better than their laptop mic.",
+            "VoxBridge 1.0.1 · made for people who sound better than their laptop mic.",
             color = colors.muted, fontSize = 11.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
         )

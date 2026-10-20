@@ -35,41 +35,102 @@ jobs:
             test "$code" = "200"
           done
           curl -fsSL "$base/download" -o /tmp/download.html
-          grep -q 'VoxBridge-Setup-1.0.0-x64.exe' /tmp/download.html
-          grep -q 'VoxBridge-1.0.0-android.apk' /tmp/download.html
-          grep -q 'VoxBridge-1.0.0-unsigned.ipa' /tmp/download.html
+          # Downloads are served from the site itself now, not from GitHub.
+          for file in VoxBridge-android.apk VoxBridge-ios.ipa \
+            VoxBridge-windows-setup.exe VoxBridge-windows-portable.zip; do
+            grep -q "/downloads/$file" /tmp/download.html
+          done
+          grep -q 'data-download="android"' /tmp/download.html
+          grep -q 'data-download="ios"' /tmp/download.html
           echo "download links present"
+
+      - name: Same-origin downloads
+        run: |
+          set -euo pipefail
+          base=https://voxbridge-app-pi.vercel.app
+          curl -fsSL "$base/downloads/manifest.json" -o /tmp/manifest.json
+          cat /tmp/manifest.json
+          python3 - <<'PY'
+          import json
+          manifest = json.load(open('/tmp/manifest.json'))
+          files = manifest.get('files') or {}
+          for key in ('android', 'ios', 'windows', 'portable'):
+              entry = files.get(key)
+              assert entry, f'{key} missing from the download manifest'
+              assert entry['size'] > 1000, f'{key} size looks wrong: {entry["size"]}'
+              assert len(entry['sha256']) == 64, f'{key} checksum is not sha256'
+          print('manifest covers', ', '.join(sorted(files)))
+          PY
+
+          # Every artifact must arrive as an attachment, with a real length and
+          # range support — a phone cannot show progress or resume without them.
+          for pair in "VoxBridge-android.apk:application/vnd.android.package-archive" \
+                      "VoxBridge-ios.ipa:application/zip" \
+                      "VoxBridge-windows-setup.exe:application/x-msdownload" \
+                      "VoxBridge-windows-portable.zip:application/zip"; do
+            file=${pair%%:*}
+            want=${pair#*:}
+            headers=$(curl -fsSIL "$base/downloads/$file")
+            echo "$file"
+            echo "$headers" | grep -qi '^HTTP/.* 200'
+            echo "$headers" | grep -qi "^content-type: $want"
+            echo "$headers" | grep -qi '^content-disposition: attachment'
+            echo "$headers" | grep -qi '^accept-ranges: bytes'
+            length=$(echo "$headers" | tr -d '\r' | awk 'tolower($1)=="content-length:"{print $2}' | tail -1)
+            test -n "$length" && test "$length" -gt 1000
+            echo "  $length bytes, $want"
+          done
+
+          # Range requests are what let a dropped mobile connection resume.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Range: bytes=0-99' \
+            "$base/downloads/VoxBridge-android.apk")
+          echo "range request -> $code"
+          test "$code" = "206"
 
       - name: Release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
+          tag=$(gh release view --json tagName --jq .tagName)
+          echo "latest release: $tag"
+          test "$tag" = "v$(python3 -c 'import json;print(json.load(open("/tmp/manifest.json"))["version"])')"
           mkdir -p dl
           cd dl
-          # Serialise with platform uploads, then refresh the checksum file so it
-          # always describes the exact bytes currently attached to the release.
-          for file in \
-            VoxBridge-Setup-1.0.0-x64.exe \
-            VoxBridge-1.0.0-win64-portable.zip \
-            VoxBridge-1.0.0-android.apk \
-            VoxBridge-1.0.0-unsigned.ipa; do
-            gh release download v1.0.0 --clobber --pattern "$file" --dir .
+          # Platform builds upload in parallel, so the release can be briefly
+          # incomplete while this runs.
+          for attempt in 1 2 3 4 5 6; do
+            gh release download "$tag" --clobber --pattern 'VoxBridge-*' --dir . || true
+            count=$(ls VoxBridge-* 2>/dev/null | wc -l)
+            echo "attempt $attempt: $count assets present"
+            test "$count" -ge 4 && break
+            sleep 20
+          done
+          test "$(ls VoxBridge-* 2>/dev/null | wc -l)" -ge 4
+          ls -l
+
+          # The mirrored copy on the website must be byte-identical to the release.
+          for file in VoxBridge-*-android.apk VoxBridge-*-unsigned.ipa \
+            VoxBridge-Setup-*-x64.exe VoxBridge-*-win64-portable.zip; do
             echo "$file $(stat -c%s "$file") bytes"
           done
           sha256sum VoxBridge-* > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          gh release upload v1.0.0 SHA256SUMS.txt --clobber
+          gh release upload "$tag" SHA256SUMS.txt --clobber
           sha256sum -c SHA256SUMS.txt
-          unzip -q VoxBridge-1.0.0-android.apk -d apk
+
+          apk=$(ls VoxBridge-*-android.apk)
+          ipa=$(ls VoxBridge-*-unsigned.ipa)
+          exe=$(ls VoxBridge-Setup-*-x64.exe)
+          unzip -q "$apk" -d apk
           test -f apk/AndroidManifest.xml
           test -f apk/classes.dex
-          unzip -q VoxBridge-1.0.0-unsigned.ipa -d ipa
+          unzip -q "$ipa" -d ipa
           test -f ipa/Payload/VoxBridge.app/VoxBridge
           test -f ipa/Payload/VoxBridge.app/Info.plist
-          python3 - <<'PY'
-          import struct
-          data = open('VoxBridge-Setup-1.0.0-x64.exe', 'rb').read()
+          EXE="$exe" python3 - <<'PY'
+          import os, struct
+          data = open(os.environ['EXE'], 'rb').read()
           assert data[-24:-16] == b'VBXPAY1\x00', 'installer footer missing'
           offset, size = struct.unpack('<QQ', data[-16:])
           assert offset + size + 24 == len(data), 'installer footer is inconsistent'
@@ -77,19 +138,29 @@ jobs:
           print('installer payload is intact:', size, 'bytes')
           PY
 
+          # The version a user sees must be the version the site advertises.
+          python3 - "$apk" <<'PY'
+          import json, sys
+          name = sys.argv[1]
+          version = json.load(open('/tmp/manifest.json'))['version']
+          print('apk:', name, 'version:', version)
+          assert f'-{version}-' in name, f'APK {name} does not carry {version}'
+          PY
+
       - name: Supabase inserts
         run: |
           set -euo pipefail
+          version=$(python3 -c 'import json;print(json.load(open("/tmp/manifest.json"))["version"])')
           url=$(grep -o "https://[a-z0-9]*\.supabase\.co" apps/web/assets/js/config.js | head -1)
           key=$(grep -o "sb_publishable_[A-Za-z0-9_]*" apps/web/assets/js/config.js | head -1)
           curl -fsS -X POST "$url/rest/v1/download_events" \
             -H "apikey: $key" -H "Authorization: Bearer $key" \
             -H 'Content-Type: application/json' \
-            -d '{"platform":"other","version":"1.0.0","source":"smoke-test"}' -o /dev/null
+            -d "{\"platform\":\"other\",\"version\":\"$version\",\"source\":\"smoke-test\"}" -o /dev/null
           curl -fsS -X POST "$url/rest/v1/feedback" \
             -H "apikey: $key" -H "Authorization: Bearer $key" \
             -H 'Content-Type: application/json' \
-            -d '{"email":"ci@voxbridge.app","topic":"smoke-test","message":"release smoke test","platform":"other","app_version":"1.0.0"}' -o /dev/null
+            -d "{\"email\":\"ci@voxbridge.app\",\"topic\":\"smoke-test\",\"message\":\"release smoke test\",\"platform\":\"other\",\"app_version\":\"$version\"}" -o /dev/null
           echo "supabase inserts accepted"
 
       - name: Report
@@ -105,6 +176,6 @@ jobs:
           {
             echo "### Release smoke test passed (${{ github.run_id }})"
             echo ""
-            echo "Website pages, installer payload, APK and IPA structure, SHA-256 checksums and Supabase inserts all verified."
+            echo "Website pages, same-origin download headers and range support, release assets, installer payload, APK and IPA structure, SHA-256 checksums and Supabase inserts all verified."
           } > /tmp/report.md
           gh issue comment "$n" --body-file /tmp/report.md

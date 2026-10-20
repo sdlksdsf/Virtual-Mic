@@ -19,6 +19,14 @@ No account · No cloud audio · No kernel driver to break your PC
 [![Android build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml)
 [![iOS build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-15150f.svg)](LICENSE)
+[![Downloads](https://img.shields.io/github/downloads/sdlksdsf/Virtual-Mic/total?color=2b7a52)](https://github.com/sdlksdsf/Virtual-Mic/releases)
+
+**Install in one step:** [voxbridge-app-pi.vercel.app/download](https://voxbridge-app-pi.vercel.app/download) —
+the site picks the right file for your device (`.exe` on Windows, `.apk` on Android, `.ipa` on iPhone) and
+serves it from its own domain, so a phone never has to wrestle with a GitHub redirect.
+
+New in **1.0.1**: the Android stream now survives a locked screen, and phone downloads no longer stall.
+See [CHANGELOG.md](CHANGELOG.md).
 
 </div>
 
@@ -94,10 +102,10 @@ Every build below is produced by GitHub Actions from this repository and publish
 
 | Platform | Requirements | File |
 |---|---|---|
-| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.0-x64.exe`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe) |
-| **Windows portable** | Same, no install | [`VoxBridge-1.0.0-win64-portable.zip`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip) |
-| **Android** | 8.0+ | [`VoxBridge-1.0.0-android.apk`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk) |
-| **iOS** | 16+, unsigned | [`VoxBridge-1.0.0-unsigned.ipa`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa) |
+| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.1-x64.exe`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.1-x64.exe) |
+| **Windows portable** | Same, no install | [`VoxBridge-1.0.1-win64-portable.zip`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-win64-portable.zip) |
+| **Android** | 8.0+ | [`VoxBridge-1.0.1-android.apk`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-android.apk) |
+| **iOS** | 16+, unsigned | [`VoxBridge-1.0.1-unsigned.ipa`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-unsigned.ipa) |
 
 > **A note on signatures.** The Windows binaries are not code-signed, so SmartScreen will ask once. The IPA is
 > unsigned because a signing identity is tied to your Apple ID; use AltStore, Sideloadly or Xcode. Both are
@@ -249,13 +257,17 @@ report a vulnerability, follow [`SECURITY.md`](SECURITY.md) rather than opening 
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a PR, please run the relevant build for the platform you
-touched — a PR is expected to keep the Desktop, Android and iOS workflows green.
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Before opening a PR, run the
+build for the platform you touched; a PR is expected to keep the Desktop, Android and iOS workflows green.
 
 ```bash
+node scripts/lint.js                             # website references + JS syntax
 cd apps/desktop && npm install && npm start      # runs the desktop host
 cd apps/android && gradle assembleDebug          # compiles the Kotlin app
 ```
+
+If VoxBridge replaced a microphone for you, a star helps other people find it — that is the whole
+marketing budget.
 
 ## License
 

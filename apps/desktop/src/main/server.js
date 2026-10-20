@@ -188,7 +188,7 @@ class Receiver extends EventEmitter {
               name: os.hostname(),
               port: this.port,
               pair: Boolean(this.settings.requirePairing),
-              version: '1.0.0',
+              version: '1.0.1',
               platform: process.platform,
             }),
           );
@@ -393,7 +393,7 @@ class Receiver extends EventEmitter {
         auth: decision.method,
         stream: { rate: this.rate, codec: this.codec, channels: 1, frame_ms: this.frameMs },
         settings: { mute: false, gain: 1 },
-        server: '1.0.0',
+        server: '1.0.1',
       }),
     );
 
