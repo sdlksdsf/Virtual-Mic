@@ -4,6 +4,7 @@ node_modules/
 .yarn/
 
 # builds
+site-build/public/
 release/
 dist/
 out/

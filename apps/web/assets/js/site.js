@@ -5,8 +5,6 @@
   const root = document.documentElement;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
   const REPO = 'sdlksdsf/Virtual-Mic';
-  const RELEASES = `https://github.com/${REPO}/releases`;
-  const RELEASES_API = `https://api.github.com/repos/${REPO}/releases/latest`;
   const VERSION = '1.0.0';
 
   // Theme ---------------------------------------------------------------------
@@ -119,14 +117,18 @@
     element.textContent = String(new Date().getFullYear());
   });
 
-  // OS detection --------------------------------------------------------------
+  // Platform ------------------------------------------------------------------
+  const PLATFORM_LABELS = { windows: 'Windows', android: 'Android', ios: 'iPhone', mac: 'macOS', other: 'your device' };
+
   function detectPlatform() {
+    const preset = document.documentElement.dataset.platform;
+    if (preset && PLATFORM_LABELS[preset]) return preset;
     const ua = navigator.userAgent.toLowerCase();
-    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
-    const p = platform.toLowerCase();
-    if (p.includes('win') || ua.includes('windows')) return 'windows';
+    const raw = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+    const p = raw.toLowerCase();
     if (p.includes('android') || ua.includes('android')) return 'android';
-    if (p.includes('iphone') || p.includes('ipad') || ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+    if (/iphone|ipod/.test(ua) || /ipad/.test(ua) || (p.includes('mac') && navigator.maxTouchPoints > 1)) return 'ios';
+    if (p.includes('win') || ua.includes('windows')) return 'windows';
     if (p.includes('mac') || ua.includes('macintosh')) return 'mac';
     return 'other';
   }
@@ -137,45 +139,42 @@
     if (element.dataset.os === platform) element.classList.add('is-detected');
   });
   document.querySelectorAll('[data-os-name]').forEach((element) => {
-    element.textContent = { windows: 'Windows', android: 'Android', ios: 'iPhone', mac: 'macOS', other: 'your device' }[platform];
+    element.textContent = PLATFORM_LABELS[platform];
   });
 
   // Downloads ----------------------------------------------------------------
   const DOWNLOADS = {
     windows: {
       file: `VoxBridge-Setup-${VERSION}-x64.exe`,
-      page: `${RELEASES}`,
-      label: 'Download for Windows',
+      path: '/downloads/VoxBridge-windows-setup.exe',
       size: '≈ 40 MB',
     },
     portable: {
       file: `VoxBridge-${VERSION}-win64-portable.zip`,
-      page: `${RELEASES}`,
-      label: 'Portable build',
+      path: '/downloads/VoxBridge-windows-portable.zip',
       size: '≈ 38 MB',
     },
     android: {
       file: `VoxBridge-${VERSION}-android.apk`,
-      page: `${RELEASES}`,
-      label: 'Download APK',
-      size: '≈ 1.3 MB',
+      path: '/downloads/VoxBridge-android.apk',
+      size: '≈ 2 MB',
     },
     ios: {
       file: `VoxBridge-${VERSION}-unsigned.ipa`,
-      page: `${RELEASES}`,
-      label: 'Download IPA',
+      path: '/downloads/VoxBridge-ios.ipa',
       size: '≈ 0.3 MB',
     },
   };
 
-  const assetCache = new Map();
-
-  async function resolveRelease() {
+  // The build mirrors every artifact next to the site and writes this manifest.
+  // Same-origin downloads are what fixed phones: no GitHub redirect, real
+  // Content-Length, and range requests so a dropped signal resumes.
+  async function loadManifest() {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 4500);
+    const timer = setTimeout(() => controller.abort(), 6000);
     try {
-      const response = await fetch(RELEASES_API, {
-        headers: { accept: 'application/vnd.github+json' },
+      const response = await fetch('/downloads/manifest.json', {
+        cache: 'no-store',
         signal: controller.signal,
       });
       if (!response.ok) return null;
@@ -187,64 +186,110 @@
     }
   }
 
-  function matchAsset(assets, fileName) {
-    if (!Array.isArray(assets)) return null;
-    return (
-      assets.find((asset) => asset.name === fileName) ||
-      assets.find((asset) => {
-        if (!asset.name) return false;
-        const lower = asset.name.toLowerCase();
-        if (fileName.endsWith('.exe')) return lower.endsWith('.exe') && lower.includes('setup');
-        if (fileName.endsWith('.apk')) return lower.endsWith('.apk');
-        if (fileName.endsWith('.ipa')) return lower.endsWith('.ipa');
-        return lower === fileName.toLowerCase();
-      }) ||
-      null
-    );
+  function formatSize(bytes) {
+    if (!bytes) return '';
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   async function hydrateDownloads() {
-    const release = await resolveRelease();
+    const manifest = await loadManifest();
+    const files = (manifest && manifest.files) || {};
+
     document.querySelectorAll('[data-download]').forEach((link) => {
       const key = link.dataset.download;
       const target = DOWNLOADS[key];
       if (!target) return;
-      let url = `https://github.com/${REPO}/releases/latest/download/${target.file}`;
-      let size = target.size;
-      let available = null;
-      if (release && release.assets) {
-        const asset = matchAsset(release.assets, target.file);
-        if (asset) {
-          url = asset.browser_download_url;
-          size = `${(asset.size / (1024 * 1024)).toFixed(1)} MB`;
-          available = true;
-          link.dataset.assetName = asset.name;
-          const checksumEl = document.querySelector(`[data-checksum="${key}"]`);
-          if (checksumEl && asset.digest) checksumEl.textContent = asset.digest.replace('sha256:', '');
+      const entry = files[key];
+      if (entry && entry.path) {
+        link.setAttribute('href', entry.path);
+        link.setAttribute('download', '');
+        link.dataset.available = 'true';
+        link.dataset.assetName = entry.name || target.file;
+        if (entry.size) {
+          document.querySelectorAll(`[data-size="${key}"]`).forEach((el) => (el.textContent = formatSize(entry.size)));
         }
+        if (entry.sha256) {
+          document.querySelectorAll(`[data-checksum="${key}"]`).forEach((el) => (el.textContent = entry.sha256));
+        }
+      } else {
+        // The mirror is missing for this file; the release page still has it.
+        link.setAttribute('href', `https://github.com/${REPO}/releases/latest/download/${target.file}`);
+        link.removeAttribute('download');
       }
-      if (release && release.tag_name) {
-        document.querySelectorAll('[data-version]').forEach((el) => (el.textContent = release.tag_name.replace(/^v/, '')));
-      }
-      link.setAttribute('href', url);
-      if (available !== null) link.dataset.available = String(available);
-      const sizeEl = document.querySelector(`[data-size="${key}"]`);
-      if (sizeEl) sizeEl.textContent = size;
-      assetCache.set(key, { url, size });
     });
+
+    if (manifest && manifest.version) {
+      document.querySelectorAll('[data-version]').forEach((element) => (element.textContent = manifest.version));
+    }
+
     document.querySelectorAll('[data-download-status]').forEach((element) => {
-      element.textContent = release
-        ? `Latest release ${release.tag_name || VERSION} · published ${new Date(release.published_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`
-        : 'Direct downloads are served from the public GitHub release page.';
+      element.textContent = manifest && manifest.version
+        ? `Latest release ${manifest.version} · downloads served from this site`
+        : 'Downloads are served from the latest GitHub release.';
     });
+
+    // The homepage hero must never offer a Windows .exe to a phone.
+    const cta = document.querySelector('[data-primary-cta]');
+    if (cta) {
+      const label = cta.querySelector('[data-primary-label]');
+      const icon = cta.querySelector('use');
+      if (platform === 'android' && files.android) {
+        cta.setAttribute('href', files.android.path);
+        cta.setAttribute('download', '');
+        cta.dataset.download = 'android';
+        cta.dataset.assetName = files.android.name || 'VoxBridge-android.apk';
+        if (label) label.textContent = 'Download the APK';
+        if (icon) icon.setAttribute('href', '#i-android');
+      } else if (platform === 'ios' && files.ios) {
+        cta.setAttribute('href', files.ios.path);
+        cta.setAttribute('download', '');
+        cta.dataset.download = 'ios';
+        cta.dataset.assetName = files.ios.name || 'VoxBridge-ios.ipa';
+        if (label) label.textContent = 'Download the IPA';
+        if (icon) icon.setAttribute('href', '#i-apple');
+      }
+    }
   }
 
   hydrateDownloads();
+
+  // In-app browsers (Instagram, WhatsApp, Facebook, most Android WebViews)
+  // silently swallow file downloads. Say so instead of leaving the user with a
+  // progress bar that never finishes.
+  function warnInAppDownload() {
+    let toast = document.getElementById('inapp-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'inapp-toast';
+      toast.className = 'inapp-toast';
+      toast.setAttribute('role', 'alert');
+      const title = document.createElement('strong');
+      title.textContent = 'Downloads are blocked in this browser.';
+      const body = document.createElement('span');
+      body.textContent =
+        'Tap ⋮ or the share button, choose “Open in Chrome” (Android) or “Open in Safari” (iPhone), then download again.';
+      const close = document.createElement('button');
+      close.type = 'button';
+      close.setAttribute('aria-label', 'Dismiss');
+      close.textContent = '✕';
+      close.addEventListener('click', () => toast.remove());
+      toast.append(title, body, close);
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 15000);
+    }
+    requestAnimationFrame(() => toast.classList.add('is-visible'));
+  }
 
   // Track a download click. Fire and forget, never blocks navigation.
   document.addEventListener('click', (event) => {
     const link = event.target.closest('[data-download]');
     if (!link) return;
+    if (document.documentElement.dataset.inapp === 'true') {
+      event.preventDefault();
+      warnInAppDownload();
+      return;
+    }
     trackDownload(link.dataset.download);
   });
 
@@ -444,7 +489,7 @@
 
   // Expose for the download page's manual actions.
   window.VoxBridgeSite = {
-    resolveRelease,
+    hydrateDownloads,
     platform,
     version: VERSION,
   };
