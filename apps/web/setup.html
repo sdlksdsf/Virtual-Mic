@@ -165,6 +165,12 @@
               <li>Windows volume mixer can mute the cable. Settings → System → Sound → Volume mixer.</li>
               <li>Reinstall the cable (Studio → Set up virtual mic) and reboot once.</li>
             </ul>
+            <h3>VoxBridge says "No cable" and nothing is routed</h3>
+            <ul>
+              <li>The app will not play your microphone into your speakers — that is what caused the echo people heard before. Install VB-CABLE from the button on the Live screen, then press <b>Refresh</b> in Studio.</li>
+              <li>A remembered output device can go stale after a driver update. Studio → Output device → <b>Automatic — best virtual cable</b> fixes it.</li>
+            </ul>
+
             <h3>Audio is choppy or delayed</h3>
             <ul>
               <li>Lower the jitter buffer to 30–60 ms; raise it if loss is happening.</li>
@@ -179,7 +185,7 @@
             </ul>
             <h3>Apps list it but I cannot hear anything in my headphones</h3>
             <ul>
-              <li>Correct — the cable carries audio to apps, not to your speakers. Turn on <b>Monitor on this PC</b> in Studio if you want to hear yourself, and use headphones to avoid feedback.</li>
+              <li>Correct — the cable carries audio to apps, not to your speakers. Flip <b>Monitor</b> in the Live header (or in Studio) if you want to hear yourself, and use headphones: a speaker will feed the phone's microphone and start an echo.</li>
             </ul>
 
             <h2>Uninstall</h2>
