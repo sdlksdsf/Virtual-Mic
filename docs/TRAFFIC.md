@@ -159,8 +159,10 @@ A phone-as-mic demo is inherently visual and audible — that is an advantage ov
 
 ## 6. Measurement — so you know which channel to repeat
 
-Vercel Web Analytics is now on every page (cookieless, no identifier; disclosed in `/privacy`). It
-answers two questions per channel: how many people arrived, and which page they landed on.
+Every page now writes one row to the Supabase `page_events` table: path, referring domain and any
+`utm_*` tag. No cookie, no identifier, no IP — the same stance as the download counter, and disclosed
+in `/privacy`. Click events were already recorded in `download_events`. Between the two you can
+answer the two questions that matter per channel: how many people arrived, and did they download.
 
 Use consistent UTM tags on every link you post:
 
@@ -180,6 +182,29 @@ directory | video | package; `utm_campaign` = launch_w1, evergreen, etc.
    titles/descriptions need work, not more pages.
 4. Supabase download rows by platform — Android vs Windows tells you which audience you actually
    reached.
+
+Two queries worth saving in the Supabase SQL editor:
+
+```sql
+-- which channel sent people, last 14 days
+select coalesce(nullif(referrer, ''), 'direct') as source, count(*) as views
+from public.page_events
+where created_at > now() - interval '14 days'
+group by 1 order by 2 desc;
+
+-- landing pages, last 14 days
+select path, count(*) as views
+from public.page_events
+where created_at > now() - interval '14 days'
+group by 1 order by 2 desc;
+```
+
+Join them against `download_events` for the number that actually matters — visits per download.
+Rows are tiny, but delete anything older than a year when you remember:
+
+```sql
+delete from public.page_events where created_at < now() - interval '365 days';
+```
 
 Do not chase daily numbers; the site is small enough that one Reddit post looks like a triumph and
 the next day looks like failure.

@@ -293,6 +293,51 @@
     trackDownload(link.dataset.download);
   });
 
+  // Anonymous page counting ---------------------------------------------------
+  // One row per page load: path, referring site and campaign tag only. No cookie,
+  // no identifier, no IP address — the same privacy stance as the download counter.
+  function trackPageview() {
+    const endpoint = window.VOXBRIDGE_CONFIG?.supabaseUrl;
+    const key = window.VOXBRIDGE_CONFIG?.supabaseAnonKey;
+    if (!endpoint || !key) return;
+    let referrer = '';
+    try {
+      referrer = document.referrer ? new URL(document.referrer).hostname : '';
+    } catch {
+      referrer = '';
+    }
+    let campaign = '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      campaign = ['utm_source', 'utm_medium', 'utm_campaign']
+        .map((name) => params.get(name))
+        .filter(Boolean)
+        .join('/')
+        .slice(0, 120);
+    } catch {
+      campaign = '';
+    }
+    const payload = {
+      path: (window.location.pathname || '/').slice(0, 160),
+      referrer: referrer.slice(0, 160),
+      campaign,
+    };
+    try {
+      navigator.sendBeacon?.(
+        `${endpoint}/rest/v1/page_events?apikey=${encodeURIComponent(key)}`,
+        new Blob([JSON.stringify(payload)], { type: 'application/json' }),
+      );
+    } catch {
+      /* offline is fine */
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', trackPageview);
+  } else {
+    trackPageview();
+  }
+
   function trackDownload(platformKey) {
     const endpoint = window.VOXBRIDGE_CONFIG?.supabaseUrl;
     const key = window.VOXBRIDGE_CONFIG?.supabaseAnonKey;
