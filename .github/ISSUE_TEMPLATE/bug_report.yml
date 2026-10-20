@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in VoxBridge does not work as described.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Audio bugs are almost always diagnosable from
+        the export in Studio → **Export diagnostics** — it is redacted and takes
+        ten seconds.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which part?
+      options:
+        - Windows app (Live / Studio)
+        - Android app
+        - iPhone app
+        - Website or downloads
+        - Build or CI
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in Settings → About, or on the download page.
+      placeholder: 1.0.1
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Windows version, phone model and Android/iOS version, Wi-Fi or USB, which app you were speaking into.
+      placeholder: |
+        Windows 11 23H2 · Pixel 8, Android 14 · Wi-Fi 6 5 GHz · Zoom 6.x
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Paste the output of Studio → Export diagnostics, or drag the JSON file here. Remove anything you consider private first.
+      render: json
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before posting
+      options:
+        - label: I checked the setup guide's troubleshooting section.
+          required: true
+        - label: This is not a security issue (those go to security@voxbridge.app per SECURITY.md).
+          required: true

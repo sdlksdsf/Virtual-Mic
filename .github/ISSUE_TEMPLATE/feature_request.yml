@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest something that would make VoxBridge better.
+title: "[idea] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do that VoxBridge makes hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+      description: A sentence is enough. Screenshots or a sketch help.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you use instead
+      description: Another app, a cable, a workaround — and why it is not enough.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: I understand the project is deliberately local-only (no cloud audio, no accounts).
+          required: true

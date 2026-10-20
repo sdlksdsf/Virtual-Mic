@@ -15,12 +15,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "VoxBridge"
       VALUE "FileDescription", "VoxBridge virtual microphone capture service"
-      VALUE "FileVersion", "1.0.0"
+      VALUE "FileVersion", "1.0.1"
       VALUE "InternalName", "VoxBridgeMic"
       VALUE "LegalCopyright", "MIT License. Copyright (c) 2026 VoxBridge contributors."
       VALUE "OriginalFilename", "VoxBridgeMic.exe"
       VALUE "ProductName", "VoxBridge"
-      VALUE "ProductVersion", "1.0.0"
+      VALUE "ProductVersion", "1.0.1"
     END
   END
   BLOCK "VarFileInfo"

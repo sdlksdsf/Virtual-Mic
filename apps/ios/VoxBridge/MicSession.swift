@@ -109,7 +109,7 @@ final class MicSession: ObservableObject {
             "code": code,
             "token": "",
             "deviceId": prefs.deviceId,
-            "app": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0",
+            "app": Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.1",
             "caps": ["pcm16", "adpcm", "stats"],
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: payload),

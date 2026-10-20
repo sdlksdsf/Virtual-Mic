@@ -55,8 +55,8 @@ jobs:
         run: |
           mkdir -p artifacts
           find apps/android/app/build/outputs/apk -name '*.apk' -print
-          cp apps/android/app/build/outputs/apk/debug/*.apk artifacts/VoxBridge-1.0.0-debug.apk || true
-          cp apps/android/app/build/outputs/apk/release/*.apk artifacts/VoxBridge-1.0.0-android.apk || true
+          cp apps/android/app/build/outputs/apk/debug/*.apk artifacts/VoxBridge-1.0.1-debug.apk || true
+          cp apps/android/app/build/outputs/apk/release/*.apk artifacts/VoxBridge-1.0.1-android.apk || true
           cd artifacts && sha256sum *.apk > SHA256SUMS.txt && ls -lh
 
       - uses: actions/upload-artifact@v4
@@ -72,11 +72,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh release view v1.0.0 >/dev/null 2>&1 || \
-            gh release create v1.0.0 --title "VoxBridge 1.0.0" --notes "VoxBridge 1.0.0"
+          gh release view v1.0.1 >/dev/null 2>&1 || \
+            gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
           ok=0
           for attempt in 1 2 3 4 5; do
-            if gh release upload v1.0.0 artifacts/VoxBridge-1.0.0-android.apk --clobber; then ok=1; break; fi
+            if gh release upload v1.0.1 artifacts/VoxBridge-1.0.1-android.apk --clobber; then ok=1; break; fi
             echo "upload attempt $attempt failed; retrying"
             sleep $((attempt * 10))
           done

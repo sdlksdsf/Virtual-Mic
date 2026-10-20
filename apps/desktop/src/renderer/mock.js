@@ -76,7 +76,7 @@
     prefillMs: 60,
     lastError: '',
     restarts: 0,
-    version: '1.0.0',
+    version: '1.0.1',
     binary: 'C:\\Program Files\\VoxBridge\\VoxBridgeMic.exe',
   };
 
@@ -173,7 +173,7 @@
     receiver.phone = {
       name: 'Pixel 8 Pro',
       device: 'android',
-      app: '1.0.0',
+      app: '1.0.1',
       address: '192.168.1.42',
       connectedAt: Date.now(),
       deviceId: 'demo-android-1',
@@ -238,7 +238,7 @@
     async getState() {
       return {
         app: {
-          version: '1.0.0',
+          version: '1.0.1',
           platform: 'win32',
           arch: 'x64',
           hostname: 'STUDIO-PC',
@@ -355,7 +355,7 @@
       return true;
     },
     async checkUpdates() {
-      return { current: '1.0.0', available: false, url: 'https://github.com/sdlksdsf/Virtual-Mic/releases' };
+      return { current: '1.0.1', available: false, url: 'https://github.com/sdlksdsf/Virtual-Mic/releases' };
     },
     async quit() {},
     async windowControl() {},

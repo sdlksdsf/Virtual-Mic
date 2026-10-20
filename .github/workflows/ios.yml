@@ -59,9 +59,9 @@ jobs:
           test -n "$APP" || { echo "::error::no .app produced"; exit 1; }
           mkdir -p Payload
           cp -R "$APP" Payload/
-          zip -qry VoxBridge-1.0.0-unsigned.ipa Payload
-          ls -lh VoxBridge-1.0.0-unsigned.ipa
-          shasum -a 256 VoxBridge-1.0.0-unsigned.ipa > SHA256SUMS.txt
+          zip -qry VoxBridge-1.0.1-unsigned.ipa Payload
+          ls -lh VoxBridge-1.0.1-unsigned.ipa
+          shasum -a 256 VoxBridge-1.0.1-unsigned.ipa > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
@@ -70,7 +70,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           path: |
-            apps/ios/VoxBridge-1.0.0-unsigned.ipa
+            apps/ios/VoxBridge-1.0.1-unsigned.ipa
             apps/ios/SHA256SUMS.txt
 
       - name: Publish IPA to release
@@ -79,11 +79,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          gh release view v1.0.0 >/dev/null 2>&1 || \
-            gh release create v1.0.0 --title "VoxBridge 1.0.0" --notes "VoxBridge 1.0.0"
+          gh release view v1.0.1 >/dev/null 2>&1 || \
+            gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
           ok=0
           for attempt in 1 2 3 4 5; do
-            if gh release upload v1.0.0 apps/ios/VoxBridge-1.0.0-unsigned.ipa --clobber; then ok=1; break; fi
+            if gh release upload v1.0.1 apps/ios/VoxBridge-1.0.1-unsigned.ipa --clobber; then ok=1; break; fi
             echo "upload attempt $attempt failed; retrying"
             sleep $((attempt * 10))
           done

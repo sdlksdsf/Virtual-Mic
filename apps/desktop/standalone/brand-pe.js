@@ -40,8 +40,8 @@ version.setStringValues(
     CompanyName: 'VoxBridge',
     LegalCopyright: 'MIT License',
     OriginalFilename: path.basename(output),
-    FileVersion: '1.0.0',
-    ProductVersion: '1.0.0',
+    FileVersion: '1.0.1',
+    ProductVersion: '1.0.1',
   },
 );
 version.outputToResourceEntries(resources.entries);

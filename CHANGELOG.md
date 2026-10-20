@@ -2,6 +2,32 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
+## [1.0.1] — 2026-10-20
+
+A patch release with two user-visible fixes. Protocol v1 is unchanged, so a
+1.0.1 phone still connects to a 1.0.0 desktop and vice versa.
+
+### Android — the stream survives a locked screen
+- A partial wake lock and a Wi-Fi lock are now held for the **whole session**
+  instead of being taken inside capture with a four-hour expiry.
+- The socket pings every 15 seconds, so a half-open connection is detected in
+  seconds rather than never.
+- Automatic reconnect with 1 s → 15 s backoff, plus an immediate retry when the
+  network callback reports Wi-Fi is back.
+- `START_STICKY` restarts resume the last host and code instead of idling.
+- A stalled microphone reopens after 600 ms while the session is live.
+- New Settings → Background section (keep-alive, battery exemption, vendor
+  autostart) and a Live-screen banner when Android may still freeze the app.
+
+### Downloads
+- All four artifacts are served from the website's own domain with
+  `Content-Disposition: attachment`, the correct MIME type, a real
+  `Content-Length` and byte-range support.
+- The download page renders a single hero for the detected device, so a phone
+  can no longer be handed the Windows installer.
+- In-app browsers (Instagram, WhatsApp, Facebook, WebView) are detected and told
+  how to open the page in Chrome or Safari, instead of leaving a stuck download.
+
 ## [1.0.0] — 2026-10-20, second pass
 
 Echo, noise-floor and self-monitoring fixes, plus sharper site artwork. The
