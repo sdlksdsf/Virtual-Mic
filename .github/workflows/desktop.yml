@@ -10,6 +10,11 @@ on:
     paths:
       - 'apps/desktop/**'
   workflow_dispatch:
+    inputs:
+      republish:
+        description: Replace the already published v1.0.1 files
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -101,11 +106,28 @@ jobs:
             apps/desktop/standalone/dist/SHA256SUMS.txt
 
       - name: Publish to the release
-        if: success()
+        if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPUBLISH: ${{ inputs.republish || 'false' }}
         run: |
           set -euo pipefail
+          # A release is immutable once people download it. Rebuilds happen on every
+          # push, and byte-for-byte identical output is not guaranteed, so publishing
+          # again would change what 1.0.1 means under the same version number (and
+          # leave the website's mirror out of step with GitHub). Only the manual
+          # `republish` run replaces files.
+          if [ "${REPUBLISH:-false}" != "true" ]; then
+            present=$(gh release view v1.0.1 --json assets --jq '.assets[].name')
+            missing=0
+            for name in 'VoxBridge-Setup-1.0.1-x64.exe' 'VoxBridge-1.0.1-win64-portable.zip'; do
+              printf '%s\n' "$present" | grep -qx "$name" || missing=1
+            done
+            if [ "$missing" = "0" ]; then
+              echo "v1.0.1 already carries these files; leaving the published bytes untouched."
+              exit 0
+            fi
+          fi
           gh release view v1.0.1 >/dev/null 2>&1 || \
             gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
           ok=0
@@ -120,7 +142,7 @@ jobs:
           test "$ok" = "1"
 
       - name: Publish the combined checksum file
-        if: success()
+        if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
