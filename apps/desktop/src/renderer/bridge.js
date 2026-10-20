@@ -142,6 +142,7 @@
     setupVirtualMic: () => call('setupVirtualMic'),
     virtualState: () => call('virtualState'),
     openVirtualDownload: () => call('openVirtualDownload'),
+    openSoundSettings: () => call('openSoundSettings'),
     verifySignature: (file) => call('verifySignature', file),
     exportDiagnostics: () => call('exportDiagnostics'),
     openExternal: (url) => call('openExternal', url),

@@ -39,6 +39,7 @@ contextBridge.exposeInMainWorld('voxbridge', {
   setupVirtualMic: () => ipcRenderer.invoke('virtual:setup'),
   virtualState: () => ipcRenderer.invoke('virtual:state'),
   openVirtualDownload: () => ipcRenderer.invoke('virtual:open-download'),
+  openSoundSettings: () => ipcRenderer.invoke('app:open-sound-settings'),
   verifySignature: (file) => ipcRenderer.invoke('virtual:verify-signature', file),
   exportDiagnostics: () => ipcRenderer.invoke('diag:export'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),

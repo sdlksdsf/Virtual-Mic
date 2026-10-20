@@ -48,6 +48,9 @@ constexpr const char* kDefaultDevices[] = {"cable input", "voxbridge virtual mic
 std::mutex gOutMutex;
 std::FILE* gLog = nullptr;
 std::atomic<bool> gQuit{false};
+// Default capture endpoint that was active before we claimed the cable, so the
+// machine is left exactly as we found it when the service stops.
+std::string gPreviousDefaultCapture;
 std::atomic<bool> gStdinClosed{false};
 
 void emitRaw(const std::string& line) {
@@ -115,6 +118,11 @@ struct Options {
   bool listDevices = false;
   bool nullSink = false;
   bool version = false;
+  // Claim the system default recording device so every app picks the virtual
+  // cable up without being configured by hand. The previous default is
+  // restored on shutdown.
+  bool claimDefault = false;
+  std::string restoreDefault;
 };
 
 Options parseOptions(const std::vector<std::string>& args) {
@@ -132,6 +140,8 @@ Options parseOptions(const std::vector<std::string>& args) {
     else if (a == "--log") opt.logPath = next("");
     else if (a == "--verify") opt.verifyPath = next("");
     else if (a == "--null-sink") opt.nullSink = true;
+    else if (a == "--claim-default") opt.claimDefault = true;
+    else if (a == "--restore-default") opt.restoreDefault = next("");
     else if (a == "--list-devices") opt.listDevices = true;
     else if (a == "--version") opt.version = true;
   }
@@ -288,6 +298,32 @@ int runService(const Options& opt) {
     if (renderer.fallback()) {
       emit("{\"ev\":\"warn\",\"code\":\"no-virtual-cable\",\"message\":\"No virtual microphone found; audio is going to the default output.\"}");
     }
+
+    // Point the system default *recording* device at the cable output so
+    // Discord, Chrome, Teams and OBS capture it without manual setup. Apps read
+    // the default endpoint, not the device VoxBridge renders into, so without
+    // this step they keep recording from the laptop microphone.
+    if (opt.claimDefault && !renderer.fallback()) {
+      std::string targetId;
+      std::string targetName;
+      for (const auto& device : vbwin::listDevices(true)) {
+        if (!vbwin::isVirtualCaptureName(device.name)) continue;
+        if (targetId.empty() || device.name.size() < targetName.size()) {
+          targetId = device.id;
+          targetName = device.name;
+        }
+      }
+      if (!targetId.empty()) {
+        const std::string previous = vbwin::defaultCaptureId();
+        const bool claimed = vbwin::setDefaultCapture(targetId);
+        emit("{\"ev\":\"default-input\",\"claimed\":" +
+             std::string(claimed ? "true" : "false") + ",\"device\":" +
+             jsonString(targetName) + ",\"previous\":" + jsonString(previous) + "}");
+        if (claimed) gPreviousDefaultCapture = previous;
+      } else {
+        emit("{\"ev\":\"warn\",\"code\":\"no-capture-cable\",\"message\":\"No virtual recording device found. Install VB-CABLE, then reopen VoxBridge.\"}");
+      }
+    }
   }
 
   std::atomic<std::uint64_t> received{0};
@@ -372,6 +408,12 @@ int runService(const Options& opt) {
   if (received.load() > 0) {
     emit("{\"ev\":\"summary\",\"frames\":" + std::to_string(received.load()) +
          ",\"packets\":" + std::to_string(packets.load()) + "}");
+  }
+  // Hand the default recording device back to the machine's own microphone.
+  if (!gPreviousDefaultCapture.empty()) {
+    vbwin::setDefaultCapture(gPreviousDefaultCapture);
+    emit("{\"ev\":\"default-input-restored\"}");
+    gPreviousDefaultCapture.clear();
   }
   emit("{\"ev\":\"bye\"}");
   if (gLog) std::fclose(gLog);

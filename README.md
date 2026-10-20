@@ -1,90 +1,262 @@
+<div align="center">
+
+<img src="docs/img/live-light.png" alt="VoxBridge for Windows running a live session, with the phone connected as a microphone" width="100%" />
+
 # VoxBridge
 
-**Your phone, now your best microphone.**
+**Turn your phone into a studio microphone for Windows.**
 
-VoxBridge turns an Android phone, iPhone, or tablet into a studio-clean microphone for Windows 10 and 11. It ships a native Windows capture service, native mobile apps, a real installer, and this repository holds the entire stack: desktop app, mobile apps, protocol, DSP, website and database.
+No account · No cloud audio · No kernel driver to break your PC
 
-- **Website:** https://voxbridge-app-pi.vercel.app
-- **Downloads:** https://voxbridge-app-pi.vercel.app/download
-- **Docs:** [`docs/`](docs)
-- **Protocol:** [`docs/PROTOCOL.md`](docs/PROTOCOL.md)
+[**Download**](https://voxbridge-app-pi.vercel.app/download) ·
+[Website](https://voxbridge-app-pi.vercel.app) ·
+[Setup guide](https://voxbridge-app-pi.vercel.app/setup) ·
+[Privacy](https://voxbridge-app-pi.vercel.app/privacy) ·
+[Security model](SECURITY.md)
 
----
+[![Release](https://img.shields.io/github/v/release/sdlksdsf/Virtual-Mic?label=release&color=ff5a2e)](https://github.com/sdlksdsf/Virtual-Mic/releases/latest)
+[![Desktop build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/desktop.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/desktop.yml)
+[![Android build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml)
+[![iOS build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-15150f.svg)](LICENSE)
 
-## Download
-
-| Platform | Build | Notes |
-|---|---|---|
-| Windows 10/11 x64 | [VoxBridge Setup 1.0.0](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe) | Single-file installer, per-user, no admin rights |
-| Windows portable | [VoxBridge 1.0.0 portable ZIP](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip) | Unzip anywhere and run `VoxBridge.exe` |
-| Android 8+ | [VoxBridge 1.0.0 APK](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk) | Debug-signed release build, sideload it |
-| iOS 16+ | [VoxBridge 1.0.0 unsigned IPA](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa) | Sign with AltStore, Sideloadly or Xcode |
-| All builds | [SHA256SUMS.txt](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/SHA256SUMS.txt) | Verify before you run |
+</div>
 
 ---
 
-## What it does
+A laptop microphone picks up the room, the keyboard, and you — in that order. The microphone on the phone in
+your pocket is genuinely better. VoxBridge is the boring part in between: a native Windows capture service, a
+real Android and iOS app, and a voice chain that is honest about what it does.
 
-1. Install VoxBridge for Windows and open it.
-2. Install VoxBridge on your phone and put both devices on the same Wi-Fi network (or use USB/ADB).
-3. The phone is discovered automatically. Tap connect, enter the 4-digit pairing code if asked.
-4. VoxBridge routes your voice into a virtual microphone that Zoom, Teams, Discord, OBS, Steam, Valorant and every other Windows app already knows how to use.
+Point the phone at the PC. Speak. Every app that accepts a microphone — Zoom, Teams, Discord, OBS, Steam,
+Chrome — hears you, cleanly, in about 60 ms.
 
-## Why it is different
+<table>
+<tr>
+<td width="50%"><img src="docs/img/live-dark.png" alt="VoxBridge in dark theme" /></td>
+<td width="50%"><img src="docs/img/studio.png" alt="Studio view with endpoint, format and verification test" /></td>
+</tr>
+<tr>
+<td align="center"><sub><b>Live session</b> — level, latency, jitter, packet loss</sub></td>
+<td align="center"><sub><b>Studio</b> — endpoint, format, and a real three-second test</sub></td>
+</tr>
+</table>
 
-- **No kernel driver to break your PC.** VoxBridge detects the virtual audio device you already trust (VB-CABLE, VoiceMeeter, Virtual Audio Cable, or Stereo Mix), configures it, and verifies it with a real recording test. If nothing is installed, one click fetches the official VB-CABLE installer and checks its Authenticode signature before running it.
-- **Honest latency engineering.** 20 ms PCM/ADPCM frames over a WebSocket, an adaptive jitter buffer, an AudioWorklet DSP chain and a native WASAPI renderer. Typical LAN round trip plus rendering stays under 60 ms.
-- **No cloud audio.** Audio never leaves your network. Analytics are anonymous and covered in the [privacy policy](apps/web/privacy.html).
+## Contents
+
+- [Why this exists](#why-this-exists)
+- [Features](#features)
+- [Download](#download)
+- [How it works](#how-it-works)
+- [Sound quality, measured](#sound-quality-measured)
+- [The phone app](#the-phone-app)
+- [Compatibility](#compatibility)
+- [Build from source](#build-from-source)
+- [Repository layout](#repository-layout)
+- [Security and privacy](#security-and-privacy)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Why this exists
+
+Most phone-as-microphone tools stop at "audio arrives somewhere". You install a driver, pick a device in a
+meeting, hear nothing, and have no idea which of the five steps failed.
+
+VoxBridge does three things differently:
+
+1. **It proves the chain works.** The Studio screen records three seconds from the *virtual cable's output* —
+   exactly what Zoom will receive — and reports the level it captured. If it is silent, you know before your
+   meeting, not during it.
+2. **It makes Windows pick the cable up for you.** On connect it sets the virtual cable as the default
+   recording device, then hands your original microphone back when you disconnect. Discord and Chrome read
+   that default; without it they keep recording the laptop.
+3. **It ships a real voice chain, not a gain slider.** Decision-directed noise suppression, a hysteresis gate,
+   auto gain that freezes in silence, presence and warmth EQ, a soft-knee compressor and a lookahead limiter.
 
 ## Features
 
 | | |
 |---|---|
-| Connection | Auto-discovery, manual IP, USB via `adb reverse`, pairing codes, remembered hosts |
-| Audio | 48/32/24/16 kHz, PCM16 or IMA-ADPCM, adaptive jitter buffer, packet-loss concealment |
-| Cleaning | Spectral noise suppression, noise gate, auto gain, high-pass, presence EQ, warmth EQ, compressor, true-peak limiter |
-| Output | +24 dB boost with soft clip protection, monitor passthrough, 16-bit WAV session recording |
-| System | Native Windows service, virtual mic detection and verification, device picker, diagnostics, background operation, autostart |
-| Mobile | Foreground service, quick actions, live meters, quality stats, light/dark themes |
+| **Connection** | Automatic LAN discovery · QR pairing from the phone · nearby-PC list · manual address · USB via `adb reverse` · 4-digit pairing code · remembered devices |
+| **Capture** | 48 / 32 / 24 / 16 kHz · PCM16 or IMA ADPCM · 10 or 20 ms frames · adaptive jitter buffer · packet-loss concealment |
+| **Cleaning** | Decision-directed spectral suppression (4 levels) · 80 Hz high-pass · hysteresis noise gate · auto gain · presence EQ · warmth shelf · soft-knee compressor |
+| **Output** | +24 dB boost · lookahead limiter with −1 dBFS ceiling · monitor passthrough · 16-bit WAV session recording |
+| **Windows** | Native WASAPI capture service · virtual-mic detection and auto-claim · three-second verification test · per-user installer · portable ZIP · background operation · autostart · diagnostics export |
+| **Android** | Foreground service with mute and gain actions · live notification · on-device DSP · light and dark themes · Android 8+ |
+| **iOS** | SwiftUI app · background audio session · Accelerate DSP · same protocol and presets · iOS 16+ |
+| **Website** | Download hub · setup guides · privacy policy · terms · security model · Supabase-backed anonymous download counters |
 
-## Repository map
+## Download
+
+Every build below is produced by GitHub Actions from this repository and published to
+[Releases](https://github.com/sdlksdsf/Virtual-Mic/releases/latest). Checksums are in
+[`SHA256SUMS.txt`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/SHA256SUMS.txt).
+
+| Platform | Requirements | File |
+|---|---|---|
+| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.0-x64.exe`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe) |
+| **Windows portable** | Same, no install | [`VoxBridge-1.0.0-win64-portable.zip`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip) |
+| **Android** | 8.0+ | [`VoxBridge-1.0.0-android.apk`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk) |
+| **iOS** | 16+, unsigned | [`VoxBridge-1.0.0-unsigned.ipa`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa) |
+
+> **A note on signatures.** The Windows binaries are not code-signed, so SmartScreen will ask once. The IPA is
+> unsigned because a signing identity is tied to your Apple ID; use AltStore, Sideloadly or Xcode. Both are
+> covered step by step in the [setup guide](https://voxbridge-app-pi.vercel.app/setup).
+
+### The virtual microphone
+
+Windows applications cannot record from an app — they record from an audio endpoint. VoxBridge renders into
+[VB-CABLE](https://vb-audio.com/Cable/), a well-known virtual audio device, and then tells Windows to use the
+cable's output as the default microphone.
+
+If VB-CABLE is missing, VoxBridge offers to fetch the official installer from `vb-audio.com`, verifies its
+Authenticode signature, and runs it. Once the cable is detected, the app remembers it and **stops asking**.
+
+## How it works
 
 ```
-apps/desktop        Electron desktop app (Windows installer target) + native capture service in C++
-apps/android        Native Android app (Kotlin, Jetpack Compose, foreground service)
-apps/ios            Native iOS app (SwiftUI, URLSession WebSocket, Accelerate DSP)
-apps/web            Static marketing site + download hub (Vercel)
-packages/protocol   Wire protocol notes and golden vectors
-packages/supabase   Database schema, RLS policies and edge functions
-docs                Architecture, protocol, privacy, build and release documentation
+  ┌──────────────┐        PCM16 / ADPCM          ┌───────────────────┐
+  │   Phone      │  ───────────────────────────▶ │  VoxBridge host   │
+  │  AudioRecord │     20 ms frames over WS      │  (Node + UI)      │
+  │  + on-device │                               │                   │
+  │      DSP     │ ◀───────── telemetry ──────── │  jitter buffer    │
+  └──────────────┘                               │  + AudioWorklet   │
+                                                 └─────────┬─────────┘
+                                                           │ processed PCM
+                                                           ▼
+                                                 ┌───────────────────┐
+                                                 │ VoxBridgeMic.exe  │
+                                                 │ WASAPI → CABLE    │
+                                                 └─────────┬─────────┘
+                                                           ▼
+                                          CABLE Output  ──▶  Zoom, Discord, OBS…
 ```
 
-## Build it yourself
+1. The phone captures audio, optionally cleans it, and sends 20 ms frames over WebSocket.
+2. The desktop buffers them against jitter, runs the voice chain in an `AudioWorklet`, and hands 20 ms of
+   processed PCM to the native service.
+3. The native service renders it to the virtual cable with WASAPI shared mode and automatic rate conversion,
+   so any endpoint works.
+4. On connect, the service sets the cable's capture endpoint as the Windows default microphone and restores
+   your previous one on exit.
+
+The wire format is documented in [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
+
+## Sound quality, measured
+
+Claims are cheap. These numbers come from the offline harness used during development, comparing the previous
+chain with the current one on the same inputs (180 Hz harmonic speech fixture, room tone at −52 dBFS):
+
+| Measurement | Before | After |
+|---|---|---|
+| THD, default chain | 1.92 % | **0.01 %** |
+| THD at +24 dB boost | 2.00 % | **0.00 %** |
+| Voice retained through the denoiser | 46.9 % | **98.5 %** |
+| Room tone rejected | 8.2 dB | **13.8 dB** |
+
+Three things drove that:
+
+- **The boost moved before the compressor.** It used to be applied after compression and immediately clamped,
+  which is what made loud syllables crunchy. Now a soft-knee 3:1 compressor handles the gain and a lookahead
+  limiter attenuates transients *before* they reach the output.
+- **The denoiser learned the wrong noise floor.** It seeded with a running maximum, so it converged to the
+  speech peaks and subtracted the voice. It now uses a smoothed periodogram with sliding minimum statistics and
+  decision-directed a priori SNR — the same family of estimator used in speech enhancement research.
+- **The overlap-add was not COLA.** Hann analysis × Hann synthesis at 50 % overlap double-counts, modulating the
+  output at the frame rate. Square-root Hann on both sides sums to exactly one.
+
+The phone runs the same chain in Kotlin (`apps/android/.../audio/Dsp.kt`) and no longer enables the platform's
+own noise suppressor or AGC on top of it, which was the cause of the hollow, "underwater" sound on Android.
+
+## The phone app
+
+<table>
+<tr>
+<td width="30%"><img src="docs/img/phone-light.png" alt="VoxBridge for Android, light theme" /></td>
+<td width="30%"><img src="docs/img/phone-dark.png" alt="VoxBridge for Android, dark theme" /></td>
+<td valign="top">
+
+**One screen, no menus.**
+
+- On air or not, at a glance
+- Level, latency, buffer, jitter, packets sent
+- Mute and stop without unlocking anything else
+- Nearby PCs, or scan the QR code shown on the PC
+- Manual address and pairing code when discovery is blocked
+- USB mode for the flattest path
+
+</td>
+</tr>
+</table>
+
+## Compatibility
+
+Any Windows application that records from a standard microphone works once the cable is the default input:
+Zoom, Microsoft Teams, Discord, Google Meet, Slack Huddles, OBS Studio, Streamlabs, Audacity, Reaper, Steam
+Voice, Valorant, Fortnite, CS2, Windows Voice Recorder and Chrome. Names are trademarks of their owners and are
+listed only to describe compatibility.
+
+Latency, on 5 GHz Wi-Fi 6 at 48 kHz PCM with 20 ms frames and a 60 ms buffer, is typically 60–90 ms end to end:
+20 ms capture, 3–12 ms network, 60 ms adaptive buffer, 18–30 ms desktop DSP and WASAPI. USB removes the network
+term.
+
+## Build from source
+
+Requires Node 20+, Python 3.11+ and, for the Windows pieces, a C++17 compiler (MSVC or the bundled
+`ziglang` toolchain used in CI).
 
 ```bash
-# Desktop app (Windows installer)
-cd apps/desktop && npm install && npm run dist
-
-# Native Windows capture service (must be built on Windows with MSVC)
-cmake -S apps/desktop/service -B build/service -A x64
-cmake --build build/service --config Release
+# Desktop app + installer (cross-compiles the native service with zig)
+cd apps/desktop/standalone
+ZIG=$(python3 -c "import ziglang,os;print(os.path.join(os.path.dirname(ziglang.__file__),'zig'))") \
+  ./build-windows.sh
 
 # Android
-cd apps/android && gradle assembleDebug
+cd apps/android && gradle assembleRelease
 
 # iOS (macOS + Xcode)
-cd apps/ios && xcodegen generate && xcodebuild -scheme VoxBridge -sdk iphoneos -configuration Release
+cd apps/ios && xcodegen generate && \
+  xcodebuild -scheme VoxBridge -sdk iphoneos -configuration Release CODE_SIGNING_ALLOWED=NO
 ```
 
-Full instructions, including how the release pipeline works, are in [`docs/BUILD.md`](docs/BUILD.md).
+Full instructions, including how the release pipeline publishes assets, are in [`docs/BUILD.md`](docs/BUILD.md).
 
-## Security model
+## Repository layout
 
-- Pairing codes are required on a per-session basis; sessions can be pinned to a device ID.
-- The desktop only listens on the local network. There is no inbound internet port and no relay server.
-- Virtual mic setup downloads only from `download.vb-audio.com`, pins the expected publisher and verifies the Authenticode signature before execution.
-- Report a vulnerability through the process in [`SECURITY.md`](SECURITY.md). Please do not open a public issue for security problems.
+```
+apps/desktop          Electron host, React-free renderer, DSP worklet, native WASAPI service (C++)
+apps/android          Kotlin + Jetpack Compose app, foreground service, on-device DSP
+apps/ios              SwiftUI app, URLSession WebSocket, Accelerate DSP
+apps/web              Marketing site, download hub and legal pages (Vercel)
+packages/protocol     Wire format notes and golden vectors
+packages/supabase     Schema, row-level security policies and RPCs
+docs                  Architecture, protocol, privacy, build and release documentation
+```
+
+## Security and privacy
+
+- Audio travels directly between your phone and your PC over the local network. There is no relay, no account
+  and no cloud processing.
+- The receiver binds to the LAN only. The phone must present the four-digit pairing code, and a device can be
+  remembered with a hashed token.
+- The only download VoxBridge performs is the official VB-CABLE installer, from `download.vb-audio.com`, with
+  its Authenticode signature checked before execution.
+- The website stores anonymous download counts. It never stores audio.
+
+Read the [privacy policy](https://voxbridge-app-pi.vercel.app/privacy) and [security model](SECURITY.md). To
+report a vulnerability, follow [`SECURITY.md`](SECURITY.md) rather than opening a public issue.
+
+## Contributing
+
+Issues and pull requests are welcome. Before opening a PR, please run the relevant build for the platform you
+touched — a PR is expected to keep the Desktop, Android and iOS workflows green.
+
+```bash
+cd apps/desktop && npm install && npm start      # runs the desktop host
+cd apps/android && gradle assembleDebug          # compiles the Kotlin app
+```
 
 ## License
 
-Code is released under the MIT License. VoxBridge is an independent project and is not affiliated with VB-Audio, VoiceMeeter, WO Mic or Microsoft.
+MIT — see [LICENSE](LICENSE). VoxBridge is an independent project and is not affiliated with VB-Audio,
+VoiceMeeter, WO Mic or Microsoft.
