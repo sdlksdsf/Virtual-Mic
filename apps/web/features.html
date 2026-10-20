@@ -119,10 +119,11 @@
                 <span class="feature-icon"><svg><use href="#i-wave"/></svg></span>
                 <h3>01 — Noise suppression</h3>
                 <p>
-                  A 512-point STFT with a learned noise floor per bin. Strength runs from off to max; at every setting
-                  the reduction keeps a floor so consonants do not vanish into the noise.
+                  A 512-point STFT that learns the room in the pauses and freezes while you speak, then subtracts
+                  over-subtraction-style per bin. Strength runs from off to max; at every setting the reduction keeps
+                  a floor so consonants do not vanish into the noise.
                 </p>
-                <span class="mono">STFT · adaptive floor · 4 levels · gate follow-up</span>
+                <span class="mono">STFT · speech-gated floor · 4 levels · gate follow-up</span>
               </div>
               <div class="feature-visual"><canvas data-wave aria-label="Waveform"></canvas></div>
             </article>
