@@ -137,9 +137,9 @@
         <h2>Website</h2>
         <p>
           The marketing site is hand-written HTML, CSS and JavaScript. It uses the same three fonts listed above and
-          two small hosted services: GitHub for release metadata and Supabase for anonymous download counters and the
-          contact form. There is no analytics script, no ad network and no cookie banner because there are no
-          tracking cookies.
+          three small hosted services: GitHub for release metadata, Supabase for anonymous download counters and the
+          contact form, and Vercel Web Analytics for cookieless page and referrer counts. There are no advertising
+          scripts, no cross-site trackers and no cookie banner, because no tracking cookie is ever set.
         </p>
 
         <h2>Corrections</h2>
@@ -190,5 +190,6 @@
         </div>
       </div>
     </footer>
-  </body>
+    <script defer src="/_vercel/insights/script.js"></script>
+</body>
 </html>

@@ -52,6 +52,8 @@ function checkSite() {
     const refs = [...html.matchAll(/(?:src|href)="(\/[^"#?]+)"/g)].map((m) => m[1]);
     for (const ref of new Set(refs)) {
       if (generated.has(ref)) continue;
+      // Served by the Vercel platform when Web Analytics is enabled, not by this repo.
+      if (ref === '/_vercel/insights/script.js') continue;
       if (ref === '/' || /\.(html|xml|txt)$/.test(ref)) {
         const local = path.join(site, ref === '/' ? 'index.html' : ref);
         if (!fs.existsSync(local)) {
