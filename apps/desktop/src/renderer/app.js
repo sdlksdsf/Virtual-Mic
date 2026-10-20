@@ -9,6 +9,10 @@
   const bridge = window.voxbridge || window.createMockBridge();
   // Result of the last attempt to make the cable the Windows default input.
   let windowsDefault = null;
+  // Monitoring plays the processed voice on this PC. With no virtual cable
+  // there is nothing to monitor, and the app would just be looping audio into
+  // the room, so the header switch is disabled until the cable is installed.
+  let cableReady = true;
 
   const state = {
     app: {},
@@ -518,9 +522,16 @@
     const native = service.mode === 'native';
     const ready = service.status === 'ready';
     const fallback = service.fallback;
+    const nullSink = Boolean(service.nullSink);
     const chip = $('#service-chip');
-    chip.textContent = ready ? (fallback ? 'Fallback' : 'Running') : capitalize(service.status || 'idle');
-    chip.className = 'status-chip ' + (ready && !fallback ? 'ok' : ready ? 'warn' : '');
+    chip.textContent = !ready
+      ? capitalize(service.status || 'idle')
+      : nullSink
+        ? 'No cable'
+        : fallback
+          ? 'Fallback'
+          : 'Running';
+    chip.className = 'status-chip ' + (ready && !fallback && !nullSink ? 'ok' : ready ? 'warn' : '');
 
     $('#engine-mode').textContent = native ? 'Native · WASAPI' : 'Software sink';
     $('#engine-device').textContent = service.device || 'No endpoint';
@@ -532,19 +543,23 @@
       : 'Running in software mode. Install VoxBridge on Windows to render into a real audio endpoint.';
 
     const notice = $('#service-notice');
-    const showNotice = !native || fallback || service.status === 'error';
+    const showNotice = !native || fallback || nullSink || service.status === 'error';
     notice.hidden = !showNotice;
     if (showNotice) {
-      $('#service-notice-title').textContent = fallback
-        ? 'No virtual microphone found'
-        : service.status === 'error'
-          ? 'Capture service stopped'
-          : 'Virtual microphone not ready';
-      $('#service-notice-body').textContent = fallback
-        ? 'Set one up once and every app on Windows will see VoxBridge as a microphone.'
-        : service.status === 'error'
-          ? service.lastError || 'Restart the service from Studio.'
-          : 'Install the native service to route audio into a virtual cable.';
+      $('#service-notice-title').textContent = nullSink
+        ? 'Silent until the cable is installed'
+        : fallback
+          ? 'No virtual microphone found'
+          : service.status === 'error'
+            ? 'Capture service stopped'
+            : 'Virtual microphone not ready';
+      $('#service-notice-body').textContent = nullSink
+        ? 'VoxBridge is deliberately not playing into your speakers — that is what caused the echo. Install VB-CABLE once and it will route into every app.'
+        : fallback
+          ? 'Set one up once and every app on Windows will see VoxBridge as a microphone.'
+          : service.status === 'error'
+            ? service.lastError || 'Restart the service from Studio.'
+            : 'Install the native service to route audio into a virtual cable.';
     }
     renderVirtualStatus();
   }
@@ -559,6 +574,12 @@
     const installed = reported
       ? Boolean(reported.present || reported.installed)
       : Boolean(device && /cable input|voicemeeter|virtual audio cable|voxbridge/i.test(device.name));
+    // Only disable the switch when we positively know there is no cable. In
+    // software/preview mode the device list is empty for reasons that have
+    // nothing to do with the user's machine.
+    const known = Boolean(reported) || state.service?.mode === 'native';
+    cableReady = !state.service?.nullSink && (!known || installed);
+    renderMonitorButton();
     const chip = $('#virtual-chip');
     const studioChip = $('#studio-virtual-chip');
     const badge = $('#endpoint-badge');
@@ -809,6 +830,7 @@
     const s = state.settings;
     $('#monitor').checked = Boolean(s.monitor);
     $('#monitor2').checked = Boolean(s.monitor);
+    renderMonitorButton();
     $('#gate').checked = s.gate !== false;
     $('#agc').checked = s.agc !== false;
     $('#limiter').checked = s.limiter !== false;
@@ -818,6 +840,26 @@
     }
     renderStats();
     renderSettings();
+  }
+
+  // Monitoring is the one control that can make the user hear themselves, and
+  // a speaker playing the microphone back into the phone is exactly how an
+  // echo starts. It is therefore a labelled switch in the header, off by
+  // default, and it says what it does.
+  function renderMonitorButton() {
+    const button = $('#monitor-btn');
+    if (!button) return;
+    button.disabled = !cableReady;
+    const on = Boolean(state.settings.monitor);
+    const label = $('#monitor-label');
+    if (label) label.textContent = on ? 'Monitor on' : 'Monitor off';
+    button.classList.toggle('is-on', on);
+    button.setAttribute('aria-pressed', on ? 'true' : 'false');
+    button.title = !cableReady
+      ? 'Install the virtual cable first — until then there is nothing to monitor.'
+      : on
+        ? 'Your voice is playing on this PC. Turn it off, or use headphones, to avoid feedback.'
+        : 'Play your processed voice on this PC so you can hear what the app hears';
   }
 
   function setRangeFill(input) {
@@ -979,9 +1021,17 @@
         case 'run-test-again':
           runVirtualTest();
           break;
-        case 'toggle-monitor':
-          await update({ monitor: !state.settings.monitor });
+        case 'toggle-monitor': {
+          const next = !state.settings.monitor;
+          await update({ monitor: next });
+          renderMonitorButton();
+          if (next) {
+            toast('warn', 'Monitoring is on', 'You will hear your own voice on this PC. Use headphones — a speaker will feed back into the phone.');
+          } else {
+            toast('ok', 'Monitoring off', 'Nothing is played on this PC.');
+          }
           break;
+        }
         case 'open-recordings':
           await bridge.openRecordings();
           break;

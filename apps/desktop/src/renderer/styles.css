@@ -707,6 +707,24 @@ html[data-theme='dark'] .btn.primary {
   --btn-ink: var(--accent-ink);
   --btn-line: var(--accent);
 }
+
+/* Monitoring is a state, not the main action: a tinted pill with a lamp reads
+ * as "this is on" without competing with Mute. */
+#monitor-btn.is-on {
+  --btn-bg: var(--accent-soft);
+  --btn-ink: var(--ink);
+  --btn-line: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset;
+}
+#monitor-btn.is-on::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  margin-left: 1px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
 .btn.is-recording,
 .btn.ghost.is-recording,
 .btn.primary.is-recording {

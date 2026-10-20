@@ -656,8 +656,24 @@ ipcMain.handle('audio:packet', (event, buffer) => {
   return written;
 });
 
+// Frames the renderer already processed. Two windows (or a stale tab) would
+// otherwise hand back the same packet and the cable would play every syllable
+// twice; the sequence number in the header is what catches it.
+const writtenSeqs = new Map();
+
 ipcMain.on('audio:processed', (event, data) => {
   const buffer = Buffer.from(data);
+  if (buffer.length < 12) return;
+  const seq = buffer.readUInt16LE(4);
+  const now = Date.now();
+  const seen = writtenSeqs.get(seq);
+  if (seen && now - seen < 400) return;
+  writtenSeqs.set(seq, now);
+  if (writtenSeqs.size > 512) {
+    for (const [key, at] of writtenSeqs) {
+      if (now - at > 4000) writtenSeqs.delete(key);
+    }
+  }
   service?.write(buffer);
   recorder?.write(buffer.subarray(12));
 });

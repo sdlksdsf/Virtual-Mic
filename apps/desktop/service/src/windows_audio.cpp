@@ -249,6 +249,19 @@ bool isVirtualCaptureName(const std::string& name) {
   return false;
 }
 
+bool isVirtualRenderName(const std::string& name) {
+  const std::string n = normalise(name);
+  if (n.empty()) return false;
+  static const char* const kMarkers[] = {
+      "cableinput", "vbaudio", "voicemeeter", "virtualaudiocable", "virtualcable",
+      "voxbridge",  "vac",      "line1",
+  };
+  for (const char* marker : kMarkers) {
+    if (n.find(marker) != std::string::npos) return true;
+  }
+  return false;
+}
+
 bool verifySignature(const std::wstring& path, std::string* detail) {
   WINTRUST_FILE_INFO fileInfo{};
   fileInfo.cbStruct = sizeof(fileInfo);
@@ -352,16 +365,24 @@ bool Renderer::open(const std::string& deviceMatch, std::uint32_t sampleRate, in
   }
 
   if (!chosen) {
-    // Fall back to the default render endpoint. Callers surface a warning:
-    // without a virtual cable the audio is only audible, not a microphone.
-    if (FAILED(impl_->enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &chosen))) {
-      if (error) *error = "no-audio-endpoint";
-      close();
-      return false;
-    }
-    deviceName_ = friendlyName(chosen.Get());
-    fallback_ = true;
-    if (usedFallback) *usedFallback = true;
+    // No cable matched. Do NOT fall back to the default playback endpoint:
+    // that plays the caller's voice out of the speakers, the phone microphone
+    // hears it, and the room loops the audio back with a delay — the user
+    // hears themselves repeating. Stay silent, keep the session alive, and let
+    // the caller explain that a virtual cable is missing.
+    nullSink_ = true;
+    deviceName_ = "No virtual cable (silent)";
+    return true;
+  }
+
+  // A remembered device can be a pair of speakers left over from an older
+  // install or a manual pick. Writing microphone audio into speakers is the
+  // same feedback loop, so treat it as "no cable" instead.
+  if (!isVirtualRenderName(deviceName_)) {
+    nullSink_ = true;
+    deviceName_ = "No virtual cable (silent)";
+    impl_->device.Reset();
+    return true;
   }
 
   impl_->device = chosen;

@@ -83,6 +83,8 @@ class Receiver extends EventEmitter {
     this.rx = 0;
     this.lost = 0;
     this.expectedSeq = null;
+    this.lastSeq = null;
+    this.staleDrops = 0;
     this.level = 0;
     this.peak = 0;
     this.bufferDepth = 0;
@@ -359,6 +361,8 @@ class Receiver extends EventEmitter {
     this.bitrate = 0;
     this.lastBytes = 0;
     this.expectedSeq = null;
+    this.lastSeq = null;
+    this.staleDrops = 0;
     this.level = 0;
     this.peak = 0;
 
@@ -409,6 +413,26 @@ class Receiver extends EventEmitter {
     this.bitrate = this.bitrate * 0.8 + (bytes * 8) / 0.02 * 0.2 / 1000;
 
     if (packet.flags & 0x02) return;
+
+    // Drop duplicates and packets that arrive after their slot has passed.
+    // A retransmitted or doubled frame is 20 ms of audio played twice, which
+    // the user hears as a stutter or a repeated syllable on top of their own
+    // voice. The worklet also guards against this, but dropping it here keeps
+    // the meter, the recorder and the level maths honest.
+    if (this.lastSeq !== null && this.lastSeq !== undefined) {
+      const delta = (packet.seq - this.lastSeq) & 0xffff;
+      if (delta === 0 || delta >= 0x8000) {
+        this.staleDrops = (this.staleDrops || 0) + 1;
+        // A reconnecting phone starts its counter over; after a short run of
+        // "stale" frames, assume a new stream rather than muting it forever.
+        if (this.staleDrops < 25) return;
+        this.lastSeq = null;
+        this.expectedSeq = null;
+      } else {
+        this.staleDrops = 0;
+      }
+    }
+    this.lastSeq = packet.seq;
 
     if (this.expectedSeq !== null) {
       const gap = (packet.seq - this.expectedSeq) & 0xffff;
@@ -523,6 +547,8 @@ class Receiver extends EventEmitter {
     this.phone = null;
     this.session = null;
     this.expectedSeq = null;
+    this.lastSeq = null;
+    this.staleDrops = 0;
     this.emit('phone', null);
     this.emit('state', this.status());
     this.emit('log', { level: 'info', message: `Session ended: ${reason}` });

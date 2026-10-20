@@ -463,6 +463,10 @@ async function stopReceiver() {
   if (receiver) await receiver.stop();
 }
 
+// Sequence numbers of processed frames written recently, used to ignore a
+// second renderer echoing the same audio into the cable.
+const processedSeqs = new Map();
+
 function startService() {
   if (!service) {
     service = new CaptureService();
@@ -565,6 +569,21 @@ const METHODS = {
   sendProcessedAudio: (base64) => {
     if (typeof base64 !== 'string') return false;
     const buffer = Buffer.from(base64, 'base64');
+    if (buffer.length < 12) return false;
+    // Two windows (or a stale tab) both receive the same phone packets and
+    // both would hand back a processed frame, so the cable would get every
+    // syllable twice. The frame carries its sequence number; the same number
+    // arriving twice inside this window is a duplicate, not new audio.
+    const seq = buffer.readUInt16LE(4);
+    const now = Date.now();
+    const seen = processedSeqs.get(seq);
+    if (seen && now - seen < 400) return false;
+    processedSeqs.set(seq, now);
+    if (processedSeqs.size > 512) {
+      for (const [key, at] of processedSeqs) {
+        if (now - at > 4000) processedSeqs.delete(key);
+      }
+    }
     service?.write(buffer);
     recorder?.write(buffer.subarray(12));
     return true;

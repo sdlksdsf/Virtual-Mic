@@ -10,13 +10,17 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const PINNED = 'f03901256b17e350366a25755c2f5e29f965a433';
-const SHA = process.env.VERCEL_GIT_COMMIT_SHA || PINNED;
+// Production builds on Vercel always fetch the commit that triggered the
+// deployment, so the site can never drift behind the repository. Outside
+// Vercel (a local `node build.js`) the tip of main is used instead of a frozen
+// sha, which saves remembering to bump a constant after every site change.
+const PINNED = 'main';
+const REF = process.env.VERCEL_GIT_COMMIT_SHA || PINNED;
 
-if (!/^[0-9a-f]{7,40}$/.test(SHA)) {
-  throw new Error(`unexpected commit sha: ${SHA}`);
+if (!/^[0-9a-zA-Z._/-]{1,100}$/.test(REF)) {
+  throw new Error(`unexpected git ref: ${REF}`);
 }
-const BASE = `https://raw.githubusercontent.com/sdlksdsf/Virtual-Mic/${SHA}/apps/web/`;
+const BASE = `https://raw.githubusercontent.com/sdlksdsf/Virtual-Mic/${REF}/apps/web/`;
 
 const FILES = [
   '404.html',
@@ -28,12 +32,11 @@ const FILES = [
   'assets/fonts/inter-tight-600.woff2',
   'assets/fonts/jetbrains-mono-400.woff2',
   'assets/fonts/jetbrains-mono-500.woff2',
-  'assets/img/app-live-dark.png',
-  'assets/img/app-live.png',
-  'assets/img/app-pair.png',
-  'assets/img/app-settings-dark.png',
-  'assets/img/app-settings.png',
-  'assets/img/app-studio.png',
+  'assets/img/app-live-dark.webp',
+  'assets/img/app-live.webp',
+  'assets/img/app-pair.webp',
+  'assets/img/app-settings-dark.webp',
+  'assets/img/app-studio.webp',
   'assets/img/apple-touch-icon.png',
   'assets/img/favicon.svg',
   'assets/img/mark.svg',

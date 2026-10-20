@@ -34,6 +34,11 @@ bool setDefaultCapture(const std::string& deviceId);
 // from (VB-CABLE, VoiceMeeter, Virtual Audio Cable).
 bool isVirtualCaptureName(const std::string& name);
 
+// True when the render name is a virtual cable VoxBridge may safely write into.
+// Anything else — speakers, headphones, HDMI — must never receive microphone
+// audio: the room hears it and the phone picks it back up as an echo.
+bool isVirtualRenderName(const std::string& name);
+
 class Renderer {
  public:
   Renderer();
