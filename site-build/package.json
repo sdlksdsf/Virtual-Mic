@@ -1,0 +1,9 @@
+{
+  "name": "voxbridge-site-build",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Assembles the static VoxBridge site for Vercel.",
+  "scripts": {
+    "build": "node build.js"
+  }
+}
