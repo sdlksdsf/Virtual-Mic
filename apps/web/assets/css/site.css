@@ -1974,9 +1974,9 @@ html[data-theme='dark'] .btn.primary {
   padding: 10px 0 2px;
   text-transform: uppercase;
 }
-.phone-shot-dark { display: none; }
-[data-theme='dark'] .phone-shot-light { display: none; }
-[data-theme='dark'] .phone-shot-dark { display: block; }
+.phone-frame .phone-shot-dark { display: none; }
+[data-theme='dark'] .phone-frame .phone-shot-light { display: none; }
+[data-theme='dark'] .phone-frame .phone-shot-dark { display: block; }
 [data-theme='dark'] .phone-frame { background: #23231b; }
 
 @media (max-width: 900px) {
