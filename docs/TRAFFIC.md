@@ -38,12 +38,12 @@ each, internal links back to `/download`, and a canonical URL. The site's own `s
 the SEO harness catch most mistakes.
 
 **Search Console** is not optional — it is how you learn which queries you already rank 8th for.
-Add the domain, submit `https://voxbridge-app-pi.vercel.app/sitemap.xml`, and check
+Add the domain, submit `https://voxbridge-mic.vercel.app/sitemap.xml`, and check
 *Performance → Queries* weekly. A page stuck at position 6–12 is usually one paragraph away from
 page one.
 
 **A custom domain helps.** `voxbridge.app` in the search result reads better than
-`voxbridge-app-pi.vercel.app`, and some directories reject `.vercel.app` links. Adding it in Vercel
+`voxbridge-mic.vercel.app`, and some directories reject `.vercel.app` links. Adding it in Vercel
 takes minutes and costs the price of the domain; `hello@voxbridge.app` is already the contact
 address used on the site, so the domain is expected.
 
@@ -53,7 +53,7 @@ address used on the site, so the domain is expected.
 
 1. **Repo metadata** (needs the repo owner — the API token used by automation cannot write it):
    - Description: `Turn your phone into a studio microphone for Windows — local-only, ~60 ms, free and MIT licensed.`
-   - Website: `https://voxbridge-app-pi.vercel.app`
+   - Website: `https://voxbridge-mic.vercel.app`
    - Topics: `microphone` `virtual-audio` `phone-as-mic` `audio` `windows` `android` `ios` `webrtc`
      `low-latency` `obs` `podcast` `self-hosted` `privacy` `electron` (pick ~12; topics are how
      GitHub's topic pages and third-party "trending" sites find you).
@@ -168,8 +168,8 @@ answer the two questions that matter per channel: how many people arrived, and d
 Use consistent UTM tags on every link you post:
 
 ```
-https://voxbridge-app-pi.vercel.app/?utm_source=reddit&utm_medium=social&utm_campaign=launch_w1
-https://voxbridge-app-pi.vercel.app/phone-as-microphone?utm_source=hn&utm_medium=social&utm_campaign=show_hn
+https://voxbridge-mic.vercel.app/?utm_source=reddit&utm_medium=social&utm_campaign=launch_w1
+https://voxbridge-mic.vercel.app/phone-as-microphone?utm_source=hn&utm_medium=social&utm_campaign=show_hn
 ```
 
 Convention: `utm_source` = reddit | hn | ph | x | yt | altto | winget; `utm_medium` = social |

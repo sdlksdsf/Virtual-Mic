@@ -30,7 +30,7 @@ jobs:
       - name: Website pages
         run: |
           set -euo pipefail
-          base=https://voxbridge-app-pi.vercel.app
+          base=https://voxbridge-mic.vercel.app
           for path in / /download /features /setup /privacy /terms /security /licenses /support \
                       /phone-as-microphone; do
             code=$(curl -fsSL -o /dev/null -w '%{http_code}' "$base$path")
@@ -56,7 +56,7 @@ jobs:
       - name: Same-origin downloads
         run: |
           set -euo pipefail
-          base=https://voxbridge-app-pi.vercel.app
+          base=https://voxbridge-mic.vercel.app
           curl -fsSL "$base/downloads/manifest.json" -o /tmp/manifest.json
           cat /tmp/manifest.json
           python3 - <<'PY'

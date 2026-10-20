@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /og-card.html
 
-Sitemap: https://voxbridge-app-pi.vercel.app/sitemap.xml
+Sitemap: https://voxbridge-mic.vercel.app/sitemap.xml

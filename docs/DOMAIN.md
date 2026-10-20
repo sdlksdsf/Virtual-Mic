@@ -89,7 +89,7 @@ git add -A && git commit -m "Point the site at voxbridge.is-a.dev"
 Then, in Vercel → the project → **Settings → Domains**:
 
 - `voxbridge.is-a.dev` is already listed; it flips to *Valid Configuration* on its own.
-- Optionally set `voxbridge-app-pi.vercel.app` to **redirect** to the new domain so the old links
+- Optionally set `voxbridge-mic.vercel.app` to **redirect** to the new domain so the old links
   people already shared land on the canonical one. Leave it as an alias if you would rather keep
   both answering directly.
 - Re-run the smoke workflow: it now checks the new host, because `scripts/set-domain.js` rewrites

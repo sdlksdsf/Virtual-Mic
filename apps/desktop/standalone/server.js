@@ -18,7 +18,7 @@ const { WebSocketServer } = require('ws');
 
 const APP_VERSION = '1.0.1';
 const GITHUB_URL = 'https://github.com/sdlksdsf/VoxBridge';
-const SITE_URL = 'https://voxbridge-app-pi.vercel.app';
+const SITE_URL = 'https://voxbridge-mic.vercel.app';
 const IS_WIN = process.platform === 'win32';
 const ROOT = path.resolve(__dirname, '..');
 const RENDERER = path.join(ROOT, 'src', 'renderer');
@@ -30,7 +30,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const ALLOWED_HOSTS = new Set([
   'github.com',
-  'voxbridge-app-pi.vercel.app',
+  'voxbridge-mic.vercel.app',
   'vb-audio.com',
   'www.vb-audio.com',
   'download.vb-audio.com',
