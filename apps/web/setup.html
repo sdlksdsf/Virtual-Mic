@@ -183,6 +183,13 @@
               <li>Move the phone 15–25 cm from your mouth, not 3 cm.</li>
               <li>Turn noise suppression to Medium; Max can thin out loud consonants.</li>
             </ul>
+            <h3>The stream stops when I lock the phone</h3>
+            <ul>
+              <li>Update the Android app: from 1.0.0 it holds a foreground microphone service, a wake lock and a Wi-Fi lock for the whole session, and reconnects by itself if the link drops. A locked screen no longer ends the call.</li>
+              <li>Settings → Background → <b>Keep the mic alive when locked</b> must be on (it is by default). The Live header shows a banner when Android is still allowed to sleep the app.</li>
+              <li>Tap <b>Battery</b> there and choose <b>Unrestricted</b>. On Xiaomi, OnePlus, Oppo, Vivo and Samsung also allow <b>Autostart</b> — the button opens the right screen.</li>
+            </ul>
+
             <h3>Apps list it but I cannot hear anything in my headphones</h3>
             <ul>
               <li>Correct — the cable carries audio to apps, not to your speakers. Flip <b>Monitor</b> in the Live header (or in Studio) if you want to hear yourself, and use headphones: a speaker will feed the phone's microphone and start an echo.</li>

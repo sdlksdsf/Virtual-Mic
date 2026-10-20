@@ -80,6 +80,7 @@ import app.voxbridge.mic.data.Prefs
 import app.voxbridge.mic.net.ConnectionState
 import app.voxbridge.mic.net.DiscoveredHost
 import app.voxbridge.mic.net.SavedHost
+import app.voxbridge.mic.system.BackgroundGuard
 import app.voxbridge.mic.ui.BigButton
 import app.voxbridge.mic.ui.Display
 import app.voxbridge.mic.ui.Divider
@@ -295,6 +296,15 @@ private fun ConnectScreen(
     val connected = Session.connection == ConnectionState.Connected
     val connecting = Session.connection == ConnectionState.Connecting
     val displayName = Session.hostName.ifBlank { Session.targetName.ifBlank { "Your PC" } }
+    // Battery state is re-read on every session tick so the banner disappears
+    // the moment the user comes back from the settings screen.
+    val sessionTick by Session.state.collectAsState()
+    var exempt by remember { mutableStateOf(BackgroundGuard.isExempt(context)) }
+    LaunchedEffect(sessionTick) {
+        exempt = BackgroundGuard.isExempt(context)
+    }
+    val retryInMs = (Session.nextRetryAt - System.currentTimeMillis()).coerceAtLeast(0)
+    val retrying = Session.connection == ConnectionState.Failed && Session.nextRetryAt > 0L && retryInMs > 0L
 
     Box(Modifier.fillMaxSize()) {
     Column(
@@ -313,7 +323,14 @@ private fun ConnectScreen(
         }
 
         Spacer(Modifier.height(22.dp))
-        Eyebrow(if (connected) "On air" else if (connecting) "Connecting" else "Standby")
+        Eyebrow(
+            when {
+                connected -> "On air"
+                connecting -> "Connecting"
+                retrying -> "Reconnecting"
+                else -> "Standby"
+            }
+        )
         Spacer(Modifier.height(6.dp))
         Display(displayName, size = 34)
         Spacer(Modifier.height(6.dp))
@@ -321,6 +338,7 @@ private fun ConnectScreen(
             when {
                 connected -> "Every app on your PC hears this phone now. Lock the screen and put it in your pocket."
                 connecting -> "Handshaking with the desktop receiver…"
+                retrying -> "Wi-Fi dropped. Reconnecting in ${retryInMs / 1000 + 1}s — keep the phone where it is."
                 Session.connection == ConnectionState.Failed -> Session.detail.ifBlank { "Could not reach the PC." }
                 else -> "Pick the PC you want to send audio to. USB and Wi-Fi both work."
             },
@@ -328,6 +346,30 @@ private fun ConnectScreen(
             fontSize = 13.sp,
             lineHeight = 19.sp,
         )
+
+        if (!exempt && (connected || connecting)) {
+            Spacer(Modifier.height(12.dp))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(colors.panel)
+                    .border(1.dp, colors.accent.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                    .clickable { BackgroundGuard.requestExemption(context) }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("Keep the mic alive when locked", color = colors.ink, fontSize = 13.sp)
+                    Text(
+                        "Your phone may sleep and drop the stream. Allow background running — one tap, nothing else changes.",
+                        color = colors.muted, fontSize = 11.sp, lineHeight = 15.sp,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+                Text("Allow", color = colors.accent, fontSize = 12.sp)
+            }
+        }
 
         Spacer(Modifier.height(18.dp))
         VoxCard {
@@ -339,6 +381,7 @@ private fun ConnectScreen(
                         when {
                             connected -> "LIVE"
                             connecting -> "CONNECTING"
+                            retrying -> "RETRYING"
                             Session.connection == ConnectionState.Failed -> "OFFLINE"
                             else -> "READY"
                         },
@@ -737,10 +780,12 @@ private fun StudioScreen(prefs: Prefs, live: Boolean) {
 
         Spacer(Modifier.height(18.dp))
         SectionLabel("On this phone")
-        VoxCard(padding = 4) {
-            ToggleRow("Keep screen off", "Capture keeps running with the display locked.", prefs.keepScreenOff) {
-                prefs.keepScreenOff = it
-            }
+        VoxCard {
+            Text(
+                "The capture service keeps the phone awake while it streams, so you can lock the screen or put the " +
+                    "phone in your pocket. If your phone still sleeps, allow background running in Settings → Background.",
+                color = colors.muted, fontSize = 12.sp, lineHeight = 17.sp,
+            )
         }
         Spacer(Modifier.height(28.dp))
     }
@@ -784,6 +829,13 @@ private fun SettingsScreen(
     var remember by remember { mutableStateOf(prefs.rememberDevice) }
     var showLogs by remember { mutableStateOf(false) }
     var hosts by remember(tick) { mutableStateOf(hostStore.all()) }
+    var keepAlive by remember { mutableStateOf(prefs.keepScreenOff) }
+    var exempt by remember { mutableStateOf(BackgroundGuard.isExempt(context)) }
+    var powerSaving by remember { mutableStateOf(BackgroundGuard.isPowerSaving(context)) }
+    LaunchedEffect(tick) {
+        exempt = BackgroundGuard.isExempt(context)
+        powerSaving = BackgroundGuard.isPowerSaving(context)
+    }
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp)) {
         Eyebrow("Settings")
@@ -859,6 +911,70 @@ private fun SettingsScreen(
         }
 
         Spacer(Modifier.height(18.dp))
+        SectionLabel("Background")
+        VoxCard(padding = 4) {
+            Column {
+                ToggleRow(
+                    "Keep running when locked",
+                    "Holds the CPU and Wi-Fi awake so the stream survives the lock screen.",
+                    keepAlive,
+                ) { on ->
+                    keepAlive = on
+                    prefs.keepScreenOff = on
+                    MicService.applyBackgroundPolicy(context)
+                }
+                Divider()
+                Row(
+                    Modifier.fillMaxWidth().clickable { BackgroundGuard.requestExemption(context) }
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Battery optimisation", color = colors.ink, fontSize = 14.sp)
+                        Text(
+                            if (exempt) {
+                                "Unrestricted — Android will not freeze the microphone."
+                            } else {
+                                "Restricted — Android may pause the mic after a while. Tap to allow."
+                            },
+                            color = if (exempt) colors.muted else colors.accent,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                        )
+                    }
+                    Text(
+                        if (exempt) "Allowed" else "Allow",
+                        color = if (exempt) colors.muted else colors.accent,
+                        fontSize = 12.sp,
+                    )
+                }
+                Divider()
+                Row(
+                    Modifier.fillMaxWidth().clickable { BackgroundGuard.openAutostart(context) }
+                        .padding(horizontal = 12.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text("Autostart", color = colors.ink, fontSize = 14.sp)
+                        Text(
+                            "Xiaomi, Huawei, Oppo, Vivo and Samsung freeze background apps until you allow them.",
+                            color = colors.muted, fontSize = 11.sp, lineHeight = 15.sp,
+                        )
+                    }
+                    Text("Open", color = colors.accent, fontSize = 12.sp)
+                }
+            }
+        }
+        if (powerSaving) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Battery saver is on. It can pause Wi-Fi while the screen is off, so the phone may take a few seconds to reconnect.",
+                color = colors.muted, fontSize = 11.sp, lineHeight = 15.sp,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+        }
+
+        Spacer(Modifier.height(18.dp))
         SectionLabel("Diagnostics")
         VoxCard {
             Column {
@@ -875,6 +991,17 @@ private fun SettingsScreen(
                         color = colors.accent, fontSize = 12.sp,
                         modifier = Modifier.clickable { showLogs = !showLogs },
                     )
+                }
+                if (MicService.isRunning) {
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        StatusDot(if (Session.screenOffSafe) Color(0xFF2FA36B) else colors.line)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (Session.screenOffSafe) "Stays awake with the screen off" else "No background lock held",
+                            color = colors.muted, fontSize = 12.sp,
+                        )
+                    }
                 }
                 if (showLogs) {
                     Spacer(Modifier.height(10.dp))
