@@ -7,6 +7,9 @@
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
   const bridge = window.voxbridge || window.createMockBridge();
+  // Result of the last attempt to make the cable the Windows default input.
+  let windowsDefault = null;
+
   const state = {
     app: {},
     settings: {},
@@ -122,6 +125,24 @@
     });
     bridge.on('app:service-event', (event) => {
       if (!event) return;
+      // The native service tells us whether it managed to make the cable the
+      // Windows default input. That is the difference between "audio arrives"
+      // and "Discord actually records it", so it is worth reporting precisely.
+      if (event.ev === 'default-input') {
+        windowsDefault = { claimed: Boolean(event.claimed), device: event.device || '', previous: event.previous || '' };
+        renderVirtualStatus();
+        if (event.claimed) {
+          toast('ok', 'Windows microphone switched', `${event.device || 'CABLE Output'} is now the default input.`);
+        } else {
+          toast('warn', 'Choose CABLE Output once', 'Windows would not switch automatically. Pick it in Sound settings and it will stick.');
+        }
+        return;
+      }
+      if (event.ev === 'default-input-restored') {
+        windowsDefault = null;
+        renderVirtualStatus();
+        return;
+      }
       if (event.ev === 'error') {
         toast('bad', 'Capture service', event.message || event.code || 'The audio service stopped.');
       }
@@ -551,10 +572,20 @@
       studioChip.className = 'status-chip ok';
       badge.textContent = 'Active';
       endpointName.textContent = device.name;
-      endpointSub.textContent = 'Apps should select “CABLE Output” as their microphone.';
+      endpointSub.textContent = 'Windows uses it as the default microphone, so most apps need no setup at all.';
       $('#virtual-device').textContent = device.name;
       $('#virtual-sub').textContent = 'Installed and ready — Windows apps can record from this now';
-      $('#virtual-foot').textContent = 'Verified signature · nothing else to do';
+      const defaultNotice = $('#default-notice');
+      if (windowsDefault && windowsDefault.claimed) {
+        $('#virtual-foot').textContent = 'Set as the Windows default microphone';
+        if (defaultNotice) defaultNotice.hidden = true;
+      } else if (windowsDefault && !windowsDefault.claimed) {
+        $('#virtual-foot').textContent = 'Installed · not the Windows default yet';
+        if (defaultNotice) defaultNotice.hidden = false;
+      } else {
+        $('#virtual-foot').textContent = 'Verified signature · nothing else to do';
+        if (defaultNotice) defaultNotice.hidden = true;
+      }
       // Once it is installed and detected, there is nothing to download. The
       // repair action moves out of the way instead of asking again on every
       // launch, which is what made the app feel like it had forgotten.
@@ -908,7 +939,15 @@
           renderRemembered();
           toast('ok', 'Remembered devices cleared');
           break;
-        case 'resume-audio':
+        case 'sound-settings':
+      if (bridge.openSoundSettings) {
+        bridge.openSoundSettings().catch(() => {});
+      } else {
+        toast('warn', 'Open Sound settings', 'Settings → System → Sound → Input, then choose CABLE Output.');
+      }
+      break;
+
+    case 'resume-audio':
           await pipeline?.resume();
           renderAudioHealth();
           if (pipeline?.running) toast('ok', 'Audio resumed', 'Your voice is reaching the virtual microphone.');

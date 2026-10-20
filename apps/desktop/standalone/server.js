@@ -602,6 +602,15 @@ const METHODS = {
   setupVirtualMic: () => setupVirtualMicrophone(),
   virtualState: () => ({ ...setupState, ...refreshCableState() }),
   openVirtualDownload: () => openExternal('https://vb-audio.com/Cable/'),
+  openSoundSettings: () => {
+    // Deep link to the Windows input picker. The allow-list in openExternal is
+    // for https only, so this goes through the shell directly.
+    if (IS_WIN) {
+      spawn('cmd', ['/c', 'start', '', 'ms-settings:sound'], { windowsHide: true, detached: true });
+      return true;
+    }
+    return false;
+  },
   verifySignature: (file) => (service ? service.verifySignature(file) : { valid: false, detail: 'service-missing' }),
 
   exportDiagnostics: async () => {
@@ -738,6 +747,11 @@ function isPortFree(port) {
   });
 }
 
+// The control surface stays on loopback by default: it can start the capture
+// service and change settings, so it has no business being reachable from the
+// network. VOXBRIDGE_BIND exists for containerised previews and is opt-in.
+const BIND_HOST = process.env.VOXBRIDGE_BIND || '127.0.0.1';
+
 async function listen(preferred) {
   for (let port = preferred; port < preferred + 20; port += 1) {
     if (!(await isPortFree(port))) continue;
@@ -745,7 +759,7 @@ async function listen(preferred) {
     try {
       await new Promise((resolve, reject) => {
         server.once('error', reject);
-        server.listen(port, '127.0.0.1', resolve);
+        server.listen(port, BIND_HOST, resolve);
       });
       return { server, port };
     } catch {

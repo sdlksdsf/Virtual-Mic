@@ -16,7 +16,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFile } = require('node:child_process');
+const { execFile, spawn } = require('node:child_process');
 const { Store } = require('./store');
 const { Receiver } = require('./server');
 const { CaptureService } = require('./service');
@@ -699,6 +699,20 @@ ipcMain.handle('diag:export', async () => {
 });
 
 ipcMain.handle('app:open-external', (event, url) => openExternal(url));
+
+ipcMain.handle('app:open-sound-settings', () => {
+  // Deep-link into the Windows input page. Nothing is fetched; this only asks
+  // the shell to open the system settings pane.
+  if (process.platform === 'win32') {
+    spawn('cmd', ['/c', 'start', '', 'ms-settings:sound'], { windowsHide: true, detached: true });
+    return true;
+  }
+  if (process.platform === 'darwin') {
+    spawn('open', ['x-apple.systempreferences:com.apple.preference.sound'], { detached: true });
+    return true;
+  }
+  return false;
+});
 
 ipcMain.handle('app:check-updates', async () => {
   return {
