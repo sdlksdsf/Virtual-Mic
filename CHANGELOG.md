@@ -2,6 +2,54 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
+## [1.0.0] — 2026-10-20, second pass
+
+Echo, noise-floor and self-monitoring fixes, plus sharper site artwork. The
+release tag stays 1.0.0 and its assets are rebuilt from this commit; the
+protocol is untouched, so existing installs keep working.
+
+### Echo and repeats
+- The Windows renderer no longer falls back to the **default speakers** when it
+  cannot find a virtual cable. That fallback played the caller's voice into the
+  room, the phone microphone picked it straight back up, and the user heard
+  themselves repeating. With no cable the service now stays silent and the app
+  says so, with a one-click route to install VB-CABLE.
+- Remembered or hand-picked playback devices are validated before use: only a
+  virtual cable endpoint can receive microphone audio. A stale "Speakers" entry
+  from an older install can no longer reopen the loop.
+- Duplicate frames are dropped at ingest (same sequence number, or older than
+  one that already played), and processed frames are de-duplicated by sequence
+  number before they reach the cable, so two windows — or a stale tab — cannot
+  write every syllable twice.
+- The jitter buffer reacts to starvation immediately (+30 ms, capped at 240 ms)
+  instead of waiting two seconds, and packet-loss concealment fades in ~20 ms
+  instead of repeating 70 ms of the last frame. Late Wi-Fi packets therefore
+  stop sounding like stuttered words.
+
+### Background noise
+- A speech-gated noise tracker replaces minimum statistics. The estimate now
+  freezes while someone is talking and converges during pauses, which removes
+  the 6 dB bias that left a hiss floor under the voice.
+- Spectral over-subtraction plus a −30 dB high-frequency floor: measured room
+  tone rejection is now 16 dB (was 2.4 dB) with ~1 dB of level lost from the
+  voice.
+- The gate opens at −40 dBFS instead of −44, and auto gain only adapts while
+  speech is present, so the room no longer swells between phrases.
+- Same estimator, gate and auto-gain order on Android (`Dsp.kt`).
+
+### Monitoring
+- A labelled **Monitor** switch now sits in the Live header: off by default,
+  persisted, disabled when no cable is installed, and it turns itself visibly
+  on with a lamp. Turning it on explains the headphone requirement.
+- Monitoring state stays in sync with the Studio toggle and the Live card.
+
+### Site and docs
+- Every app screenshot was recaptured at 2× from the running app, including the
+  new Monitor switch, and served as 2400 px WebP (≈95 KB each; was 111–172 KB
+  PNG at 1440 px, which looked soft on retina displays).
+- The site build fetches `apps/web` from the commit that triggered the
+  deployment, so the published site can never lag the repository again.
+
 ## [1.0.0 rebuild] — 2026-10-20
 
 Audio, pairing and clarity fixes on top of the 1.0.0 tag. The release assets
