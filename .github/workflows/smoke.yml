@@ -128,6 +128,27 @@ jobs:
           gh release upload "$tag" SHA256SUMS.txt --clobber
           sha256sum -c SHA256SUMS.txt
 
+          # The checksum the website publishes has to describe the file the
+          # website serves. A rebuild that silently replaced a release file used
+          # to leave those two out of step, so fail loudly if it happens again.
+          python3 - <<'PY'
+          import glob, hashlib, json
+          manifest = json.load(open('/tmp/manifest.json'))['files']
+          pattern = {
+              'android': 'VoxBridge-*-android.apk',
+              'ios': 'VoxBridge-*-unsigned.ipa',
+              'windows': 'VoxBridge-Setup-*-x64.exe',
+              'portable': 'VoxBridge-*-win64-portable.zip',
+          }
+          for key, glob_pattern in pattern.items():
+              path = glob.glob(glob_pattern)[0]
+              digest = hashlib.sha256(open(path, 'rb').read()).hexdigest()
+              published = manifest[key]['sha256']
+              assert digest == published, (
+                  f'{key}: the site publishes {published[:12]}… but the release holds {digest[:12]}…')
+              print(f'{key}: {digest[:12]}… is the checksum the site advertises')
+          PY
+
           apk=$(ls VoxBridge-*-android.apk)
           ipa=$(ls VoxBridge-*-unsigned.ipa)
           exe=$(ls VoxBridge-Setup-*-x64.exe)
