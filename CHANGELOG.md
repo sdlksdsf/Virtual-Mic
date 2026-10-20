@@ -2,6 +2,44 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
+## [1.0.1] — 2026-10-20
+
+Audio, pairing and clarity fixes on top of 1.0.0. The release assets for 1.0.0
+were rebuilt from this commit, so a fresh download already contains all of it.
+
+### Audio
+- Rebuilt the voice chain: the denoiser now uses a smoothed periodogram with
+  sliding minimum statistics and decision-directed a priori SNR, so consonants
+  survive and the "underwater" artefact is gone.
+- Boost is applied before the compressor, and a lookahead limiter with a
+  −1 dBFS ceiling replaces the old post-compression clamp. THD at default
+  settings falls from 1.92 % to 0.01 %; room tone rejection rises by ~6 dB.
+- Analysis/synthesis now use square-root Hann windows, which sum to unity at
+  50 % overlap. The previous Hann/Hann pair modulated the output at frame rate.
+- Android no longer enables the platform noise suppressor, AGC or echo
+  canceller on top of the app's own chain, and avoids `VOICE_COMMUNICATION`.
+
+### Pairing
+- The phone can scan the QR code shown on the PC (`voxbridge://pair?...`),
+  in addition to nearby-PC discovery, manual address and USB.
+- The Android scanner runs on a background executor and hops back to the main
+  looper for state updates.
+
+### Windows
+- On connect the capture service makes the cable the default recording device
+  and restores the previous one on exit.
+- The app now reports whether that switch actually happened, and offers a
+  Sound settings deep link when Windows refuses it.
+- Once the cable is detected, the install prompt disappears for good instead of
+  reappearing on every launch.
+
+### App and site
+- Live view shows an audio-health notice when the browser engine is suspended,
+  with a one-click resume.
+- Long-form site pages share a centred column; the privacy page no longer
+  scrolls sideways on a phone.
+- README rewritten with real screenshots, feature tables and measured numbers.
+
 ## [1.0.0] — 2026-10-19
 
 First public release.
