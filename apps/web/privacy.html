@@ -110,7 +110,7 @@
         <p>The website is static, has no login, and sets no advertising cookies. It does four small things:</p>
         <ul>
           <li><b>Anonymous download counting.</b> When you click a download, we record the platform (Windows, Android or iOS), the app version and the source page. No IP address, no user agent, no identifier — the row is not linkable to you.</li>
-          <li><b>Anonymous page counting.</b> Each page load records the page path, the domain of the site that referred you, and any <code>utm_*</code> campaign tag in the link you followed. No cookie, no browser identifier, no IP address — a row cannot be linked back to you, and nothing is shared with advertisers.</li>
+          <li><b>Anonymous page counting.</b> Each page load records the page path, the domain of the site that referred you, and any <code>utm_*</code> campaign tag in the link you followed. A random value generated for that one page load is used to discard duplicates; it is not stored in your browser, not reused on the next page, and says nothing about who you are. No cookie, no browser identifier, no IP address — a row cannot be linked back to you, and nothing is shared with advertisers.</li>
           <li><b>Optional feedback.</b> If you send a message or subscribe to release notes, we store the email address you typed plus the message. That is the only personal data we knowingly hold.</li>
           <li><b>Local theme preference.</b> Light or dark is stored in your browser’s local storage. It never reaches a server.</li>
         </ul>

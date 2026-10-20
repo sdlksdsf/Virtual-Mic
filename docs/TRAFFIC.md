@@ -160,7 +160,8 @@ A phone-as-mic demo is inherently visual and audible — that is an advantage ov
 ## 6. Measurement — so you know which channel to repeat
 
 Every page now writes one row to the Supabase `page_events` table: path, referring domain and any
-`utm_*` tag. No cookie, no identifier, no IP — the same stance as the download counter, and disclosed
+`utm_*` tag. A duplicated beacon from the same page load is discarded, so a number is a page load,
+not an impression twice-counted. No cookie, no identifier, no IP — the same stance as the download counter, and disclosed
 in `/privacy`. Click events were already recorded in `download_events`. Between the two you can
 answer the two questions that matter per channel: how many people arrived, and did they download.
 
