@@ -114,18 +114,14 @@
         this.readyPos = 0;
         const bins = (FFT_N >> 1) + 1;
         this.power = new Float32Array(bins);
-        this.noise = new Float32Array(bins);
-        this.minCur = new Float32Array(bins);
-        this.minPrev = new Float32Array(bins);
+        this.noise = new Float32Array(bins).fill(Infinity);
         this.gain = new Float32Array(bins);
         this.smooth = new Float32Array(bins);
         this.prevGain = new Float32Array(bins);
         this.prevGamma = new Float32Array(bins);
         this.initFrames = 0;
         this.initTarget = 30;  // ~160 ms of room tone before suppression starts
-        this.windowFrames = 240; // ~1.3 s sliding minimum
-        this.windowCount = 0;
-        this.seeded = false;
+        this.speechHold = 0;
       }
 
       setStrength(value) {
@@ -169,62 +165,88 @@
 
         const bins = (FFT_N >> 1) + 1;
         const strength = this.strength;
-        const floorGain = 0.5 - 0.44 * strength;
+        // How much of a noise-only bin survives. The old curve left 18 % of the
+        // room tone at the strongest setting (-15 dB), which is audible as hiss
+        // under the voice. This one reaches -30 dB and still fades in smoothly.
+        const floorGain = 0.22 - 0.19 * strength;
         const alphaDD = 0.92;
-        const seeding = this.initFrames < this.initTarget;
+        const warming = this.initFrames < this.initTarget;
 
-        // Slide the minimum-statistics window.
-        this.windowCount += 1;
-        if (this.windowCount >= this.windowFrames) {
-          this.windowCount = 0;
-          for (let i = 0; i < bins; i += 1) {
-            this.minPrev[i] = this.minCur[i];
-            this.minCur[i] = Infinity;
-          }
-        }
-
+        // Pass 1: smooth the periodogram. Raw FFT power has a variance as
+        // large as its mean, so everything downstream works on the smoothed
+        // value; the total drives the speech detector.
+        let framePower = 0;
         for (let i = 0; i < bins; i += 1) {
           const raw = re[i] * re[i] + im[i] * im[i];
-
-          // Smooth the periodogram first. Raw FFT power has a variance as
-          // large as its mean, so a minimum taken on it collapses far below
-          // the true floor and the suppressor stops working entirely.
           this.power[i] += (raw - this.power[i]) * 0.25;
-          const ps = this.power[i];
+          framePower += this.power[i];
+        }
+        framePower /= bins;
 
-          if (!this.seeded) {
-            this.minCur[i] = ps;
-            this.minPrev[i] = ps;
-          } else if (ps < this.minCur[i]) {
-            this.minCur[i] = ps;
+        // Pass 2: is this frame speech or room? A frame clearly above the
+        // tracked noise is speech, and the estimate is then frozen. This is
+        // what makes the suppression hold: the old minimum-statistics tracker
+        // ran straight through the voice, drifted with it, and left a hiss
+        // floor that was 6 dB out.
+        if (warming) {
+          for (let i = 0; i < bins; i += 1) {
+            if (this.noise[i] > this.power[i]) this.noise[i] = this.power[i];
           }
-          const floorPower = Math.min(this.minCur[i], this.minPrev[i]) * 1.6 + 1e-12;
-          this.noise[i] = floorPower;
+        }
+        let noisePower = 0;
+        for (let i = 0; i < bins; i += 1) noisePower += this.noise[i];
+        noisePower /= bins;
+        const loud = noisePower > 1e-9 && framePower > noisePower * 3;
+        if (loud) this.speechHold = 80;
+        else if (this.speechHold > 0) this.speechHold -= 1;
+        const upRate = this.speechHold === 0 ? 0.06 : 0.0005;
 
-          if (seeding) {
+        // Pass 3: track the floor and build the gain.
+        for (let i = 0; i < bins; i += 1) {
+          const ps = this.power[i];
+          const prevNoise = this.noise[i];
+          if (ps < prevNoise) {
+            this.noise[i] = prevNoise + (ps - prevNoise) * 0.4;
+          } else {
+            this.noise[i] = prevNoise + (ps - prevNoise) * upRate;
+          }
+          // The warm-up minimum sits a few dB under the true mean; compensate
+          // once so the first phrase is already protected.
+          if (this.initFrames === this.initTarget) this.noise[i] *= 2.5;
+          const floorPower = Math.max(this.noise[i], 1e-12);
+
+          if (warming) {
             this.smooth[i] = 1;
             this.prevGain[i] = 1;
             this.prevGamma[i] = 1;
             continue;
           }
 
-          const gamma = ps / floorPower;
-          const xi = alphaDD * (this.prevGain[i] * this.prevGain[i]) * this.prevGamma[i]
-            + (1 - alphaDD) * Math.max(gamma - 1, 0);
+          // Spectral over-subtraction. A plain Wiener gain only removes about
+          // half the power of stationary noise, which is why a fan or an air
+          // conditioner stayed audible.
+          const gamma = Math.max(ps - 0.8 * floorPower, 0.05 * floorPower) / floorPower;
+          const xi = Math.min(
+            64,
+            alphaDD * (this.prevGain[i] * this.prevGain[i]) * Math.min(this.prevGamma[i], 8)
+              + (1 - alphaDD) * Math.max(gamma - 1, 0),
+          );
           let g = xi / (1 + xi);
-          if (g < floorGain) g = floorGain;
+          // Hiss lives in the top octaves; lean on them a little harder.
+          const hf = i / (bins - 1);
+          const floor = floorGain * (1 - 0.35 * hf * hf);
+          if (g < floor) g = floor;
           if (g > 1) g = 1;
           this.smooth[i] = g;
           this.prevGamma[i] = gamma;
           this.prevGain[i] = g;
         }
-        if (!this.seeded) this.seeded = true;
 
         for (let i = 0; i < bins; i += 1) {
           // Three-tap smoothing across neighbouring bins removes the isolated
           // "musical noise" spikes that make denoised speech sound metallic.
           let g = this.smooth[i];
-          if (!seeding && i > 0 && i < bins - 1) {
+          if (!warming && i > 0 && i < bins - 1) {
             g = 0.25 * this.smooth[i - 1] + 0.5 * this.smooth[i] + 0.25 * this.smooth[i + 1];
           }
           this.gain[i] = g;
@@ -446,6 +468,7 @@
         this.meterCount = 0;
         this.lastMeter = 0;
         this.lastAdapt = 0;
+        this.lastRaise = 0;
 
         this.port.onmessage = (event) => this.onMessage(event.data);
       }
@@ -613,15 +636,27 @@
 
         if (got < frames) {
           // Packet loss concealment: repeat the tail of the last frame, fading
-          // out, instead of snapping to digital silence (which clicks).
+          // out fast, instead of snapping to digital silence (which clicks).
+          // The fade is deliberately short: on a jittery Wi-Fi link the late
+          // packet still arrives, and long concealment made the user hear the
+          // same syllable twice.
           this.silenceQuanta += 1;
-          const fade = Math.max(0, 1 - this.silenceQuanta / 26);
-          const offset = Math.round(frames * (this.silenceQuanta % 8));
+          const fade = Math.max(0, 1 - this.silenceQuanta / 8);
+          const offset = Math.round(frames * (this.silenceQuanta % 4));
           for (let i = got; i < frames; i += 1) {
             const idx = (offset + i) % this.lastFrameSamples.length;
             channel[i] = this.lastFrameSamples[idx] * fade;
           }
-          if (got === 0) this.underrunEvents += 1;
+          if (got === 0) {
+            this.underrunEvents += 1;
+            // Grow the cushion immediately instead of waiting for the slow
+            // two-second adjuster. A starving buffer repeats audio; a few more
+            // milliseconds of latency do not.
+            if (currentTime - this.lastRaise > 0.5 && this.targetMs < 240) {
+              this.lastRaise = currentTime;
+              this.targetMs = Math.min(240, this.targetMs + 30);
+            }
+          }
           if (this.silenceQuanta > 26) {
             this.started = false;
             this.silenceQuanta = 0;
@@ -647,8 +682,11 @@
         const mix = this.mix;
         const dt = 1 / this.rate;
         const boost = dbToGain(this.runtime.boostDb);
-        const gateOpen = 0.0063;  // -44 dBFS
-        const gateClose = 0.0032; // -50 dBFS
+        // -40 dBFS opens, -49 dBFS closes. The old pair (-44 / -50) sat low
+        // enough that room tone kept the gate open and the auto gain then
+        // lifted it another 12 dB.
+        const gateOpen = 0.0100;
+        const gateClose = 0.0035;
         const envAttack = 1 - Math.exp(-dt / 0.002);
         const envRelease = 1 - Math.exp(-dt / 0.180);
         const agcAttack = 1 - Math.exp(-dt / 0.030);
@@ -667,24 +705,8 @@
 
           const raw = Math.abs(x);
 
-          // Auto gain rides the level slowly and freezes during silence, so it
-          // cannot wind up and amplify the noise floor between phrases.
-          if (this.config.agc) {
-            if (raw > gateOpen) {
-              this.agcEnv += (raw - this.agcEnv)
-                * (raw > this.agcEnv ? agcAttack : agcRelease);
-            }
-            if (this.agcEnv > 0.0016) {
-              const currentDb = 20 * Math.log10(this.agcEnv + 1e-9);
-              const targetGain = Math.max(0.5, Math.min(4, dbToGain(-20 - currentDb)));
-              const glide = 1 - Math.exp(-dt / 0.600);
-              this.agcGain += (targetGain - this.agcGain) * glide;
-            }
-            x *= this.agcGain;
-          }
-
-          // Hysteresis gate with a hold and a slow release. The old gate
-          // released in milliseconds and chattered on every consonant.
+          // Track the gate envelope first: it answers "is anyone speaking?",
+          // and both the gate and the auto gain need that answer.
           if (this.config.gate) {
             this.env += (raw - this.env) * (raw > this.env ? envAttack : envRelease);
             if (this.env > gateOpen) {
@@ -694,6 +716,30 @@
               this.gateHold -= dt;
               if (this.gateHold <= 0) this.gateTarget = 0.0005;
             }
+          }
+          const speaking = this.config.gate ? this.env > gateOpen : raw > gateOpen;
+
+          // Auto gain rides the level slowly, but only while there is speech.
+          // Adapting during pauses is what made the noise floor swell between
+          // phrases: with nothing to measure it crept up to +12 dB and lifted
+          // the hiss into audibility.
+          if (this.config.agc) {
+            if (speaking) {
+              this.agcEnv += (raw - this.agcEnv)
+                * (raw > this.agcEnv ? agcAttack : agcRelease);
+              if (this.agcEnv > 0.0016) {
+                const currentDb = 20 * Math.log10(this.agcEnv + 1e-9);
+                const targetGain = Math.max(0.5, Math.min(4, dbToGain(-20 - currentDb)));
+                const glide = 1 - Math.exp(-dt / 0.600);
+                this.agcGain += (targetGain - this.agcGain) * glide;
+              }
+            }
+            x *= this.agcGain;
+          }
+
+          // Hysteresis gate with a hold and a slow release. The old gate
+          // released in milliseconds and chattered on every consonant.
+          if (this.config.gate) {
             this.gateGain += (this.gateTarget - this.gateGain)
               * (this.gateTarget > this.gateGain ? gateAttack : gateRelease);
             x *= this.gateGain;

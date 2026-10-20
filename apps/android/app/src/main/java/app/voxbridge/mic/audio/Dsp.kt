@@ -73,8 +73,10 @@ class Dsp(
 
         denoiser?.process(floats, length)
 
-        val gateOpen = 0.0063f   // -44 dBFS
-        val gateClose = 0.0032f  // -50 dBFS
+        // -40 dBFS opens, -49 dBFS closes. The old pair sat low enough that
+        // room tone held the gate open, and the auto gain then lifted it.
+        val gateOpen = 0.0100f
+        val gateClose = 0.0035f
 
         for (i in 0 until length) {
             var x = floats[i]
@@ -84,23 +86,8 @@ class Dsp(
 
             val raw = abs(x)
 
-            // Auto gain rides the level slowly and freezes during silence, so
-            // it cannot wind up and amplify the room between phrases.
-            if (agcOn) {
-                if (raw > gateOpen) {
-                    agcEnv += (raw - agcEnv) * (if (raw > agcEnv) agcAttack else agcRelease)
-                }
-                if (agcEnv > 0.0016f) {
-                    val currentDb = 20.0 * log10((agcEnv + 1e-9f).toDouble())
-                    val targetGain = 10.0.pow(((-20.0 - currentDb) / 20.0).coerceIn(-6.0, 12.0))
-                        .toFloat().coerceIn(0.5f, 4f)
-                    agcGain += (targetGain - agcGain) * agcGlide
-                }
-                x *= agcGain
-            }
-
-            // Hysteresis gate with a hold and a slow release. The previous gate
-            // released in milliseconds and chattered on every consonant.
+            // Track the gate envelope first: it answers "is anyone speaking?",
+            // and both the gate and the auto gain need that answer.
             if (gateOn) {
                 envelope += (raw - envelope) * (if (raw > envelope) envAttack else envRelease)
                 if (envelope > gateOpen) {
@@ -109,6 +96,27 @@ class Dsp(
                 } else if (envelope < gateClose) {
                     if (holdSamples > 0) holdSamples -= 1 else gateTarget = 0.0005f
                 }
+            }
+            val speaking = if (gateOn) envelope > gateOpen else raw > gateOpen
+
+            // Auto gain only adapts while someone is speaking. Letting it ride
+            // the room between phrases is what made the noise floor swell.
+            if (agcOn) {
+                if (speaking) {
+                    agcEnv += (raw - agcEnv) * (if (raw > agcEnv) agcAttack else agcRelease)
+                    if (agcEnv > 0.0016f) {
+                        val currentDb = 20.0 * log10((agcEnv + 1e-9f).toDouble())
+                        val targetGain = 10.0.pow(((-20.0 - currentDb) / 20.0).coerceIn(-6.0, 12.0))
+                            .toFloat().coerceIn(0.5f, 4f)
+                        agcGain += (targetGain - agcGain) * agcGlide
+                    }
+                }
+                x *= agcGain
+            }
+
+            // Hysteresis gate with a hold and a slow release. The previous gate
+            // released in milliseconds and chattered on every consonant.
+            if (gateOn) {
                 gateGain += (gateTarget - gateGain) *
                     (if (gateTarget > gateGain) gateAttack else gateRelease)
                 x *= gateGain
@@ -204,16 +212,14 @@ class Denoiser(private val strength: Double) {
     private val frame = FloatArray(FFT_SIZE)
     private val overlap = FloatArray(FFT_SIZE)
     private val power = FloatArray(BINS)
-    private val minCur = FloatArray(BINS)
-    private val minPrev = FloatArray(BINS)
+    private val noise = FloatArray(BINS) { Float.MAX_VALUE }
     private val smooth = FloatArray(BINS)
     private val prevGain = FloatArray(BINS) { 1f }
     private val prevGamma = FloatArray(BINS) { 1f }
     private val pending = FloatArray(HOP)
     private var pendingFill = 0
     private var warmup = 0
-    private var windowCount = 0
-    private var seeded = false
+    private var speechHold = 0
     private val fifo = ArrayDeque<FloatArray>()
     private var fifoOffset = 0
 
@@ -260,59 +266,84 @@ class Denoiser(private val strength: Double) {
         }
         fft.forward()
 
-        val floorGain = (0.5 - 0.44 * strength).toFloat()
+        // How much of a noise-only bin survives. The old curve left 18 % of the
+        // room tone at the strongest setting (-15 dB), audible as hiss.
+        val floorGain = (0.22 - 0.19 * strength).toFloat()
         val alphaDD = 0.92f
-        val seeding = warmup < 30
+        val warming = warmup < 30
 
-        windowCount += 1
-        if (windowCount >= 240) {
-            windowCount = 0
-            for (i in 0 until BINS) {
-                minPrev[i] = minCur[i]
-                minCur[i] = Float.MAX_VALUE
-            }
-        }
-
+        // Pass 1: smooth the periodogram. Raw FFT power has a variance as
+        // large as its mean, so everything downstream works on the smoothed
+        // value; the total drives the speech detector.
+        var framePower = 0f
         for (i in 0 until BINS) {
             val raw = re[i] * re[i] + im[i] * im[i]
-            // Smooth the periodogram: raw FFT power has variance as large as
-            // its mean, so a minimum taken directly on it collapses far below
-            // the true noise floor and the suppressor stops working.
             power[i] += (raw - power[i]) * 0.25f
-            val ps = power[i]
+            framePower += power[i]
+        }
+        framePower /= BINS
 
-            if (!seeded) {
-                minCur[i] = ps
-                minPrev[i] = ps
-            } else if (ps < minCur[i]) {
-                minCur[i] = ps
+        // Pass 2: is this frame speech or room? A frame clearly above the
+        // tracked noise is speech, and the estimate is then frozen, so a long
+        // vowel cannot teach the suppressor that the voice is noise.
+        if (warming) {
+            for (i in 0 until BINS) {
+                if (noise[i] > power[i]) noise[i] = power[i]
             }
-            val floorPower = minOf(minCur[i], minPrev[i]) * 1.6f + 1e-12f
+        }
+        var noisePower = 0f
+        for (i in 0 until BINS) noisePower += noise[i]
+        noisePower /= BINS
+        val loud = noisePower > 1e-9f && framePower > noisePower * 3f
+        if (loud) speechHold = 80
+        else if (speechHold > 0) speechHold -= 1
+        val upRate = if (speechHold == 0) 0.06f else 0.0005f
 
-            if (seeding) {
+        // Pass 3: track the floor (fast down, gated up) and build the gain.
+        for (i in 0 until BINS) {
+            val ps = power[i]
+            val prevNoise = noise[i]
+            if (ps < prevNoise) {
+                noise[i] = prevNoise + (ps - prevNoise) * 0.4f
+            } else {
+                noise[i] = prevNoise + (ps - prevNoise) * upRate
+            }
+            // The warm-up minimum sits a few dB under the true mean; compensate
+            // once so the first phrase is already protected.
+            if (warmup == 30) noise[i] *= 2.5f
+            val floorPower = maxOf(noise[i], 1e-12f)
+
+            if (warming) {
                 smooth[i] = 1f
                 prevGain[i] = 1f
                 prevGamma[i] = 1f
                 continue
             }
 
-            val gamma = ps / floorPower
-            val xi = alphaDD * (prevGain[i] * prevGain[i]) * prevGamma[i] +
-                (1f - alphaDD) * maxOf(gamma - 1f, 0f)
+            // Spectral over-subtraction: a plain Wiener gain only removes half
+            // the power of stationary noise, so a fan stayed audible.
+            val gamma = maxOf(ps - 0.8f * floorPower, 0.05f * floorPower) / floorPower
+            val xi = minOf(
+                64f,
+                alphaDD * (prevGain[i] * prevGain[i]) * minOf(prevGamma[i], 8f) +
+                    (1f - alphaDD) * maxOf(gamma - 1f, 0f),
+            )
             var g = xi / (1f + xi)
-            if (g < floorGain) g = floorGain
+            // Hiss lives in the top octaves; lean on them a little harder.
+            val hf = i.toFloat() / (BINS - 1)
+            val floor = floorGain * (1f - 0.35f * hf * hf)
+            if (g < floor) g = floor
             if (g > 1f) g = 1f
             smooth[i] = g
             prevGamma[i] = gamma
             prevGain[i] = g
         }
-        if (!seeded) seeded = true
 
         for (i in 0 until BINS) {
             // Three-tap smoothing across neighbouring bins removes the isolated
             // "musical noise" spikes that make denoised speech sound metallic.
             var g = smooth[i]
-            if (!seeding && i > 0 && i < BINS - 1) {
+            if (!warming && i > 0 && i < BINS - 1) {
                 g = 0.25f * smooth[i - 1] + 0.5f * smooth[i] + 0.25f * smooth[i + 1]
             }
             re[i] *= g

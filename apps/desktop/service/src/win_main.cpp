@@ -295,15 +295,17 @@ int runService(const Options& opt) {
          ",\"rate\":" + std::to_string(opt.rate) +
          ",\"bufferMs\":" + std::to_string(opt.bufferMs) +
          ",\"prefillMs\":" + std::to_string(opt.prefillMs) + "}");
-    if (renderer.fallback()) {
-      emit("{\"ev\":\"warn\",\"code\":\"no-virtual-cable\",\"message\":\"No virtual microphone found; audio is going to the default output.\"}");
+    if (renderer.nullSink() && !opt.nullSink) {
+      // Deliberately silent instead of playing the caller's voice out of the
+      // speakers, which the phone would hear and loop back.
+      emit("{\"ev\":\"warn\",\"code\":\"no-virtual-cable\",\"message\":\"No virtual microphone found. Audio is not sent anywhere until the cable is installed.\"}");
     }
 
     // Point the system default *recording* device at the cable output so
     // Discord, Chrome, Teams and OBS capture it without manual setup. Apps read
     // the default endpoint, not the device VoxBridge renders into, so without
     // this step they keep recording from the laptop microphone.
-    if (opt.claimDefault && !renderer.fallback()) {
+    if (opt.claimDefault && !renderer.fallback() && !renderer.nullSink()) {
       std::string targetId;
       std::string targetName;
       for (const auto& device : vbwin::listDevices(true)) {
@@ -358,6 +360,7 @@ int runService(const Options& opt) {
         }
         emit("{\"ev\":\"ready\",\"device\":" + jsonString(renderer.deviceName()) +
              ",\"fallback\":" + (renderer.fallback() ? "true" : "false") +
+             ",\"nullSink\":" + (renderer.nullSink() ? "true" : "false") +
              ",\"rate\":" + std::to_string(opt.rate) + "}");
       }
     } else if (renderer.nullSink()) {
