@@ -19,7 +19,23 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const OLD_HOST = 'voxbridge-app-pi.vercel.app';
+
+/**
+ * Read the host the site currently advertises instead of hard-coding it.
+ * The constant used to go stale after every move, which made the stale-reference
+ * check silently useless; the canonical link cannot drift from the pages.
+ */
+function currentHost() {
+  try {
+    const html = fs.readFileSync(path.join(ROOT, 'apps/web/index.html'), 'utf8');
+    const match = html.match(/<link[^>]+rel="canonical"[^>]+href="https:\/\/([^/"]+)/i)
+      || html.match(/<link[^>]+href="https:\/\/([^/"]+)[^>]+rel="canonical"/i);
+    if (match) return match[1];
+  } catch { /* fall through */ }
+  throw new Error('could not read the canonical address from apps/web/index.html');
+}
+
+const OLD_HOST = currentHost();
 const SKIP_DIRS = new Set(['.git', 'node_modules', 'public', '.vercel', '.next']);
 const EXTENSIONS = new Set(['.html', '.xml', '.txt', '.js', '.json', '.md', '.yml', '.yaml']);
 
