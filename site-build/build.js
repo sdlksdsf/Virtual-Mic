@@ -3,13 +3,19 @@
 // Static build for the VoxBridge site.
 //
 // The deployment carries this script only; the pages, styles, fonts and images
-// are pulled from the repository at a pinned commit, which keeps every build
-// reproducible and the uploaded payload small. Bump SHA when the site changes.
+// are pulled from the repository, which keeps the uploaded payload small and
+// the output identical to the commit that triggered the build. When the script
+// runs outside Vercel it falls back to the pinned commit below.
 
 const fs = require('node:fs');
 const path = require('node:path');
 
-const SHA = '2c8ca1098ca6fb36a3605cf0ababc8c1fa57db7d';
+const PINNED = 'f03901256b17e350366a25755c2f5e29f965a433';
+const SHA = process.env.VERCEL_GIT_COMMIT_SHA || PINNED;
+
+if (!/^[0-9a-f]{7,40}$/.test(SHA)) {
+  throw new Error(`unexpected commit sha: ${SHA}`);
+}
 const BASE = `https://raw.githubusercontent.com/sdlksdsf/Virtual-Mic/${SHA}/apps/web/`;
 
 const FILES = [
