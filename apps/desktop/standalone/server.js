@@ -463,9 +463,9 @@ async function stopReceiver() {
   if (receiver) await receiver.stop();
 }
 
-// Sequence numbers of processed frames written recently, used to ignore a
-// second renderer echoing the same audio into the cable.
-const processedSeqs = new Map();
+// Last processed frame written to the cable. A second renderer, or a stale
+// tab, would otherwise echo the same audio in twice.
+let lastAccepted = { seq: null, at: 0 };
 
 function startService() {
   if (!service) {
@@ -572,18 +572,17 @@ const METHODS = {
     if (buffer.length < 12) return false;
     // Two windows (or a stale tab) both receive the same phone packets and
     // both would hand back a processed frame, so the cable would get every
-    // syllable twice. The frame carries its sequence number; the same number
-    // arriving twice inside this window is a duplicate, not new audio.
+    // syllable twice — out of order, which sounds like a stutter. Sequence
+    // numbers are monotonic per stream, so anything that repeats or goes
+    // backwards inside a short window is not new audio. A gap of more than
+    // 400 ms means the writer restarted (a reload), so it is accepted.
     const seq = buffer.readUInt16LE(4);
     const now = Date.now();
-    const seen = processedSeqs.get(seq);
-    if (seen && now - seen < 400) return false;
-    processedSeqs.set(seq, now);
-    if (processedSeqs.size > 512) {
-      for (const [key, at] of processedSeqs) {
-        if (now - at > 4000) processedSeqs.delete(key);
-      }
+    if (lastAccepted.seq !== null) {
+      const delta = (seq - lastAccepted.seq) & 0xffff;
+      if ((delta === 0 || delta >= 0x8000) && now - lastAccepted.at < 400) return false;
     }
+    lastAccepted = { seq, at: now };
     service?.write(buffer);
     recorder?.write(buffer.subarray(12));
     return true;

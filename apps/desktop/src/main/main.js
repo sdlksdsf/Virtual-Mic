@@ -656,24 +656,23 @@ ipcMain.handle('audio:packet', (event, buffer) => {
   return written;
 });
 
-// Frames the renderer already processed. Two windows (or a stale tab) would
-// otherwise hand back the same packet and the cable would play every syllable
-// twice; the sequence number in the header is what catches it.
-const writtenSeqs = new Map();
+// Last processed frame written. Two windows (or a stale tab) would otherwise
+// hand back the same packet and the cable would play every syllable twice, out
+// of order. Sequence numbers are monotonic per stream, so a repeat or a step
+// backwards inside a short window is a duplicate; a gap over 400 ms means the
+// writer restarted and is accepted.
+let lastProcessed = { seq: null, at: 0 };
 
 ipcMain.on('audio:processed', (event, data) => {
   const buffer = Buffer.from(data);
   if (buffer.length < 12) return;
   const seq = buffer.readUInt16LE(4);
   const now = Date.now();
-  const seen = writtenSeqs.get(seq);
-  if (seen && now - seen < 400) return;
-  writtenSeqs.set(seq, now);
-  if (writtenSeqs.size > 512) {
-    for (const [key, at] of writtenSeqs) {
-      if (now - at > 4000) writtenSeqs.delete(key);
-    }
+  if (lastProcessed.seq !== null) {
+    const delta = (seq - lastProcessed.seq) & 0xffff;
+    if ((delta === 0 || delta >= 0x8000) && now - lastProcessed.at < 400) return;
   }
+  lastProcessed = { seq, at: now };
   service?.write(buffer);
   recorder?.write(buffer.subarray(12));
 });
