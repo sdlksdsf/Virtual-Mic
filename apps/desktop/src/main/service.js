@@ -46,6 +46,10 @@ class CaptureService extends EventEmitter {
       status: 'idle',
       device: '',
       fallback: false,
+      // True when Windows has no virtual cable, so the service deliberately
+      // stays silent instead of playing the caller out of the speakers (which
+      // the phone would hear and loop straight back).
+      nullSink: false,
       rate: 48000,
       bufferMs: 20,
       prefillMs: 80,
@@ -124,6 +128,7 @@ class CaptureService extends EventEmitter {
       this.state.status = 'software';
       this.state.device = 'Software sink';
       this.state.fallback = true;
+      this.state.nullSink = false;
       this.emit('event', {
         ev: 'ready',
         device: 'Software sink',
@@ -205,6 +210,7 @@ class CaptureService extends EventEmitter {
           this.state.status = 'ready';
           this.state.device = event.device || '';
           this.state.fallback = Boolean(event.fallback);
+          this.state.nullSink = Boolean(event.nullSink && !event.fallback);
           this.state.rate = event.rate || this.state.rate;
           this.state.bufferMs = event.bufferMs || this.state.bufferMs;
           this.state.prefillMs = event.prefillMs || this.state.prefillMs;
