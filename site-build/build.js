@@ -128,6 +128,7 @@ async function releaseInfo() {
         assets: (release.assets || []).map((asset) => ({
           name: String(asset.name),
           size: Number(asset.size) || 0,
+          digest: String(asset.digest || ''),
           url: String(asset.browser_download_url),
         })),
       };
@@ -174,6 +175,17 @@ async function downloadAsset(asset) {
   const buffer = Buffer.from(await response.arrayBuffer());
   if (asset.size && buffer.length !== asset.size) {
     throw new Error(`expected ${asset.size} bytes, received ${buffer.length}`);
+  }
+  // Builds re-upload the same asset name, so a download that started before an
+  // upload can finish with the previous bytes. The release API tells us the
+  // current digest; if it does not match, retry instead of mirroring a file
+  // that no longer exists on the release.
+  if (asset.digest && asset.digest.startsWith('sha256:')) {
+    const actual = sha256(buffer);
+    const expected = asset.digest.slice('sha256:'.length);
+    if (actual !== expected) {
+      throw new Error(`checksum changed during the build (got ${actual.slice(0, 12)}…, expected ${expected.slice(0, 12)}…)`);
+    }
   }
   return buffer;
 }
