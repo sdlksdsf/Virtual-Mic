@@ -8,6 +8,7 @@
     <meta name="theme-color" content="#f4f1ea" />
     <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/css/site.css" />
+    <script src="assets/js/platform.js"></script>
     <script src="assets/js/config.js" defer></script>
     <script src="assets/js/icons.js" defer></script>
     <script src="assets/js/site.js" defer></script>
@@ -52,63 +53,229 @@
           </p>
           <div class="pill-row" style="margin-top: 22px">
             <span class="os-detect">Detected: <b data-os-name>your device</b></span>
-            <span class="pill"><svg><use href="#i-check"/></svg> <span data-download-status>Resolving latest release</span></span>
+            <span class="pill"><svg><use href="#i-check"/></svg> <span data-download-status>Downloads served from this site</span></span>
           </div>
         </div>
       </section>
 
       <section class="block tight">
-        <div class="wrap download-hero">
-          <div>
-            <span class="mono">Recommended for this PC</span>
-            <h2 class="serif" style="font-size: clamp(30px, 3.6vw, 42px); margin: 10px 0 14px">VoxBridge for Windows</h2>
-            <p style="color: var(--muted); max-width: 52ch">
-              The full desktop app: native capture service, virtual microphone routing, the studio chain, session
-              recording, background operation and the verification test. Windows 10 1809 or later, Windows 11, 64-bit.
-            </p>
-            <div class="hero-actions" style="margin: 26px 0 18px">
-              <a class="btn primary lg" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe" data-download="windows">
-                <svg><use href="#i-download"/></svg> Download the installer
-              </a>
-              <a class="btn ghost lg" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip" data-download="portable">Portable (.zip)</a>
-            </div>
-            <div class="pill-row">
-              <span class="pill"><svg><use href="#i-shield"/></svg> Installs per user</span>
-              <span class="pill"><svg><use href="#i-check"/></svg> No kernel driver</span>
-              <span class="pill"><svg><use href="#i-check"/></svg> Uninstall in one click</span>
+        <div class="wrap">
+          <div class="inapp-note" role="status">
+            <span class="inapp-icon"><svg><use href="#i-phone"/></svg></span>
+            <div>
+              <strong>This browser cannot save downloads.</strong>
+              <p>
+                Instagram, WhatsApp, Facebook and other in-app browsers block file downloads. Open this page in
+                Chrome (Android) or Safari (iPhone) — usually <b>⋮ → Open in browser</b> — then tap download again.
+              </p>
             </div>
           </div>
-          <div class="build-list">
+
+          <article class="dl-hero" data-for="android">
+            <div class="dl-hero-copy">
+              <span class="mono">Recommended for this phone</span>
+              <h2 class="serif">VoxBridge for <em>Android.</em></h2>
+              <p class="dl-hero-lede">
+                The sender app, downloaded straight from this site. No store, no account and no GitHub redirect:
+                the file streams from our own server and resumes if your signal drops.
+              </p>
+              <div class="hero-actions">
+                <a class="btn primary lg" href="/downloads/VoxBridge-android.apk" download data-download="android">
+                  <svg><use href="#i-download"/></svg> Download the APK
+                </a>
+                <a class="btn ghost lg" href="#phone-steps">How to install</a>
+              </div>
+              <div class="pill-row">
+                <span class="pill"><svg><use href="#i-check"/></svg> <span data-size="android">≈ 2 MB</span></span>
+                <span class="pill"><svg><use href="#i-check"/></svg> Android 8.0+</span>
+                <a class="pill" href="#checksums"><svg><use href="#i-shield"/></svg> Verified SHA-256</a>
+              </div>
+            </div>
+            <aside class="dl-hero-aside">
+              <div class="dl-spec"><span>File</span><b>VoxBridge-android.apk</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Size</span><b data-size="android">≈ 2 MB</b></div>
+              <div class="dl-spec"><span>Platform</span><b>Android 8.0 or newer</b></div>
+              <p class="dl-aside-note">
+                Served from voxbridge.app with byte-range support, so a dropped connection continues instead of
+                starting over. The same APK is attached to the GitHub release as a mirror.
+              </p>
+            </aside>
+          </article>
+
+          <article class="dl-hero" data-for="ios">
+            <div class="dl-hero-copy">
+              <span class="mono">Recommended for this iPhone</span>
+              <h2 class="serif">VoxBridge for <em>iPhone.</em></h2>
+              <p class="dl-hero-lede">
+                An unsigned IPA. Apple only runs builds signed with your Apple ID, so install it with AltStore,
+                Sideloadly or Xcode — the guide covers all three, free account included.
+              </p>
+              <div class="hero-actions">
+                <a class="btn primary lg" href="/downloads/VoxBridge-ios.ipa" download data-download="ios">
+                  <svg><use href="#i-download"/></svg> Download the IPA
+                </a>
+                <a class="btn ghost lg" href="setup.html#ios">Sideload guide</a>
+              </div>
+              <div class="pill-row">
+                <span class="pill"><svg><use href="#i-check"/></svg> <span data-size="ios">≈ 0.3 MB</span></span>
+                <span class="pill"><svg><use href="#i-check"/></svg> iOS 16+</span>
+                <span class="pill"><svg><use href="#i-check"/></svg> Unsigned</span>
+              </div>
+            </div>
+            <aside class="dl-hero-aside">
+              <div class="dl-spec"><span>File</span><b>VoxBridge-ios.ipa</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Size</span><b data-size="ios">≈ 0.3 MB</b></div>
+              <div class="dl-spec"><span>Installer</span><b>AltStore · Sideloadly · Xcode</b></div>
+              <p class="dl-aside-note">
+                Safari saves the file to Downloads. It will not open on its own — that is expected. Add your name
+                and Apple ID in the signing tool and it installs like any other app.
+              </p>
+            </aside>
+          </article>
+
+          <article class="dl-hero" data-for="windows">
+            <div class="dl-hero-copy">
+              <span class="mono">Recommended for this PC</span>
+              <h2 class="serif">VoxBridge for <em>Windows.</em></h2>
+              <p class="dl-hero-lede">
+                The full desktop app: native capture service, virtual microphone routing, the studio chain, session
+                recording, background operation and the verification test. Windows 10 1809 or later, Windows 11, 64-bit.
+              </p>
+              <div class="hero-actions">
+                <a class="btn primary lg" href="/downloads/VoxBridge-windows-setup.exe" download data-download="windows">
+                  <svg><use href="#i-download"/></svg> Download the installer
+                </a>
+                <a class="btn ghost lg" href="/downloads/VoxBridge-windows-portable.zip" download data-download="portable">Portable (.zip)</a>
+              </div>
+              <div class="pill-row">
+                <span class="pill"><svg><use href="#i-shield"/></svg> Installs per user</span>
+                <span class="pill"><svg><use href="#i-check"/></svg> No kernel driver</span>
+                <span class="pill"><svg><use href="#i-check"/></svg> Uninstall in one click</span>
+              </div>
+            </div>
+            <aside class="dl-hero-aside">
+              <div class="dl-spec"><span>File</span><b>VoxBridge-windows-setup.exe</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.0.0</b></div>
+              <div class="dl-spec"><span>Size</span><b data-size="windows">≈ 40 MB</b></div>
+              <div class="dl-spec"><span>Platform</span><b>Windows 10 1809+ · 11 · x64</b></div>
+              <p class="dl-aside-note">
+                SmartScreen may ask once because the publisher is new — choose <b>More info → Run anyway</b> after
+                checking the SHA-256 below. The optional VB-CABLE driver install is the only step that needs admin.
+              </p>
+            </aside>
+          </article>
+
+          <article class="dl-hero" data-for="other">
+            <div class="dl-hero-copy">
+              <span class="mono">Android · iPhone · Windows</span>
+              <h2 class="serif">Pick your <em>device.</em></h2>
+              <p class="dl-hero-lede">
+                Windows runs the receiver; a phone sends the microphone. Install both sides, put them on the same
+                Wi-Fi, then pair with the four-digit code.
+              </p>
+              <div class="hero-actions">
+                <a class="btn primary lg" href="/downloads/VoxBridge-android.apk" download data-download="android">
+                  <svg><use href="#i-android"/></svg> Android APK
+                </a>
+                <a class="btn ghost lg" href="/downloads/VoxBridge-ios.ipa" download data-download="ios">
+                  <svg><use href="#i-apple"/></svg> iPhone IPA
+                </a>
+                <a class="btn ghost lg" href="/downloads/VoxBridge-windows-setup.exe" download data-download="windows">
+                  <svg><use href="#i-windows"/></svg> Windows installer
+                </a>
+              </div>
+            </div>
+            <aside class="dl-hero-aside">
+              <div class="dl-spec"><span>Windows</span><b>Receiver + virtual cable</b></div>
+              <div class="dl-spec"><span>Android</span><b>Sender · APK</b></div>
+              <div class="dl-spec"><span>iPhone</span><b>Sender · unsigned IPA</b></div>
+              <p class="dl-aside-note">Not sure which one you need? The setup guide walks through it in order.</p>
+            </aside>
+          </article>
+        </div>
+      </section>
+
+      <section class="block tight" id="all-builds">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">Every artifact</span>
+              <h2>One page, <em>all builds.</em></h2>
+            </div>
+            <p>Downloads are served from this site. GitHub keeps an identical copy of each file on the release.</p>
+          </div>
+          <div class="build-list build-list-wide">
             <div class="build-row">
               <svg style="width: 18px; height: 18px; color: var(--muted)"><use href="#i-windows"/></svg>
               <div class="name"><strong>VoxBridge Setup</strong><span>Windows installer · x64 · <span data-size="windows">≈ 40 MB</span></span></div>
-              <a class="btn sm" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.0-x64.exe" data-download="windows">.exe</a>
+              <a class="btn sm" href="/downloads/VoxBridge-windows-setup.exe" download data-download="windows">.exe</a>
             </div>
             <div class="build-row">
               <svg style="width: 18px; height: 18px; color: var(--muted)"><use href="#i-windows"/></svg>
-              <div class="name"><strong>VoxBridge Portable</strong><span>ZIP archive · no install</span></div>
-              <a class="btn sm ghost" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-win64-portable.zip" data-download="portable">.zip</a>
+              <div class="name"><strong>VoxBridge Portable</strong><span>ZIP archive · no install · <span data-size="portable">≈ 38 MB</span></span></div>
+              <a class="btn sm ghost" href="/downloads/VoxBridge-windows-portable.zip" download data-download="portable">.zip</a>
             </div>
             <div class="build-row">
               <svg style="width: 18px; height: 18px; color: var(--muted)"><use href="#i-android"/></svg>
-              <div class="name"><strong>VoxBridge for Android</strong><span>APK · Android 8+ · <span data-size="android">≈ 1.3 MB</span></span></div>
-              <a class="btn sm" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-android.apk" data-download="android">.apk</a>
+              <div class="name"><strong>VoxBridge for Android</strong><span>APK · Android 8+ · <span data-size="android">≈ 2 MB</span></span></div>
+              <a class="btn sm" href="/downloads/VoxBridge-android.apk" download data-download="android">.apk</a>
             </div>
             <div class="build-row">
               <svg style="width: 18px; height: 18px; color: var(--muted)"><use href="#i-apple"/></svg>
               <div class="name"><strong>VoxBridge for iOS</strong><span>Unsigned IPA · iOS 16+ · <span data-size="ios">≈ 0.3 MB</span></span></div>
-              <a class="btn sm" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.0-unsigned.ipa" data-download="ios">.ipa</a>
+              <a class="btn sm ghost" href="/downloads/VoxBridge-ios.ipa" download data-download="ios">.ipa</a>
             </div>
             <div class="build-row">
               <svg style="width: 18px; height: 18px; color: var(--muted)"><use href="#i-folder"/></svg>
-              <div class="name"><strong>Checksums</strong><span>SHA256SUMS.txt for every artifact</span></div>
-              <a class="btn sm ghost" href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/SHA256SUMS.txt">.txt</a>
+              <div class="name"><strong>Checksums</strong><span>SHA256SUMS.txt for every file above</span></div>
+              <a class="btn sm ghost" href="/downloads/SHA256SUMS.txt">.txt</a>
             </div>
+          </div>
+          <p class="build-footnote">
+            Mirror:
+            <a href="https://github.com/sdlksdsf/Virtual-Mic/releases/latest" rel="noopener">the same files on the GitHub release</a>.
+            If a mirror ever fails to load, the buttons above fall back to it automatically.
+          </p>
+        </div>
+      </section>
+
+      <section class="block tight" id="phone-steps">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">After you tap download</span>
+              <h2>Installing on a <em>phone.</em></h2>
+            </div>
+            <p>Four steps, no store involved. iPhone needs a signing tool first — see the sideload guide.</p>
+          </div>
+          <div class="phone-step-grid">
+            <article class="phone-step">
+              <span class="phone-step-n">01</span>
+              <h3>Download finishes</h3>
+              <p>Chrome starts <b>VoxBridge-android.apk</b> immediately. It appears in the notification shade when the file is complete.</p>
+            </article>
+            <article class="phone-step">
+              <span class="phone-step-n">02</span>
+              <h3>Open the file</h3>
+              <p>Tap the notification, or open <b>Chrome → Downloads</b> / your file manager, then tap the APK.</p>
+            </article>
+            <article class="phone-step">
+              <span class="phone-step-n">03</span>
+              <h3>Allow this source</h3>
+              <p>Android asks once: <b>Settings → Allow from this source</b>, then Back and <b>Install</b>. Only the app you opened the file with.</p>
+            </article>
+            <article class="phone-step">
+              <span class="phone-step-n">04</span>
+              <h3>Pair and stream</h3>
+              <p>Allow microphone and notifications, pick your PC, enter the four-digit code. In Settings → Background, leave <b>Keep running when locked</b> on.</p>
+            </article>
           </div>
         </div>
       </section>
 
-      <section class="block tight">
+      <section class="block tight" id="checksums">
         <div class="wrap">
           <div class="section-head">
             <div>
@@ -117,10 +284,32 @@
             </div>
             <p>Every artifact is built in public. If a hash does not match, stop and report it.</p>
           </div>
-          <div class="hash-box"><span data-checksum="windows">SHA-256 is published with each release — see the release notes or SHA256SUMS.txt.</span></div>
+          <div class="hash-list">
+            <div class="hash-row">
+              <div class="hash-meta"><strong>Android APK</strong><span>VoxBridge-android.apk</span></div>
+              <code data-checksum="android">filled in from the release manifest</code>
+              <button class="hash-copy" type="button" data-copy data-copy-from='[data-checksum="android"]'>Copy</button>
+            </div>
+            <div class="hash-row">
+              <div class="hash-meta"><strong>iPhone IPA</strong><span>VoxBridge-ios.ipa</span></div>
+              <code data-checksum="ios">filled in from the release manifest</code>
+              <button class="hash-copy" type="button" data-copy data-copy-from='[data-checksum="ios"]'>Copy</button>
+            </div>
+            <div class="hash-row">
+              <div class="hash-meta"><strong>Windows installer</strong><span>VoxBridge-windows-setup.exe</span></div>
+              <code data-checksum="windows">filled in from the release manifest</code>
+              <button class="hash-copy" type="button" data-copy data-copy-from='[data-checksum="windows"]'>Copy</button>
+            </div>
+            <div class="hash-row">
+              <div class="hash-meta"><strong>Windows portable</strong><span>VoxBridge-windows-portable.zip</span></div>
+              <code data-checksum="portable">filled in from the release manifest</code>
+              <button class="hash-copy" type="button" data-copy data-copy-from='[data-checksum="portable"]'>Copy</button>
+            </div>
+          </div>
           <p class="checksum-note">
-            On Windows: <code>certutil -hashfile VoxBridge-Setup-1.0.0-x64.exe SHA256</code>. Compare the output with
-            the hash above. On macOS or Linux: <code>shasum -a 256 file</code>.
+            On Windows: <code>certutil -hashfile VoxBridge-windows-setup.exe SHA256</code>. On a phone or macOS:
+            <code>shasum -a 256 &lt;file&gt;</code>. The same list is downloadable as
+            <a href="/downloads/SHA256SUMS.txt">SHA256SUMS.txt</a>.
           </p>
           <div class="pill-row" style="margin-top: 18px">
             <a class="pill" href="https://github.com/sdlksdsf/Virtual-Mic/actions" rel="noopener"><svg><use href="#i-check"/></svg> Build logs</a>
