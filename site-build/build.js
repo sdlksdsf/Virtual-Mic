@@ -73,7 +73,7 @@ async function main() {
       fs.writeFileSync(target, buffer);
     }),
   );
-  console.log(`copied ${FILES.length} files from ${SHA.slice(0, 7)}`);
+  console.log(`copied ${FILES.length} files from ${REF.slice(0, 7)}`);
 }
 
 main().catch((error) => {
