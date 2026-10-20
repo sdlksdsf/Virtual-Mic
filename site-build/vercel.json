@@ -29,7 +29,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "public, max-age=0, must-revalidate, no-transform"
         }
       ]
     },
@@ -38,7 +38,7 @@
       "headers": [
         {
           "key": "Content-Type",
-          "value": "application/octet-stream"
+          "value": "application/zip"
         },
         {
           "key": "Content-Disposition",
@@ -50,7 +50,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "public, max-age=0, must-revalidate, no-transform"
         }
       ]
     },
@@ -59,7 +59,7 @@
       "headers": [
         {
           "key": "Content-Type",
-          "value": "application/octet-stream"
+          "value": "application/x-msdownload"
         },
         {
           "key": "Content-Disposition",
@@ -71,7 +71,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "public, max-age=0, must-revalidate, no-transform"
         }
       ]
     },
@@ -92,7 +92,7 @@
         },
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "public, max-age=0, must-revalidate, no-transform"
         }
       ]
     },
