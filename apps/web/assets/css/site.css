@@ -1264,6 +1264,19 @@ html[data-theme='dark'] .btn.primary {
   padding: 56px 0 80px;
   max-width: 760px;
 }
+/* Long-form pages: the heading and the body share one centred column. Without
+   this the prose hugs the left of a 1280 px wrap and leaves a dead gutter on
+   wide screens. */
+main.doc .wrap {
+  max-width: 760px;
+}
+main.doc .page-head h1 {
+  max-width: 26ch;
+}
+main.doc .prose {
+  margin-inline: auto;
+  max-width: 760px;
+}
 .prose h2 {
   font-family: var(--serif);
   font-weight: 400;
@@ -1326,12 +1339,29 @@ html[data-theme='dark'] .btn.primary {
   margin: 18px 0;
   font-size: 13.5px;
 }
+@media (max-width: 640px) {
+  .prose th,
+  .prose td {
+    padding: 9px 8px;
+  }
+  .prose table {
+    font-size: 12.5px;
+  }
+  .prose th {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+}
 .prose th,
 .prose td {
   text-align: left;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   vertical-align: top;
+  /* Permission names such as FOREGROUND_SERVICE_MICROPHONE are single tokens
+     with no break opportunity; without this the table pushes the page wider
+     than a 390 px phone. */
+  overflow-wrap: anywhere;
 }
 .prose th {
   font-family: var(--mono);
