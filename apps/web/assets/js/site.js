@@ -4,7 +4,7 @@
 
   const root = document.documentElement;
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-  const REPO = 'sdlksdsf/Virtual-Mic';
+  const REPO = 'sdlksdsf/VoxBridge';
   const VERSION = '1.0.1';
 
   // Theme ---------------------------------------------------------------------

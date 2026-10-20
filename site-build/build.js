@@ -29,7 +29,7 @@ const REF = process.env.VERCEL_GIT_COMMIT_SHA || PINNED;
 if (!/^[0-9a-zA-Z._/-]{1,100}$/.test(REF)) {
   throw new Error(`unexpected git ref: ${REF}`);
 }
-const REPO = 'sdlksdsf/Virtual-Mic';
+const REPO = 'sdlksdsf/VoxBridge';
 const BASE = `https://raw.githubusercontent.com/${REPO}/${REF}/apps/web/`;
 
 // A local checkout is preferred when it exists (Vercel checks out the whole

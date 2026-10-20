@@ -29,7 +29,7 @@ https://voxbridge-app-pi.vercel.app
 <!-- Please tell us the purpose or motive behind your website in between the start/end markers. For example, it is a portfolio website, etc. -->
 
 <!-- WEBSITE_PURPOSE_START -->
-VoxBridge is a free, MIT-licensed open-source desktop utility that turns an Android phone or iPhone into a low-latency microphone for Windows. It is a developer tool with no accounts, no ads and no revenue: the site hosts the documentation and the source release downloads for the project at https://github.com/sdlksdsf/Virtual-Mic.
+VoxBridge is a free, MIT-licensed open-source desktop utility that turns an Android phone or iPhone into a low-latency microphone for Windows. It is a developer tool with no accounts, no ads and no revenue: the site hosts the documentation and the source release downloads for the project at https://github.com/sdlksdsf/VoxBridge.
 
 Both DNS files are in this PR:
 - `domains/voxbridge.json` — CNAME to the Vercel project that serves the site.

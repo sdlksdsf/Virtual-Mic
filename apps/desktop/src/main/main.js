@@ -26,7 +26,7 @@ const APP_VERSION = '1.0.1';
 const IS_WIN = process.platform === 'win32';
 const IS_MAC = process.platform === 'darwin';
 const IS_DEMO = process.env.VOXBRIDGE_DEMO === '1';
-const GITHUB_URL = 'https://github.com/sdlksdsf/Virtual-Mic';
+const GITHUB_URL = 'https://github.com/sdlksdsf/VoxBridge';
 const SITE_URL = 'https://voxbridge.vercel.app';
 const ALLOWED_HOSTS = new Set([
   'github.com',

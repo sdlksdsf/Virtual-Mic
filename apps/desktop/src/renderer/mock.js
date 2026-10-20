@@ -246,7 +246,7 @@
           packaged: true,
           userData: 'C:\\Users\\you\\AppData\\Roaming\\VoxBridge',
           recordingDir: 'Music/VoxBridge Recordings',
-          github: 'https://github.com/sdlksdsf/Virtual-Mic',
+          github: 'https://github.com/sdlksdsf/VoxBridge',
           site: 'https://voxbridge.vercel.app',
         },
         settings,
@@ -355,7 +355,7 @@
       return true;
     },
     async checkUpdates() {
-      return { current: '1.0.1', available: false, url: 'https://github.com/sdlksdsf/Virtual-Mic/releases' };
+      return { current: '1.0.1', available: false, url: 'https://github.com/sdlksdsf/VoxBridge/releases' };
     },
     async quit() {},
     async windowControl() {},

@@ -4,5 +4,5 @@ contact_links:
     url: https://voxbridge-app-pi.vercel.app/support
     about: Installation, pairing, virtual cable and audio questions.
   - name: Security policy
-    url: https://github.com/sdlksdsf/Virtual-Mic/blob/main/SECURITY.md
+    url: https://github.com/sdlksdsf/VoxBridge/blob/main/SECURITY.md
     about: Please report vulnerabilities privately, not as an issue.

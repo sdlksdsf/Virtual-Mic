@@ -14,12 +14,12 @@ No account · No cloud audio · No kernel driver to break your PC
 [Privacy](https://voxbridge-app-pi.vercel.app/privacy) ·
 [Security model](SECURITY.md)
 
-[![Release](https://img.shields.io/github/v/release/sdlksdsf/Virtual-Mic?label=release&color=ff5a2e)](https://github.com/sdlksdsf/Virtual-Mic/releases/latest)
-[![Desktop build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/desktop.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/desktop.yml)
-[![Android build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/android.yml)
-[![iOS build](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml/badge.svg)](https://github.com/sdlksdsf/Virtual-Mic/actions/workflows/ios.yml)
+[![Release](https://img.shields.io/github/v/release/sdlksdsf/VoxBridge?label=release&color=ff5a2e)](https://github.com/sdlksdsf/VoxBridge/releases/latest)
+[![Desktop build](https://github.com/sdlksdsf/VoxBridge/actions/workflows/desktop.yml/badge.svg)](https://github.com/sdlksdsf/VoxBridge/actions/workflows/desktop.yml)
+[![Android build](https://github.com/sdlksdsf/VoxBridge/actions/workflows/android.yml/badge.svg)](https://github.com/sdlksdsf/VoxBridge/actions/workflows/android.yml)
+[![iOS build](https://github.com/sdlksdsf/VoxBridge/actions/workflows/ios.yml/badge.svg)](https://github.com/sdlksdsf/VoxBridge/actions/workflows/ios.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-15150f.svg)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/sdlksdsf/Virtual-Mic/total?color=2b7a52)](https://github.com/sdlksdsf/Virtual-Mic/releases)
+[![Downloads](https://img.shields.io/github/downloads/sdlksdsf/VoxBridge/total?color=2b7a52)](https://github.com/sdlksdsf/VoxBridge/releases)
 
 **Install in one step:** [voxbridge-app-pi.vercel.app/download](https://voxbridge-app-pi.vercel.app/download) —
 the site picks the right file for your device (`.exe` on Windows, `.apk` on Android, `.ipa` on iPhone) and
@@ -97,15 +97,15 @@ VoxBridge does three things differently:
 ## Download
 
 Every build below is produced by GitHub Actions from this repository and published to
-[Releases](https://github.com/sdlksdsf/Virtual-Mic/releases/latest). Checksums are in
-[`SHA256SUMS.txt`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/SHA256SUMS.txt).
+[Releases](https://github.com/sdlksdsf/VoxBridge/releases/latest). Checksums are in
+[`SHA256SUMS.txt`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/SHA256SUMS.txt).
 
 | Platform | Requirements | File |
 |---|---|---|
-| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.1-x64.exe`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-Setup-1.0.1-x64.exe) |
-| **Windows portable** | Same, no install | [`VoxBridge-1.0.1-win64-portable.zip`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-win64-portable.zip) |
-| **Android** | 8.0+ | [`VoxBridge-1.0.1-android.apk`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-android.apk) |
-| **iOS** | 16+, unsigned | [`VoxBridge-1.0.1-unsigned.ipa`](https://github.com/sdlksdsf/Virtual-Mic/releases/latest/download/VoxBridge-1.0.1-unsigned.ipa) |
+| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.1-x64.exe`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-Setup-1.0.1-x64.exe) |
+| **Windows portable** | Same, no install | [`VoxBridge-1.0.1-win64-portable.zip`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-win64-portable.zip) |
+| **Android** | 8.0+ | [`VoxBridge-1.0.1-android.apk`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-android.apk) |
+| **iOS** | 16+, unsigned | [`VoxBridge-1.0.1-unsigned.ipa`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-unsigned.ipa) |
 
 > **A note on signatures.** The Windows binaries are not code-signed, so SmartScreen will ask once. The IPA is
 > unsigned because a signing identity is tied to your Apple ID; use AltStore, Sideloadly or Xcode. Both are

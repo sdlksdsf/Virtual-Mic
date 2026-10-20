@@ -1039,7 +1039,7 @@
           await exportDiagnostics();
           break;
         case 'open-github':
-          bridge.openExternal('https://github.com/sdlksdsf/Virtual-Mic');
+          bridge.openExternal('https://github.com/sdlksdsf/VoxBridge');
           break;
         case 'open-site':
           bridge.openExternal('https://voxbridge.vercel.app');
@@ -1051,7 +1051,7 @@
           bridge.openExternal('https://voxbridge.vercel.app/licenses.html');
           break;
         case 'open-issues':
-          bridge.openExternal('https://github.com/sdlksdsf/Virtual-Mic/issues/new');
+          bridge.openExternal('https://github.com/sdlksdsf/VoxBridge/issues/new');
           break;
         case 'reset-settings':
           await resetSettings();
