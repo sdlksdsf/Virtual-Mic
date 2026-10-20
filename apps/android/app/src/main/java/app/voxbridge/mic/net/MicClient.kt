@@ -76,6 +76,11 @@ class MicClient(private val onEvent: (Event) -> Unit) {
         .readTimeout(0, TimeUnit.MILLISECONDS)
         .writeTimeout(8, TimeUnit.SECONDS)
         .retryOnConnectionFailure(true)
+        // Protocol-level keepalive. When the phone's Wi-Fi radio naps with the
+        // screen off, the socket can go silent without ever closing; a ping
+        // every 15 s detects that in seconds and lets the service reconnect
+        // instead of streaming into a dead link.
+        .pingInterval(15, TimeUnit.SECONDS)
         .build()
 
     @Synchronized

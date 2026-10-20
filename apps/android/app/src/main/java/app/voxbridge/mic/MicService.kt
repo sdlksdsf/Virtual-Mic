@@ -1,6 +1,7 @@
 package app.voxbridge.mic
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -16,6 +17,9 @@ import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.IBinder
 import android.os.PowerManager
@@ -27,6 +31,7 @@ import app.voxbridge.mic.audio.Dsp
 import app.voxbridge.mic.audio.LevelMeter
 import app.voxbridge.mic.net.ConnectionState
 import app.voxbridge.mic.net.MicClient
+import app.voxbridge.mic.system.BackgroundGuard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +42,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import kotlin.math.min
 
 /**
  * Foreground capture service. Owns the AudioRecord instance, the DSP chain and
@@ -53,6 +59,24 @@ class MicService : Service() {
     private var hwAgc: AutomaticGainControl? = null
     private var hwAec: AcousticEchoCanceler? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: WifiManager.WifiLock? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    private var tickJob: Job? = null
+    private var reconnectJob: Job? = null
+
+    // Where to reconnect to, captured when the session starts.
+    private var sessionHost = ""
+    private var sessionPort = 8720
+    private var sessionCode: String? = null
+    // The user pressed Stop: never bring the session back on its own.
+    @Volatile private var stopped = false
+    // Pairing was refused: retrying with the same code cannot succeed, so the
+    // loop stops and the phone waits for a fresh code.
+    @Volatile private var retryBlocked = false
+    private var attempt = 0
+    // Bumped whenever the capture loop is replaced, so a stalled loop that
+    // restarts itself cannot leave two recorders open.
+    private var captureToken = 0
 
     private val encodeLock = Any()
 
@@ -62,11 +86,15 @@ class MicService : Service() {
         super.onCreate()
         prefs = (application as VoxBridgeApp).prefs
         isRunning = true
+        instance = this
+        startTicker()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_STOP -> {
+                stopped = true
+                stopCapture()
                 stopSelf()
                 return START_NOT_STICKY
             }
@@ -93,68 +121,218 @@ class MicService : Service() {
                 return START_STICKY
             }
             else -> {
+                // The system restarted us after a kill (START_STICKY), or the
+                // notification was tapped after the process died. Pick the last
+                // session back up so a locked phone reconnects on its own.
                 ensureNotification()
+                val host = prefs.lastHost
+                if (!host.isNullOrBlank() && Session.connection != ConnectionState.Connected) {
+                    Session.targetName = host
+                    connect(host, 8720, prefs.lastCode)
+                }
                 return START_STICKY
             }
         }
     }
 
+    /**
+     * Starts (or restarts) a session against the desktop. The wake and Wi-Fi
+     * locks are taken here, before the first packet, so the radio stays out of
+     * power save even while the screen is off and the connection is still being
+     * negotiated.
+     */
     private fun connect(host: String, port: Int, code: String?) {
-        val client = MicClient { event ->
-            when (event) {
-                is MicClient.Event.State -> {
-                    Session.connection = event.state
-                    Session.detail = event.detail
-                    updateNotification()
-                    Session.emitState()
-                }
-                is MicClient.Event.Welcome -> {
-                    Session.hostName = event.name
-                    Session.auth = event.auth
-                    prefs.lastHost = host
-                    prefs.lastCode = code
-                    applyStreamConfig(event.stream.rate, event.stream.codec, event.stream.frameMs)
-                    startCapture()
-                }
-                is MicClient.Event.Denied -> {
-                    Session.detail = event.hint.ifBlank { event.reason }
-                    Session.connection = ConnectionState.Failed
-                    updateNotification()
-                    Session.emitState()
-                }
-                is MicClient.Event.Config -> {
-                    applyStreamConfig(event.stream.rate, event.stream.codec, event.stream.frameMs, restart = true)
-                }
-                is MicClient.Event.RemoteStats -> {
-                    Session.stats.value = event.stats
-                }
-                is MicClient.Event.RemoteMute -> {
-                    Session.muted = event.on
-                    updateNotification()
-                    Session.emitState()
-                }
-                is MicClient.Event.Log -> Session.log(event.message)
-            }
+        stopped = false
+        retryBlocked = false
+        attempt = 0
+        sessionHost = host
+        sessionPort = port
+        sessionCode = code
+        Session.muted = false
+        Session.detail = ""
+        applyBackgroundPolicy()
+        registerNetwork()
+        startClient(force = true)
+    }
+
+    @Synchronized
+    private fun startClient(force: Boolean = false) {
+        if (stopped) return
+        val host = sessionHost
+        if (host.isBlank()) return
+        // A retry must not race a session that is already negotiating or live.
+        // An explicit connect is allowed to replace the running one.
+        if (!force && (Session.connection == ConnectionState.Connecting ||
+                Session.connection == ConnectionState.Connected)
+        ) {
+            return
         }
+
+        Session.client?.disconnect()
+        var self: MicClient? = null
+        val client = MicClient { event ->
+            // A stale client from a previous attempt must not steer the session.
+            if (self != null && self === Session.client) onClientEvent(event)
+        }
+        self = client
         Session.client = client
         Session.targetHost = host
-        Session.targetPort = port
-        Session.muted = false
+        Session.targetPort = sessionPort
         client.connect(
             host = host,
-            port = port,
-            code = code,
+            port = sessionPort,
+            code = sessionCode,
             token = if (prefs.rememberDevice) prefs.token else null,
             deviceName = "${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}",
             deviceId = prefs.deviceId,
         )
-        scope.launch {
+    }
+
+    private fun onClientEvent(event: MicClient.Event) {
+        when (event) {
+            is MicClient.Event.State -> {
+                val previous = Session.connection
+                Session.connection = event.state
+                Session.detail = event.detail
+                when (event.state) {
+                    ConnectionState.Connected -> {
+                        attempt = 0
+                        Session.retryAttempt = 0
+                        Session.nextRetryAt = 0L
+                    }
+                    ConnectionState.Failed, ConnectionState.Closed -> {
+                        if (previous != ConnectionState.Failed && previous != ConnectionState.Closed) {
+                            Session.log("Link lost: ${event.detail.ifBlank { event.state.name }}")
+                            stopCapture()
+                            scheduleReconnect()
+                        }
+                    }
+                    else -> Unit
+                }
+                updateNotification()
+                Session.emitState()
+            }
+            is MicClient.Event.Welcome -> {
+                Session.hostName = event.name
+                Session.auth = event.auth
+                prefs.lastHost = sessionHost
+                prefs.lastCode = sessionCode
+                retryBlocked = false
+                attempt = 0
+                Session.nextRetryAt = 0L
+                applyStreamConfig(event.stream.rate, event.stream.codec, event.stream.frameMs)
+                startCapture()
+            }
+            is MicClient.Event.Denied -> {
+                retryBlocked = true
+                Session.detail = event.hint.ifBlank { event.reason }
+                Session.connection = ConnectionState.Failed
+                Session.nextRetryAt = 0L
+                stopCapture()
+                updateNotification()
+                Session.emitState()
+            }
+            is MicClient.Event.Config -> {
+                applyStreamConfig(event.stream.rate, event.stream.codec, event.stream.frameMs, restart = true)
+            }
+            is MicClient.Event.RemoteStats -> {
+                Session.stats.value = event.stats
+            }
+            is MicClient.Event.RemoteMute -> {
+                Session.muted = event.on
+                updateNotification()
+                Session.emitState()
+            }
+            is MicClient.Event.Log -> Session.log(event.message)
+        }
+    }
+
+    /** Exponential backoff, 1 s to 15 s, so a sleeping phone recovers quickly. */
+    private fun backoffMs(attempt: Int): Long = min(15_000L, 1_000L shl min(attempt, 4))
+
+    private fun scheduleReconnect() {
+        if (stopped || retryBlocked || sessionHost.isBlank()) return
+        if (reconnectJob?.isActive == true) return
+        val wait = backoffMs(attempt)
+        attempt += 1
+        Session.retryAttempt = attempt
+        Session.nextRetryAt = System.currentTimeMillis() + wait
+        Session.log("Reconnecting in ${wait / 1000}s (attempt $attempt)")
+        updateNotification()
+        reconnectJob = scope.launch {
+            delay(wait)
+            Session.nextRetryAt = 0L
+            if (stopped || retryBlocked) return@launch
+            if (Session.connection == ConnectionState.Connected) return@launch
+            startClient()
+            updateNotification()
+            Session.emitState()
+        }
+    }
+
+    /**
+     * When the radio comes back — the screen turned on, Wi-Fi re-associated, a
+     * roaming handover finished — reconnect at once instead of waiting out the
+     * backoff.
+     */
+    private fun registerNetwork() {
+        if (networkCallback != null) return
+        val manager = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                if (stopped || retryBlocked) return
+                if (Session.connection == ConnectionState.Connected) return
+                scope.launch {
+                    delay(250)
+                    if (stopped || retryBlocked) return@launch
+                    if (Session.connection == ConnectionState.Connecting) return@launch
+                    if (Session.connection == ConnectionState.Connected) return@launch
+                    reconnectJob?.cancel()
+                    attempt = 0
+                    Session.nextRetryAt = 0L
+                    Session.log("Network is back — reconnecting")
+                    startClient()
+                    updateNotification()
+                    Session.emitState()
+                }
+            }
+        }
+        try {
+            manager.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (_: Exception) {
+            // Registration is best effort; the backoff loop still recovers.
+        }
+    }
+
+    private fun unregisterNetwork() {
+        val callback = networkCallback ?: return
+        networkCallback = null
+        try {
+            (getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)
+                ?.unregisterNetworkCallback(callback)
+        } catch (_: Exception) {
+            // ignore
+        }
+    }
+
+    /** One heartbeat per second for the whole service lifetime. */
+    private fun startTicker() {
+        if (tickJob?.isActive == true) return
+        tickJob = scope.launch {
+            var beats = 0
             while (isActive) {
                 delay(1000)
-                client.tick()
-                client.reportQuality(Session.stats.value.rtt, 0.0)
-                Session.emitState()
+                beats += 1
+                Session.client?.let { client ->
+                    client.tick()
+                    client.reportQuality(Session.stats.value.rtt, 0.0)
+                }
                 Session.heartbeat()
+                Session.emitState()
+                // OEM power managers sometimes drop a wake lock after a sweep;
+                // take it back while a session is supposed to be live.
+                if (beats % 30 == 0 && Session.client != null) applyBackgroundPolicy()
             }
         }
     }
@@ -194,10 +372,8 @@ class MicService : Service() {
 
     private fun startCapture(force: Boolean = false) {
         if (captureJob?.isActive == true && !force) return
-        captureJob?.cancel()
-        record?.release()
-        releaseEffects()
-        record = null
+        stopCapture()
+        val token = ++captureToken
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
             != PackageManager.PERMISSION_GRANTED
@@ -260,7 +436,6 @@ class MicService : Service() {
             // ignored by design
         }
 
-        acquireWakeLock()
         val dsp = Dsp(
             sampleRate = rate,
             denoise = prefs.denoise,
@@ -324,9 +499,38 @@ class MicService : Service() {
                     // ignore
                 }
                 recorder.release()
-                releaseWakeLock()
+                if (record === recorder) record = null
+                // The capsule stalled (another app grabbed it, a call came in,
+                // or the OEM muted the mic for a moment). Reopen it as long as
+                // the session is still meant to be live.
+                if (token == captureToken && !stopped &&
+                    Session.connection == ConnectionState.Connected
+                ) {
+                    scope.launch {
+                        delay(600)
+                        if (token == captureToken && !stopped &&
+                            Session.connection == ConnectionState.Connected
+                        ) {
+                            Session.log("Restarting the microphone after a stall")
+                            startCapture()
+                        }
+                    }
+                }
             }
         }
+    }
+
+    /** Stops the capture loop and gives the microphone back to the phone. */
+    private fun stopCapture() {
+        captureToken += 1
+        val job = captureJob
+        captureJob = null
+        job?.cancel()
+        // Releasing unblocks a pending read(); the job's finally releases the
+        // same instance again, which is safe.
+        record?.release()
+        record = null
+        releaseEffects()
     }
 
     private fun releaseEffects() {
@@ -335,15 +539,56 @@ class MicService : Service() {
         hwAec?.release(); hwAec = null
     }
 
+    /**
+     * Keeps the CPU and the Wi-Fi radio awake for the whole session. The old
+     * code took a CPU lock only while audio was flowing and let it expire after
+     * four hours; if the link dropped with the screen off there was nothing
+     * left to reconnect with, which is exactly when the session disappeared.
+     */
+    private fun applyBackgroundPolicy() {
+        if (!prefs.keepScreenOff) {
+            releaseWakeLock()
+            releaseWifiLock()
+            Session.screenOffSafe = false
+            return
+        }
+        acquireWakeLock()
+        acquireWifiLock()
+        Session.screenOffSafe = wakeLock?.isHeld == true
+    }
+
+    @SuppressLint("WakelockTimeout")
     private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
         try {
             val manager = getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "voxbridge:capture").apply {
                 setReferenceCounted(false)
-                acquire(4 * 60 * 60 * 1000L)
+                acquire()
             }
         } catch (_: Exception) {
             // ignore
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun acquireWifiLock() {
+        if (wifiLock?.isHeld == true) return
+        try {
+            val manager = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+                ?: return
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                WifiManager.WIFI_MODE_FULL_LOW_LATENCY
+            } else {
+                WifiManager.WIFI_MODE_FULL_HIGH_PERF
+            }
+            wifiLock = manager.createWifiLock(mode, "voxbridge:stream").apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        } catch (_: Exception) {
+            // Some devices refuse the lock; the CPU lock still covers capture.
+            wifiLock = null
         }
     }
 
@@ -356,6 +601,15 @@ class MicService : Service() {
         wakeLock = null
     }
 
+    private fun releaseWifiLock() {
+        try {
+            if (wifiLock?.isHeld == true) wifiLock?.release()
+        } catch (_: Exception) {
+            // ignore
+        }
+        wifiLock = null
+    }
+
     private fun ensureNotification() {
         val open = PendingIntent.getActivity(
             this,
@@ -364,12 +618,20 @@ class MicService : Service() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = buildNotification(open)
-        ServiceCompat.startForeground(
-            this,
-            NOTIFICATION_ID,
-            notification,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0,
-        )
+        try {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                notification,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE else 0,
+            )
+        } catch (error: Exception) {
+            // Android 14 can refuse a microphone foreground service that the
+            // system itself restarted while the app was in the background.
+            // Nothing useful can run without the notification, so stop cleanly.
+            Session.log("Foreground start refused: ${error.message}")
+            stopSelf()
+        }
     }
 
     private fun updateNotification() {
@@ -385,10 +647,20 @@ class MicService : Service() {
 
     private fun buildNotification(open: PendingIntent): Notification {
         val connecting = Session.connection == ConnectionState.Connecting
-        val title = if (connecting) "Connecting to ${Session.targetName}" else Session.targetName.ifBlank { "VoxBridge" }
+        val retrying = Session.nextRetryAt > System.currentTimeMillis()
+        val title = when {
+            connecting -> "Connecting to ${Session.targetName}"
+            // The screen is off and the link dropped: say so, and say that the
+            // app is working on it, instead of showing a dead session.
+            Session.connection == ConnectionState.Failed && retrying ->
+                "Reconnecting to ${Session.targetName}"
+            else -> Session.targetName.ifBlank { "VoxBridge" }
+        }
         val text = when {
             Session.connection == ConnectionState.Connected && Session.muted -> "Muted · tap to unmute"
             Session.connection == ConnectionState.Connected -> "Live · ${Session.rate / 1000} kHz ${if (Session.codec == "adpcm") "ADPCM" else "PCM"}"
+            Session.connection == ConnectionState.Failed && retrying ->
+                "Wi-Fi dropped · attempt ${Session.retryAttempt} · ${((Session.nextRetryAt - System.currentTimeMillis()).coerceAtLeast(0) / 1000) + 1}s"
             Session.connection == ConnectionState.Failed -> Session.detail.ifBlank { "Connection failed" }
             else -> getString(R.string.service_idle)
         }
@@ -425,18 +697,27 @@ class MicService : Service() {
 
     override fun onDestroy() {
         isRunning = false
-        captureJob?.cancel()
+        stopped = true
+        instance = null
+        reconnectJob?.cancel()
+        tickJob?.cancel()
+        stopCapture()
         Session.client?.disconnect()
         Session.client = null
-        record?.release()
-        record = null
-        releaseEffects()
+        unregisterNetwork()
         releaseWakeLock()
+        releaseWifiLock()
         scope.cancel()
         Session.connection = ConnectionState.Idle
+        Session.nextRetryAt = 0L
+        Session.retryAttempt = 0
+        Session.screenOffSafe = false
         Session.emitState()
         super.onDestroy()
     }
+
+    /** Applied when the user flips the background switch mid-session. */
+    fun refreshBackgroundPolicy() = applyBackgroundPolicy()
 
     companion object {
         const val ACTION_CONNECT = "app.voxbridge.mic.CONNECT"
@@ -451,6 +732,15 @@ class MicService : Service() {
         @Volatile
         var isRunning = false
 
+        /** The live service, so a settings change can take effect immediately. */
+        @Volatile
+        private var instance: MicService? = null
+
+        fun applyBackgroundPolicy(context: Context) {
+            val service = instance ?: return
+            if (MicService.isRunning) service.refreshBackgroundPolicy()
+        }
+
         fun start(context: Context, host: String, port: Int, code: String?, name: String) {
             val intent = Intent(context, MicService::class.java).apply {
                 action = ACTION_CONNECT
@@ -463,7 +753,13 @@ class MicService : Service() {
         }
 
         fun stop(context: Context) {
-            context.startService(Intent(context, MicService::class.java).setAction(ACTION_STOP))
+            try {
+                context.startService(Intent(context, MicService::class.java).setAction(ACTION_STOP))
+            } catch (_: Exception) {
+                // Android 12+ can refuse a background service start; stopping
+                // outright is the equivalent outcome.
+                context.stopService(Intent(context, MicService::class.java))
+            }
         }
     }
 }
@@ -484,6 +780,11 @@ object Session {
     @Volatile var frameMs: Int = 20
     @Volatile var meter: LevelMeter? = null
     @Volatile var dsp: Dsp? = null
+    /** Epoch millis of the next automatic reconnect, 0 when none is pending. */
+    @Volatile var nextRetryAt: Long = 0L
+    @Volatile var retryAttempt: Int = 0
+    /** True while the CPU and Wi-Fi locks that survive a locked screen are held. */
+    @Volatile var screenOffSafe: Boolean = false
 
     val stats = kotlinx.coroutines.flow.MutableStateFlow(app.voxbridge.mic.net.SessionStats())
     private val stateFlow = kotlinx.coroutines.flow.MutableStateFlow(0)
@@ -518,4 +819,7 @@ object Session {
         .put("rate", rate)
         .put("codec", codec)
         .put("muted", muted)
+        .put("retry", retryAttempt)
+        .put("retryInMs", (nextRetryAt - System.currentTimeMillis()).coerceAtLeast(0))
+        .put("screenOff", screenOffSafe)
 }
