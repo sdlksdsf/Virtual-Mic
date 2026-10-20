@@ -8,10 +8,10 @@
 
 No account · No cloud audio · No kernel driver to break your PC
 
-[**Download**](https://voxbridge-app-pi.vercel.app/download) ·
-[Website](https://voxbridge-app-pi.vercel.app) ·
-[Setup guide](https://voxbridge-app-pi.vercel.app/setup) ·
-[Privacy](https://voxbridge-app-pi.vercel.app/privacy) ·
+[**Download**](https://voxbridge-mic.vercel.app/download) ·
+[Website](https://voxbridge-mic.vercel.app) ·
+[Setup guide](https://voxbridge-mic.vercel.app/setup) ·
+[Privacy](https://voxbridge-mic.vercel.app/privacy) ·
 [Security model](SECURITY.md)
 
 [![Release](https://img.shields.io/github/v/release/sdlksdsf/VoxBridge?label=release&color=ff5a2e)](https://github.com/sdlksdsf/VoxBridge/releases/latest)
@@ -21,7 +21,7 @@ No account · No cloud audio · No kernel driver to break your PC
 [![License: MIT](https://img.shields.io/badge/license-MIT-15150f.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/sdlksdsf/VoxBridge/total?color=2b7a52)](https://github.com/sdlksdsf/VoxBridge/releases)
 
-**Install in one step:** [voxbridge-app-pi.vercel.app/download](https://voxbridge-app-pi.vercel.app/download) —
+**Install in one step:** [voxbridge-mic.vercel.app/download](https://voxbridge-mic.vercel.app/download) —
 the site picks the right file for your device (`.exe` on Windows, `.apk` on Android, `.ipa` on iPhone) and
 serves it from its own domain, so a phone never has to wrestle with a GitHub redirect.
 
@@ -109,7 +109,7 @@ Every build below is produced by GitHub Actions from this repository and publish
 
 > **A note on signatures.** The Windows binaries are not code-signed, so SmartScreen will ask once. The IPA is
 > unsigned because a signing identity is tied to your Apple ID; use AltStore, Sideloadly or Xcode. Both are
-> covered step by step in the [setup guide](https://voxbridge-app-pi.vercel.app/setup).
+> covered step by step in the [setup guide](https://voxbridge-mic.vercel.app/setup).
 
 ### The virtual microphone
 
@@ -252,7 +252,7 @@ docs                  Architecture, protocol, privacy, build and release documen
   its Authenticode signature checked before execution.
 - The website stores anonymous download counts. It never stores audio.
 
-Read the [privacy policy](https://voxbridge-app-pi.vercel.app/privacy) and [security model](SECURITY.md). To
+Read the [privacy policy](https://voxbridge-mic.vercel.app/privacy) and [security model](SECURITY.md). To
 report a vulnerability, follow [`SECURITY.md`](SECURITY.md) rather than opening a public issue.
 
 ## Contributing
