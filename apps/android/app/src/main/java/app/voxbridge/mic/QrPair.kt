@@ -2,6 +2,8 @@ package app.voxbridge.mic
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -141,9 +143,16 @@ fun QrScannerOverlay(
     }
     // Touched from the camera analysis thread, so keep it off Compose state.
     val handled = remember { java.util.concurrent.atomic.AtomicBoolean(false) }
+    // Analysis runs on a background thread. A plain Context cannot post to the
+    // main thread, so hop back through a looper-bound Handler before touching
+    // Compose state or calling back into the activity.
+    val main = remember { Handler(Looper.getMainLooper()) }
 
     DisposableEffect(Unit) {
-        onDispose { executor.shutdown() }
+        onDispose {
+            main.removeCallbacksAndMessages(null)
+            executor.shutdown()
+        }
     }
 
     Box(
@@ -172,9 +181,9 @@ fun QrScannerOverlay(
                                     val payload = parsePairPayload(raw)
                                     if (payload != null) {
                                         handled.set(true)
-                                        viewContext.post { onResult(payload) }
+                                        main.post { onResult(payload) }
                                     } else {
-                                        viewContext.post {
+                                        main.post {
                                             status = "That QR code is not a VoxBridge pairing code."
                                         }
                                     }
@@ -191,7 +200,7 @@ fun QrScannerOverlay(
                                 analysis,
                             )
                         } catch (_: Exception) {
-                            viewContext.post {
+                            main.post {
                                 status = "Could not open the camera on this device."
                             }
                         }
