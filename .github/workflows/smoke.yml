@@ -29,7 +29,8 @@ jobs:
         run: |
           set -euo pipefail
           base=https://voxbridge-app-pi.vercel.app
-          for path in / /download /features /setup /privacy /terms /security /licenses /support; do
+          for path in / /download /features /setup /privacy /terms /security /licenses /support \
+                      /phone-as-microphone; do
             code=$(curl -fsSL -o /dev/null -w '%{http_code}' "$base$path")
             echo "$path -> $code"
             test "$code" = "200"
@@ -43,6 +44,12 @@ jobs:
           grep -q 'data-download="android"' /tmp/download.html
           grep -q 'data-download="ios"' /tmp/download.html
           echo "download links present"
+          # The search-intent guide has to stay crawlable and machine-readable.
+          curl -fsSL "$base/phone-as-microphone" -o /tmp/guide.html
+          grep -q 'rel="canonical"' /tmp/guide.html
+          grep -q 'property="og:image"' /tmp/guide.html
+          grep -q '"@type": "HowTo"' /tmp/guide.html
+          echo "guide page has canonical, social card and HowTo markup"
 
       - name: Same-origin downloads
         run: |
