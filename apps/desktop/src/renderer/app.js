@@ -1512,6 +1512,8 @@
     setTimeout(() => pad.classList.remove('is-hit'), 160);
   }
 
+  let padHintShown = false;
+
   async function playPad(id) {
     const pad = soundbank.list.find((item) => item.id === id);
     if (!pad) return;
@@ -1522,6 +1524,13 @@
     pipeline?.resume();
     pipeline?.playSound(pad.index, 1);
     flashPad(id);
+    // The pads are mixed into the cable, which is what callers hear. On this
+    // machine they are only audible when monitoring is on, and a first-time
+    // press with silence is confusing, so say so once.
+    if (!state.settings.monitor && !padHintShown) {
+      padHintShown = true;
+      toast('info', 'Pads are going to the cable', 'Press “Hear it” to listen on this PC — use headphones.');
+    }
   }
 
   function bindVoice() {
