@@ -258,6 +258,24 @@
   transform: none;
 }
 
+.gate-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 18px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.gate-warning svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  margin-top: 1px;
+  color: var(--warn);
+}
+
 .gate-error {
   margin-top: 12px;
   font-size: 13px;
@@ -776,6 +794,98 @@
   color: var(--ink-soft);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* --- inbox tools ---------------------------------------------------------- */
+
+.inbox-tools {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inbox-search {
+  margin-left: auto;
+  font: inherit;
+  font-size: 12.5px;
+  padding: 7px 12px;
+  min-width: 200px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.inbox-search:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.message-item.is-handled .message-body {
+  color: var(--muted);
+}
+
+.message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.16s var(--ease);
+}
+
+.message-item:hover .message-actions,
+.message-item:focus-within .message-actions {
+  opacity: 1;
+}
+
+.message-actions .dash-btn {
+  font-size: 11.5px;
+  padding: 6px 11px;
+}
+
+@media (hover: none) {
+  .message-actions {
+    opacity: 1;
+  }
+}
+
+/* --- controls ------------------------------------------------------------- */
+
+.panel-copy {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.control-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.control-input {
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  width: 84px;
+  padding: 9px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.control-status {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--ok);
+  min-height: 18px;
+}
+
+.control-status.is-bad {
+  color: var(--bad);
 }
 
 /* --- footer --------------------------------------------------------------- */

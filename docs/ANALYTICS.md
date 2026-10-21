@@ -30,7 +30,11 @@ first:
 | `owner_live(key)` | People on site now (5 min), 15-minute visitors/views/downloads, today's totals, a 60-minute pulse, and the 30 most recent events |
 | `owner_traffic(key, days, tz)` | Totals, a per-day series, and breakdowns by page, referrer, country, device, browser, campaign, platform, source, download country and download device |
 | `owner_health(key, days, tz)` | Recorded probes plus a daily rollup (runs, passes, average latency) |
-| `owner_messages(key, limit)` | Feedback and release-note submissions, newest first |
+| `owner_messages(key, limit, filter)` | Feedback and release-note submissions (`all` / `open` / `handled`), with open/handled counts; CI rows excluded |
+| `owner_message_update(key, id, handled)` | Mark a message handled, or reopen it |
+| `owner_message_delete(key, id)` | Delete one message |
+| `owner_purge(key, days)` | Delete traffic and health rows older than `days` (1–3650) |
+| `owner_cleanup(key)` | Delete release-test messages and health rows older than 30 days |
 
 `anon` may execute those five functions and nothing else. `page_events`,
 `download_events`, `feedback`, `health_checks`, `owner_access` and
@@ -85,6 +89,19 @@ written.
 
 The dashboard also has a **Run test** button that probes the same endpoints from
 the browser, for the moment you want to know rather than the last scheduled tick.
+
+## Owner controls
+
+| Control | Does |
+| --- | --- |
+| Ranges | Today / 7 / 30 / 90 days, remembered per browser |
+| Inbox | Filter all/open/handled, search, mark handled, reopen, delete |
+| Export | CSV of the totals, the daily series and every breakdown for the current range |
+| Retention | `owner_purge` — delete traffic and health rows older than N days |
+| CI noise | `owner_cleanup` — remove the messages the release test writes |
+| Access | Rotate the key (shown once) or lock this browser |
+
+Deletes are immediate and cannot be undone; the buttons confirm first.
 
 ## Local development
 

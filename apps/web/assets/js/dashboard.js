@@ -27,6 +27,9 @@
     live: null,
     health: null,
     messages: null,
+    filter: 'all',
+    search: '',
+    messageRows: [],
   };
 
   const $ = (id) => document.getElementById(id);
@@ -457,25 +460,164 @@
 
   function renderMessages(data) {
     state.messages = data;
+    state.messageRows = data?.messages || [];
     const list = $('messages');
+    setText('msg-counts', `${num.format(data?.open || 0)} open · ${num.format(data?.handled || 0)} handled`);
     if (!list) return;
-    const messages = data?.messages || [];
-    if (!messages.length) {
-      list.innerHTML = '<p class="empty-note">No messages yet.</p>';
+
+    const needle = state.search.trim().toLowerCase();
+    const rows = state.messageRows.filter((message) => {
+      if (state.filter === 'open' && message.handled_at) return false;
+      if (state.filter === 'handled' && !message.handled_at) return false;
+      if (!needle) return true;
+      return [message.topic, message.message, message.email, message.platform]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(needle));
+    });
+
+    if (!rows.length) {
+      list.innerHTML = `<p class="empty-note">${state.messageRows.length ? 'Nothing matches that filter.' : 'No messages yet.'}</p>`;
       return;
     }
-    list.innerHTML = messages
-      .map((message) => `<article class="message-item">
+
+    list.innerHTML = rows
+      .map((message) => `<article class="message-item ${message.handled_at ? 'is-handled' : ''}" data-id="${Number(message.id)}">
         <div class="message-meta">
           <b>${escapeHtml(message.topic || 'general')}</b>
           <span>${escapeHtml(message.platform || 'unknown device')}</span>
           ${message.app_version ? `<span>v${escapeHtml(message.app_version)}</span>` : ''}
           <span>${escapeHtml(timeAgo(message.created_at))}</span>
           ${message.email ? `<span>${escapeHtml(message.email)}</span>` : ''}
+          ${message.handled_at ? '<span class="status-chip">handled</span>' : ''}
         </div>
         <div class="message-body">${escapeHtml(message.message)}</div>
+        <div class="message-actions">
+          <button class="dash-btn ghost" type="button" data-action="toggle" data-id="${Number(message.id)}" data-handled="${message.handled_at ? '1' : '0'}">
+            ${message.handled_at ? 'Reopen' : 'Mark handled'}
+          </button>
+          <button class="dash-btn danger" type="button" data-action="delete" data-id="${Number(message.id)}">Delete</button>
+        </div>
       </article>`)
       .join('');
+  }
+
+  async function reloadMessages() {
+    try {
+      const data = await guarded('owner_messages', { p_limit: 60, p_filter: state.filter });
+      renderMessages(data || {});
+    } catch (error) {
+      setStatus(`Could not load the inbox: ${error.message}`, true);
+    }
+  }
+
+  function setStatus(text, bad = false) {
+    const element = $('control-status');
+    if (!element) return;
+    element.textContent = text;
+    element.classList.toggle('is-bad', bad);
+    if (text) window.setTimeout(() => {
+      if (element.textContent === text) element.textContent = '';
+    }, 6000);
+    const pill = $('foot-status');
+    if (pill) {
+      pill.classList.toggle('is-live', !bad);
+      const label = pill.querySelector('span:last-child');
+      if (label) label.textContent = bad ? 'Attention' : 'Ready';
+    }
+  }
+
+  function downloadFile(name, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  function exportCsv() {
+    const traffic = state.traffic;
+    if (!traffic) {
+      setStatus('Nothing to export yet — wait for the first load.', true);
+      return;
+    }
+    const cell = (value) => {
+      const text = String(value ?? '');
+      return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+    };
+    const lines = [];
+    const totals = traffic.totals || {};
+    lines.push(['VoxBridge dashboard export'].map(cell).join(','));
+    lines.push(['generated', new Date().toISOString()].map(cell).join(','));
+    lines.push(['days', traffic.range?.days || state.days].map(cell).join(','));
+    lines.push('');
+    lines.push(['metric', 'value'].map(cell).join(','));
+    for (const key of ['visits', 'visitors', 'downloads', 'messages']) {
+      lines.push([key, totals[key] ?? 0].map(cell).join(','));
+    }
+    lines.push('');
+    lines.push(['day', 'page_views', 'visitors', 'downloads'].map(cell).join(','));
+    for (const point of traffic.series || []) {
+      lines.push([point.day, point.visits, point.visitors, point.downloads].map(cell).join(','));
+    }
+    const breakdowns = [
+      ['pages', traffic.pages],
+      ['referrers', traffic.referrers],
+      ['countries', traffic.countries],
+      ['devices', traffic.devices],
+      ['browsers', traffic.browsers],
+      ['campaigns', traffic.campaigns],
+      ['platforms', traffic.platforms],
+      ['download_countries', traffic.download_countries],
+      ['download_devices', traffic.download_devices],
+    ];
+    for (const [name, rows] of breakdowns) {
+      if (!rows?.length) continue;
+      lines.push('');
+      lines.push([name, 'count'].map(cell).join(','));
+      for (const row of rows) lines.push([row.label, row.count].map(cell).join(','));
+    }
+    const stamp = new Date().toISOString().slice(0, 10);
+    downloadFile(`voxbridge-${stamp}-${traffic.range?.days || state.days}d.csv`, `${lines.join('\n')}\n`, 'text/csv;charset=utf-8');
+    setStatus('Exported the current range.');
+  }
+
+  async function purgeOldRows() {
+    const input = $('purge-days');
+    const days = Math.max(1, Math.min(3650, Number(input?.value) || 365));
+    if (!window.confirm(`Delete traffic and health rows older than ${days} days? This cannot be undone.`)) return;
+    const button = $('purge');
+    if (button) button.disabled = true;
+    try {
+      const result = await guarded('owner_purge', { p_days: days });
+      const removed = result?.deleted || {};
+      const total = (removed.page_events || 0) + (removed.download_events || 0) + (removed.health_checks || 0);
+      setStatus(`Removed ${num.format(total)} rows older than ${days} days.`);
+      await loadAll();
+    } catch (error) {
+      setStatus(`Purge failed: ${error.message}`, true);
+    } finally {
+      if (button) button.disabled = false;
+    }
+  }
+
+  async function clearTestData() {
+    if (!window.confirm('Delete the release-test messages and old health rows?')) return;
+    const button = $('cleanup');
+    if (button) button.disabled = true;
+    try {
+      const result = await guarded('owner_cleanup');
+      const removed = result?.deleted || {};
+      setStatus(`Removed ${num.format(removed.test_messages || 0)} test messages and ${num.format(removed.old_health_checks || 0)} old health rows.`);
+      await Promise.all([reloadMessages(), loadHealth()]);
+    } catch (error) {
+      setStatus(`Cleanup failed: ${error.message}`, true);
+    } finally {
+      if (button) button.disabled = false;
+    }
   }
 
   /* --- load -------------------------------------------------------------- */
@@ -505,23 +647,33 @@
     renderBars('download_devices', data.download_devices);
   }
 
+  function timezone() {
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    } catch {
+      return 'UTC';
+    }
+  }
+
+  async function loadHealth() {
+    try {
+      const detail = await guarded('owner_health', { p_days: HEALTH_DAYS, p_tz: timezone() });
+      renderHealth(detail || {});
+    } catch (error) {
+      console.warn('dashboard:', error.message);
+    }
+  }
+
   async function loadAll() {
     if (!state.key || state.busy) return;
     state.busy = true;
-    const timezone = (() => {
-      try {
-        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-      } catch {
-        return 'UTC';
-      }
-    })();
     $('refresh')?.classList.add('is-busy');
     try {
       const [live, traffic, health, messages] = await Promise.all([
         guarded('owner_live'),
-        guarded('owner_traffic', { p_days: state.days, p_tz: timezone }),
-        guarded('owner_health', { p_days: HEALTH_DAYS, p_tz: timezone }),
-        guarded('owner_messages', { p_limit: 40 }),
+        guarded('owner_traffic', { p_days: state.days, p_tz: timezone() }),
+        guarded('owner_health', { p_days: HEALTH_DAYS, p_tz: timezone() }),
+        guarded('owner_messages', { p_limit: 60, p_filter: state.filter }),
       ]);
       renderLive(live || {});
       renderTraffic(traffic || { totals: {}, series: [] });
@@ -586,6 +738,62 @@
     });
 
     $('probe-run')?.addEventListener('click', runLiveProbe);
+
+    $('export-csv')?.addEventListener('click', exportCsv);
+    $('purge')?.addEventListener('click', purgeOldRows);
+    $('cleanup')?.addEventListener('click', clearTestData);
+
+    $('msg-tabs')?.addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-filter]');
+      if (!button) return;
+      state.filter = button.dataset.filter || 'all';
+      $('msg-tabs').querySelectorAll('button').forEach((element) => {
+        element.setAttribute('aria-pressed', String(element === button));
+      });
+      reloadMessages();
+    });
+
+    $('msg-search')?.addEventListener('input', (event) => {
+      state.search = event.target.value || '';
+      renderMessages(state.messages || {});
+    });
+
+    $('messages')?.addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button) return;
+      const id = Number(button.dataset.id);
+      if (!id) return;
+      const row = state.messageRows.find((message) => Number(message.id) === id);
+      if (!row) return;
+
+      if (button.dataset.action === 'toggle') {
+        const handled = button.dataset.handled !== '1';
+        button.disabled = true;
+        try {
+          await guarded('owner_message_update', { p_id: id, p_handled: handled });
+          row.handled_at = handled ? new Date().toISOString() : null;
+          await reloadMessages();
+          setStatus(handled ? 'Message marked handled.' : 'Message reopened.');
+        } catch (error) {
+          setStatus(`Could not update the message: ${error.message}`, true);
+          button.disabled = false;
+        }
+        return;
+      }
+
+      if (button.dataset.action === 'delete') {
+        if (!window.confirm('Delete this message permanently?')) return;
+        button.disabled = true;
+        try {
+          await guarded('owner_message_delete', { p_id: id });
+          await reloadMessages();
+          setStatus('Message deleted.');
+        } catch (error) {
+          setStatus(`Could not delete the message: ${error.message}`, true);
+          button.disabled = false;
+        }
+      }
+    });
 
     $('lock')?.addEventListener('click', () => {
       stopAutoRefresh();
