@@ -56,8 +56,8 @@ Anonymous, aggregated, no cookie and no IP address.
 
 | Table | Columns | Written by |
 | --- | --- | --- |
-| `page_events` | `view_id` (random per page load), `path`, `referrer` (host), `campaign` (`utm_*`), `device`, `os`, `browser`, `country`, `created_at` | `assets/js/site.js`, one beacon per page load |
-| `download_events` | `platform`, `version`, `source`, `referrer`, `campaign`, `device`, `os`, `browser`, `country`, `created_at` | `site.js` on a download click; smoke test with `source = 'smoke-test'` |
+| `page_events` | `view_id` (random per page load, deduplicates beacons), `session_id` (random per tab visit, in session storage), `path`, `referrer` (host), `campaign` (`utm_*`), `device`, `os`, `browser`, `country`, `created_at` | `assets/js/site.js`, one beacon per page load |
+| `download_events` | `platform`, `version`, `source`, `session_id`, `referrer`, `campaign`, `device`, `os`, `browser`, `country`, `created_at` | `site.js` on a download click; smoke test with `source = 'smoke-test'` |
 | `feedback` | `email`, `topic`, `message`, `platform`, `app_version`, `created_at` | the support form |
 | `health_checks` | `ok`, `latency_ms`, `checks` (jsonb per endpoint), `source`, `checked_at` | `.github/workflows/health.yml`, `scripts/health-probe.js` |
 
@@ -69,6 +69,10 @@ location. The privacy policy says the same thing in §4.
 
 Rows whose `source` or `topic` is `smoke-test` are filtered out of the dashboard,
 so CI runs never look like users.
+
+A *visitor* is one tab visit: `count(distinct coalesce(session_id, view_id))`. Older
+rows written before `session_id` existed fall back to their per-load id, so history
+still counts.
 
 ## Health checks
 
