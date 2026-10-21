@@ -169,6 +169,12 @@ jobs:
               print(f'{key}: {digest[:12]}… is the checksum the site advertises')
           PY
 
+          # The pages have to quote the version they mirror. This is what drifted
+          # when 1.1.0 shipped: the release existed, the site still said 1.0.1.
+          curl -fsSL "$base/assets/js/site.js?x=$(date +%s)" -o site.js
+          grep -q "const VERSION = '${tag#v}';" site.js
+          echo "site.js reports ${tag#v}"
+
           apk=$(ls VoxBridge-*-android.apk)
           ipa=$(ls VoxBridge-*-unsigned.ipa)
           exe=$(ls VoxBridge-Setup-*-x64.exe)
