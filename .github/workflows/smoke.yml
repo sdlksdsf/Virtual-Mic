@@ -177,6 +177,58 @@ jobs:
           assert f'-{version}-' in name, f'APK {name} does not carry {version}'
           PY
 
+      - name: Private dashboard
+        run: |
+          set -euo pipefail
+          base=https://voxbridge-mic.vercel.app
+          url=$(grep -o "https://[a-z0-9]*\.supabase\.co" apps/web/assets/js/config.js | head -1)
+          key=$(grep -o "sb_publishable_[A-Za-z0-9_]*" apps/web/assets/js/config.js | head -1)
+
+          curl -fsSL "$base/dashboard" -o /tmp/dashboard.html
+          grep -q 'name="robots" content="noindex' /tmp/dashboard.html
+          grep -q 'assets/js/dashboard.js' /tmp/dashboard.html
+          echo "dashboard served and marked noindex"
+
+          # It must stay out of the sitemap and out of the public navigation.
+          curl -fsSL "$base/sitemap.xml" -o /tmp/sitemap.xml
+          ! grep -q '/dashboard' /tmp/sitemap.xml
+          curl -fsSL "$base/robots.txt" -o /tmp/robots.txt
+          grep -q 'Disallow: /dashboard' /tmp/robots.txt
+          echo "dashboard hidden from crawlers"
+
+          # The public key can write events but must not read them, and must not
+          # be able to read the owner key hash either.
+          for table in page_events download_events feedback health_checks owner_access owner_auth_failures; do
+            body=$(curl -fsS "$url/rest/v1/$table?select=*&limit=1" \
+              -H "apikey: $key" -H "Authorization: Bearer $key")
+            echo "$table -> $body"
+            test "$body" = "[]"
+          done
+
+          # Every owner function exists and refuses a key that is too short to
+          # be real. The guard rejects those before it touches the failure log,
+          # so this cannot trip the owner's own lockout.
+          for fn in owner_ping owner_live owner_traffic owner_health owner_messages owner_rotate; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
+              -H "apikey: $key" -H 'Content-Type: application/json' -d '{"p_key":"short"}')
+            echo "$fn -> $code"
+            test "$code" = "403"
+          done
+
+          # A wrong key is rejected, never silently ignored. One attempt only.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/rest/v1/rpc/owner_ping" \
+            -H "apikey: $key" -H 'Content-Type: application/json' \
+            -d '{"p_key":"not-the-owner-key-0000000000"}')
+          echo "wrong owner key -> $code"
+          test "$code" != "200"
+
+      - name: Record site health
+        run: |
+          set -euo pipefail
+          # The scheduled probe runs every 15 minutes; this gives the dashboard a
+          # fresh row at the exact moment a release is verified.
+          node scripts/health-probe.js
+
       - name: Supabase inserts
         run: |
           set -euo pipefail

@@ -1,5 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /og-card.html
+Disallow: /dashboard
 
 Sitemap: https://voxbridge-mic.vercel.app/sitemap.xml
