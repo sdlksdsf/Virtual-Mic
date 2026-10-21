@@ -10,5 +10,5 @@ window.VOXBRIDGE_CONFIG = {
   supportEmail: 'hello@voxbridge.app',
   securityEmail: 'security@voxbridge.app',
   privacyEmail: 'privacy@voxbridge.app',
-  version: '1.0.1',
+  version: '1.1.0',
 };

@@ -59,7 +59,7 @@
           <p class="breadcrumbs"><a href="index.html">VoxBridge</a> / Download</p>
           <h1>Everything you need, <em>nothing you don’t.</em></h1>
           <p>
-            Version <b data-version>1.0.1</b>. Free, MIT licensed, built by GitHub Actions from the public repository.
+            Version <b data-version>1.1.0</b>. Free, MIT licensed, built by GitHub Actions from the public repository.
             Windows ships an installer and a portable build, Android ships an APK, and the iPhone build is an unsigned IPA
             because Apple requires a signature only you can generate.
           </p>
@@ -105,7 +105,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-android.apk</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.1.0</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="android">≈ 2 MB</b></div>
               <div class="dl-spec"><span>Platform</span><b>Android 8.0 or newer</b></div>
               <p class="dl-aside-note">
@@ -137,7 +137,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-ios.ipa</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.1.0</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="ios">≈ 0.3 MB</b></div>
               <div class="dl-spec"><span>Installer</span><b>AltStore · Sideloadly · Xcode</b></div>
               <p class="dl-aside-note">
@@ -169,7 +169,7 @@
             </div>
             <aside class="dl-hero-aside">
               <div class="dl-spec"><span>File</span><b>VoxBridge-windows-setup.exe</b></div>
-              <div class="dl-spec"><span>Version</span><b data-version>1.0.1</b></div>
+              <div class="dl-spec"><span>Version</span><b data-version>1.1.0</b></div>
               <div class="dl-spec"><span>Size</span><b data-size="windows">≈ 40 MB</b></div>
               <div class="dl-spec"><span>Platform</span><b>Windows 10 1809+ · 11 · x64</b></div>
               <p class="dl-aside-note">
@@ -364,10 +364,17 @@
           <div class="section-head">
             <div>
               <span class="mono">Release notes</span>
-              <h2>Version <em>1.0.1.</em></h2>
+              <h2>Version <em>1.1.0.</em></h2>
             </div>
           </div>
           <div class="prose" style="padding-top: 0">
+            <h3>1.1.0 — 21 October 2026</h3>
+            <ul>
+              <li><b>Voice changer:</b> 25 characters in four families — Chipmunk, Helium, Giant, Villain, Demon, Robot, Android, Alien, Cyborg, Walkie-talkie, Old phone, Megaphone, Ghost, Underwater, Cave, Choir, Angel, Whisper, Drunk, Announcer and more. Pitch and formant move independently, so the note can change without the size of the head, and the reverse. <b>Natural</b> is a true bypass.</li>
+              <li><b>Soundboard:</b> 34 troll pads — air horn, sad trombone, vine boom, rimshot, fart, burp, bruh, evil laugh, crickets, applause, duck, cat, dog, monkey, buzzer, alarm and the rest. They are mixed into the microphone next to your voice, never pitch-shifted, and eight can overlap. Every pad is synthesised on your machine: no downloads, no API key, no borrowed recordings.</li>
+              <li><b>Where it applies:</b> the character is applied before the audio reaches the virtual cable, so Discord, Zoom, OBS and Teams hear it. The phone apps are unchanged.</li>
+              <li><b>Everything from 1.0.1</b> is included.</li>
+            </ul>
             <h3>1.0.1 — 20 October 2026</h3>
             <ul>
               <li><b>Android:</b> the stream survives the lock screen. A session-scoped wake lock and Wi-Fi lock, a 15-second socket ping, automatic reconnect with backoff, an instant retry when the network returns, and a sticky restart that resumes the last session. Settings → Background shows whether Android may still freeze the app.</li>

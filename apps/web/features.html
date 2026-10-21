@@ -242,6 +242,60 @@
         </div>
       </section>
 
+      <section class="block tight" id="voice">
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <span class="mono">Voice</span>
+              <h2>Sound like someone <em>else.</em></h2>
+            </div>
+            <p>
+              A voice changer and a soundboard sit between the phone and the cable, so Discord, Zoom,
+              OBS and anything else that reads the microphone hear the character — not a preview of it.
+              Nothing is downloaded and no audio leaves the PC.
+            </p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature reveal">
+              <span class="feature-icon"><svg><use href="#i-radio"/></svg></span>
+              <h3>25 characters</h3>
+              <p>
+                Chipmunk, helium, giant, villain, demon, robot, android, alien, cyborg, walkie-talkie,
+                old phone, megaphone, ghost, underwater, cave, choir, angel, whisper, drunk, announcer,
+                squeak — plus a true bypass.
+              </p>
+            </article>
+            <article class="feature reveal">
+              <span class="feature-icon"><svg><use href="#i-sliders"/></svg></span>
+              <h3>Pitch and formant, separately</h3>
+              <p>
+                Pitch moves the note; the formant stage warps the spectral envelope without touching
+                phase, so the apparent size of the head can change on its own. Both stages stay out of
+                the path unless the character asks for them.
+              </p>
+            </article>
+            <article class="feature reveal">
+              <span class="feature-icon"><svg><use href="#i-volume"/></svg></span>
+              <h3>34 troll pads</h3>
+              <p>
+                Air horn, sad trombone, vine boom, rimshot, fart, burp, bruh, evil laugh, crickets,
+                applause, duck, cat, dog, monkey, buzzer, alarm… mixed into the microphone next to your
+                voice, never pitch-shifted, eight at a time.
+              </p>
+            </article>
+            <article class="feature reveal">
+              <span class="feature-icon"><svg><use href="#i-chip"/></svg></span>
+              <h3>Synthesised, not sampled</h3>
+              <p>
+                Every pad is generated from maths in about half a second, on your machine, the first
+                time you open the view. No downloads, no API keys, no borrowed recordings, and the same
+                sound on every install.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section class="block tight">
         <div class="wrap-narrow">
           <div class="section-head" style="margin-bottom: 18px">
@@ -262,6 +316,10 @@
             <details>
               <summary>Does noise suppression work on music?</summary>
               <div><p>It is tuned for speech. On music it will thin the low end and pump. Turn suppression off, keep the limiter on, and use the boost only if needed.</p></div>
+            </details>
+            <details>
+              <summary>Does the voice changer work in every app?</summary>
+              <div><p>Yes. It runs on the desktop, before the audio reaches the virtual cable, so every application that reads the cable gets the processed voice. The phone app only sends the raw microphone; it does not need to be updated for a new character. The soundboard mixes into the same stream, which is why other people hear the pads as if they came from your microphone.</p></div>
             </details>
             <details>
               <summary>Can two phones connect at once?</summary>

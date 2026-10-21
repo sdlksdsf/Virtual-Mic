@@ -2,7 +2,7 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
-## [Unreleased]
+## [1.1.0] — 2026-10-21
 
 ### Voice changer and soundboard
 - **25 characters** across four families — Classic (chipmunk, helium, giant, villain,

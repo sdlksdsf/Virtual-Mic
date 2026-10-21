@@ -26,7 +26,7 @@ body:
     attributes:
       label: Version
       description: Shown in Settings → About, or on the download page.
-      placeholder: 1.0.1
+      placeholder: 1.1.0
     validations:
       required: true
   - type: textarea

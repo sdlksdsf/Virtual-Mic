@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       republish:
-        description: Replace the already published v1.0.1 files
+        description: Replace the already published v1.1.0 files
         type: boolean
         default: false
 
@@ -64,9 +64,9 @@ jobs:
           test -n "$APP" || { echo "::error::no .app produced"; exit 1; }
           mkdir -p Payload
           cp -R "$APP" Payload/
-          zip -qry VoxBridge-1.0.1-unsigned.ipa Payload
-          ls -lh VoxBridge-1.0.1-unsigned.ipa
-          shasum -a 256 VoxBridge-1.0.1-unsigned.ipa > SHA256SUMS.txt
+          zip -qry VoxBridge-1.1.0-unsigned.ipa Payload
+          ls -lh VoxBridge-1.1.0-unsigned.ipa
+          shasum -a 256 VoxBridge-1.1.0-unsigned.ipa > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - uses: actions/upload-artifact@v4
@@ -75,7 +75,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
           path: |
-            apps/ios/VoxBridge-1.0.1-unsigned.ipa
+            apps/ios/VoxBridge-1.1.0-unsigned.ipa
             apps/ios/SHA256SUMS.txt
 
       - name: Publish IPA to release
@@ -87,25 +87,25 @@ jobs:
           set -euo pipefail
           # A release is immutable once people download it. Rebuilds happen on every
           # push, and byte-for-byte identical output is not guaranteed, so publishing
-          # again would change what 1.0.1 means under the same version number (and
+          # again would change what 1.1.0 means under the same version number (and
           # leave the website's mirror out of step with GitHub). Only the manual
           # `republish` run replaces files.
           if [ "${REPUBLISH:-false}" != "true" ]; then
-            present=$(gh release view v1.0.1 --json assets --jq '.assets[].name')
+            present=$(gh release view v1.1.0 --json assets --jq '.assets[].name' 2>/dev/null || true)
             missing=0
-            for name in 'VoxBridge-1.0.1-unsigned.ipa'; do
+            for name in 'VoxBridge-1.1.0-unsigned.ipa'; do
               printf '%s\n' "$present" | grep -qx "$name" || missing=1
             done
             if [ "$missing" = "0" ]; then
-              echo "v1.0.1 already carries these files; leaving the published bytes untouched."
+              echo "v1.1.0 already carries these files; leaving the published bytes untouched."
               exit 0
             fi
           fi
-          gh release view v1.0.1 >/dev/null 2>&1 || \
-            gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
+          gh release view v1.1.0 >/dev/null 2>&1 || \
+            gh release create v1.1.0 --title "VoxBridge 1.1.0" --notes "See the release notes on the website." || gh release view v1.1.0 >/dev/null
           ok=0
           for attempt in 1 2 3 4 5; do
-            if gh release upload v1.0.1 apps/ios/VoxBridge-1.0.1-unsigned.ipa --clobber; then ok=1; break; fi
+            if gh release upload v1.1.0 apps/ios/VoxBridge-1.1.0-unsigned.ipa --clobber; then ok=1; break; fi
             echo "upload attempt $attempt failed; retrying"
             sleep $((attempt * 10))
           done

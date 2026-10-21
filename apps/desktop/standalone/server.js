@@ -16,7 +16,7 @@ const crypto = require('node:crypto');
 const { spawn, execFile } = require('node:child_process');
 const { WebSocketServer } = require('ws');
 
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1.0';
 const GITHUB_URL = 'https://github.com/sdlksdsf/VoxBridge';
 const SITE_URL = 'https://voxbridge-mic.vercel.app';
 const IS_WIN = process.platform === 'win32';
