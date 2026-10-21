@@ -129,17 +129,20 @@
           <button class="nav-item is-active" data-nav="live" aria-current="page">
             <svg><use href="#i-radio" /></svg><span>Live</span><kbd>1</kbd>
           </button>
+          <button class="nav-item" data-nav="voice">
+            <svg><use href="#i-mic" /></svg><span>Voice</span><kbd>2</kbd>
+          </button>
           <button class="nav-item" data-nav="pair">
-            <svg><use href="#i-phone" /></svg><span>Pair</span><kbd>2</kbd>
+            <svg><use href="#i-phone" /></svg><span>Pair</span><kbd>3</kbd>
           </button>
           <button class="nav-item" data-nav="studio">
-            <svg><use href="#i-sliders" /></svg><span>Studio</span><kbd>3</kbd>
+            <svg><use href="#i-sliders" /></svg><span>Studio</span><kbd>4</kbd>
           </button>
           <button class="nav-item" data-nav="settings">
-            <svg><use href="#i-gear" /></svg><span>Settings</span><kbd>4</kbd>
+            <svg><use href="#i-gear" /></svg><span>Settings</span><kbd>5</kbd>
           </button>
           <button class="nav-item" data-nav="help">
-            <svg><use href="#i-help" /></svg><span>Guide</span><kbd>5</kbd>
+            <svg><use href="#i-help" /></svg><span>Guide</span><kbd>6</kbd>
           </button>
         </nav>
 
@@ -369,6 +372,107 @@
                 <div><span>02</span><p>Join the same Wi-Fi. The phone finds this PC automatically.</p></div>
                 <div><span>03</span><p>Tap your PC, type the four digit code, speak.</p></div>
               </div>
+            </div>
+          </section>
+
+          <!-- VOICE -->
+          <section class="view" data-view="voice" aria-labelledby="voice-title" hidden>
+            <div class="view-head">
+              <div class="view-head-copy">
+                <p class="eyebrow"><span class="live-dot"></span> Voice changer</p>
+                <h1 class="display" id="voice-title">Become someone <em>else.</em></h1>
+                <p class="lede">
+                  Pick a character, then bend it. The work happens here, before the audio reaches the
+                  cable, so Discord, Zoom, OBS and every other app hear the same thing.
+                </p>
+              </div>
+              <div class="head-actions">
+                <button class="btn ghost" data-action="voice-reset">
+                  <svg><use href="#i-refresh" /></svg><span>Reset</span>
+                </button>
+                <button class="btn ghost" id="voice-hear" data-action="voice-monitor" aria-pressed="false">
+                  <svg><use href="#i-volume" /></svg><span id="voice-hear-label">Hear it</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="voice-grid">
+              <section class="card span-2">
+                <header class="card-head">
+                  <div>
+                    <p class="mono-label">Characters</p>
+                    <h2 id="voice-current">Natural <em>— off</em></h2>
+                  </div>
+                  <span class="status-chip" id="voice-chip">Bypassed</span>
+                </header>
+                <div id="voice-groups" class="voice-groups">
+                  <p class="empty-note">Loading characters…</p>
+                </div>
+              </section>
+
+              <section class="card span-2">
+                <header class="card-head">
+                  <div>
+                    <p class="mono-label">Fine tune</p>
+                    <h2>Shape the <em>character</em></h2>
+                  </div>
+                  <span class="status-chip" id="voice-latency-chip">—</span>
+                </header>
+                <div class="fine-grid">
+                  <div class="control-list">
+                    <label class="control">
+                      <span class="control-label">Pitch <b id="voice-pitch-val">0 st</b></span>
+                      <input type="range" id="voice-pitch" min="-16" max="16" step="1" value="0" />
+                      <span class="ticks"><i>−16</i><i>0</i><i>+16 st</i></span>
+                    </label>
+                    <label class="control">
+                      <span class="control-label">Formant <b id="voice-formant-val">1.00×</b></span>
+                      <input type="range" id="voice-formant" min="55" max="160" step="1" value="100" />
+                      <span class="ticks"><i>bigger</i><i>natural</i><i>smaller</i></span>
+                    </label>
+                  </div>
+                  <div class="control-list">
+                    <label class="control">
+                      <span class="control-label">Amount <b id="voice-amount-val">100%</b></span>
+                      <input type="range" id="voice-amount" min="0" max="100" step="5" value="100" />
+                      <span class="ticks"><i>dry</i><i>half</i><i>full</i></span>
+                    </label>
+                    <p class="small muted" id="voice-note">
+                      Pitch moves the note, formant moves the size of the head. Together they are what
+                      makes a chipmunk convincing and a demon funny.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section class="card span-2">
+                <header class="card-head">
+                  <div>
+                    <p class="mono-label">Soundboard</p>
+                    <h2>Thirty-four <em>buttons.</em></h2>
+                  </div>
+                  <div class="head-actions">
+                    <span class="status-chip" id="bank-chip">Preparing</span>
+                    <button class="btn ghost sm" data-action="sound-stop">
+                      <svg><use href="#i-pause" /></svg><span>Stop</span>
+                    </button>
+                  </div>
+                </header>
+                <p class="small muted">
+                  Pads play into the microphone, next to your voice, and are never pitch-shifted.
+                  Click one, or press the key printed on it.
+                </p>
+                <div id="pad-groups" class="pad-groups">
+                  <p class="empty-note">Building the bank…</p>
+                </div>
+                <footer class="card-foot">
+                  <label class="control pad-volume">
+                    <span class="control-label">Pad level <b id="pad-gain-val">80%</b></span>
+                    <input type="range" id="pad-gain" min="0" max="120" step="5" value="80" />
+                  </label>
+                  <span class="mono" id="pad-status">Ready when you are.</span>
+                </footer>
+              </section>
             </div>
           </section>
 
@@ -838,11 +942,51 @@
                   <div><dt>Record</dt><dd><kbd>R</kbd></dd></div>
                   <div><dt>Switch theme</dt><dd><kbd>T</kbd></dd></div>
                   <div><dt>Live view</dt><dd><kbd>1</kbd></dd></div>
-                  <div><dt>Pair view</dt><dd><kbd>2</kbd></dd></div>
-                  <div><dt>Studio</dt><dd><kbd>3</kbd></dd></div>
-                  <div><dt>Settings</dt><dd><kbd>4</kbd></dd></div>
-                  <div><dt>Guide</dt><dd><kbd>5</kbd></dd></div>
+                  <div><dt>Voice</dt><dd><kbd>2</kbd></dd></div>
+                  <div><dt>Pair view</dt><dd><kbd>3</kbd></dd></div>
+                  <div><dt>Studio</dt><dd><kbd>4</kbd></dd></div>
+                  <div><dt>Settings</dt><dd><kbd>5</kbd></dd></div>
+                  <div><dt>Guide</dt><dd><kbd>6</kbd></dd></div>
+                  <div><dt>Play a pad</dt><dd><kbd>Q</kbd>…<kbd>B</kbd></dd></div>
                 </dl>
+              </section>
+
+              <section class="card span-2">
+                <header class="card-head"><div><p class="mono-label">Voice</p><h2>Characters and <em>pads</em></h2></div></header>
+                <div class="fine-grid">
+                  <div>
+                    <p class="small muted">
+                      The voice changer runs on this PC, inside the same chain as the denoiser, so it
+                      applies to every application that reads the cable — the phone app does not need
+                      to know about it.
+                    </p>
+                    <p class="small muted">
+                      <b>Pitch</b> moves the note, <b>Formant</b> moves the apparent size of the head.
+                      A chipmunk is both up; a demon is both down; a robot is neither, just ring
+                      modulation. <b>Amount</b> blends the whole character back toward your own voice.
+                    </p>
+                    <p class="small muted">
+                      <b>Natural</b> is a true bypass: no pitch stage, no formant stage, no added
+                      latency.
+                    </p>
+                  </div>
+                  <div>
+                    <p class="small muted">
+                      The soundboard plays into the microphone next to your voice, and is added
+                      <em>after</em> the character, so the pads always sound like themselves. Eight
+                      can overlap; the limiter keeps the sum under the ceiling.
+                    </p>
+                    <p class="small muted">
+                      Mute silences your voice, not the pads — a pad is something you pressed on
+                      purpose. <b>Stop</b> in the Voice view ends everything immediately, and the pad
+                      level slider is independent of the output boost.
+                    </p>
+                    <p class="small muted">
+                      Every pad is synthesised on this machine the first time you open the view. No
+                      files are downloaded and no microphone audio leaves the PC.
+                    </p>
+                  </div>
+                </div>
               </section>
 
               <section class="card span-2">
@@ -936,6 +1080,8 @@
     <script src="vendor/qrcode.min.js"></script>
     <script src="mock.js"></script>
     <script src="audio.js"></script>
+    <script src="voice.js"></script>
+    <script src="soundbank.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

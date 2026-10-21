@@ -37,6 +37,11 @@ const DEFAULTS = {
   quality: 'balanced',
   onBoard: false,
   muted: false,
+  voiceId: 'natural',
+  voicePitch: 0,
+  voiceFormant: 1,
+  voiceAmount: 0,
+  soundboardGain: 0.8,
 };
 
 class Store {

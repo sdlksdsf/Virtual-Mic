@@ -42,6 +42,11 @@
     diagnostics: false,
     quality: 'balanced',
     recordingDir: 'Music/VoxBridge Recordings',
+    voiceId: 'natural',
+    voicePitch: 0,
+    voiceFormant: 1,
+    voiceAmount: 0,
+    soundboardGain: 0.8,
   };
 
   const receiver = {

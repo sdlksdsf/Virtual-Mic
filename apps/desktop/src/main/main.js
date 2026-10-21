@@ -580,6 +580,11 @@ ipcMain.handle('app:set-settings', (event, patch) => {
     'recordingDir',
     'onBoard',
     'muted',
+    'voiceId',
+    'voicePitch',
+    'voiceFormant',
+    'voiceAmount',
+    'soundboardGain',
   ];
   const clean = {};
   for (const key of allowed) {
