@@ -237,7 +237,9 @@ jobs:
             code=$(curl -s -o /tmp/rpc.json -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
               -H "apikey: $key" -H 'Content-Type: application/json' -d "$params")
             echo "$fn -> $code $(cat /tmp/rpc.json)"
-            test "$code" = "403" || fail "$fn answered $code instead of 403 (missing function?)"
+            # PostgREST answers 401 for the 42501 the guard raises in this
+            # project; 403 is equally a refusal. 404 would mean it is missing.
+            test "$code" = "401" -o "$code" = "403" || fail "$fn answered $code (404 means the function is missing)"
           done
 
           # A plausible but wrong key is rejected too. One attempt only: each
@@ -246,7 +248,7 @@ jobs:
             -H "apikey: $key" -H 'Content-Type: application/json' \
             -d '{"p_key":"not-the-owner-key-0000000000"}')
           echo "wrong owner key -> $code"
-          test "$code" = "403" || fail "a wrong owner key answered $code"
+          test "$code" = "401" -o "$code" = "403" || fail "a wrong owner key answered $code"
           echo "public key cannot read the data; owner functions reject wrong keys"
 
       - name: Record site health
