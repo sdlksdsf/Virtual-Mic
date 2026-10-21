@@ -39,6 +39,7 @@ const WEB_DIR = path.join(__dirname, '..', 'apps', 'web');
 
 const FILES = [
   '404.html',
+  'assets/css/dashboard.css',
   'assets/css/site.css',
   'assets/fonts/instrument-serif-400-italic.woff2',
   'assets/fonts/instrument-serif-400.woff2',
@@ -59,9 +60,11 @@ const FILES = [
   'assets/img/phone-pair-dark.png',
   'assets/img/phone-pair.png',
   'assets/js/config.js',
+  'assets/js/dashboard.js',
   'assets/js/icons.js',
   'assets/js/platform.js',
   'assets/js/site.js',
+  'dashboard.html',
   'download.html',
   'features.html',
   'index.html',

@@ -293,6 +293,101 @@
     trackDownload(link.dataset.download);
   });
 
+  // Coarse context for the owner dashboard -------------------------------------
+  // Broad buckets only: a device class, an OS family, a browser family and an
+  // approximate country from the browser's own timezone. Not a fingerprint —
+  // no screen size, no fonts, no versions, no IP, nothing that survives a
+  // second visit. Everything stays anonymous and is never joined to a person.
+  const TIMEZONE_COUNTRIES = (`
+    Africa/Accra:GH Africa/Addis_Ababa:ET Africa/Algiers:DZ Africa/Cairo:EG
+    Africa/Casablanca:MA Africa/Dar_es_Salaam:TZ Africa/Johannesburg:ZA
+    Africa/Khartoum:SD Africa/Lagos:NG Africa/Nairobi:KE Africa/Tunis:TN
+    America/Anchorage:US America/Argentina/Buenos_Aires:AR America/Asuncion:PY
+    America/Bogota:CO America/Caracas:VE America/Chicago:US America/Costa_Rica:CR
+    America/Denver:US America/Detroit:US America/Edmonton:CA America/Guatemala:GT
+    America/Halifax:CA America/Havana:CU America/La_Paz:BO America/Lima:PE
+    America/Los_Angeles:US America/Manaus:BR America/Mexico_City:MX America/Monterrey:MX
+    America/Montevideo:UY America/New_York:US America/Panama:PA America/Phoenix:US
+    America/Port-au-Prince:HT America/Puerto_Rico:PR America/Recife:BR
+    America/Santiago:CL America/Santo_Domingo:DO America/Sao_Paulo:BR
+    America/St_Johns:CA America/Tijuana:MX America/Toronto:CA America/Vancouver:CA
+    America/Winnipeg:CA Asia/Almaty:KZ Asia/Amman:JO Asia/Ashgabat:TM Asia/Baghdad:IQ
+    Asia/Bahrain:BH Asia/Baku:AZ Asia/Bangkok:TH Asia/Beirut:LB Asia/Bishkek:KG
+    Asia/Colombo:LK Asia/Dhaka:BD Asia/Dubai:AE Asia/Dushanbe:TJ Asia/Ho_Chi_Minh:VN
+    Asia/Hong_Kong:HK Asia/Hovd:MN Asia/Jakarta:ID Asia/Jayapura:ID Asia/Jerusalem:IL
+    Asia/Kabul:AF Asia/Karachi:PK Asia/Kathmandu:NP Asia/Katmandu:NP Asia/Kolkata:IN
+    Asia/Calcutta:IN Asia/Kuala_Lumpur:MY Asia/Kuwait:KW Asia/Macau:MO Asia/Makassar:ID
+    Asia/Manila:PH Asia/Muscat:OM Asia/Phnom_Penh:KH Asia/Pyongyang:KP Asia/Qatar:QA
+    Asia/Riyadh:SA Asia/Rangoon:MM Asia/Yangon:MM Asia/Seoul:KR Asia/Shanghai:CN
+    Asia/Chongqing:CN Asia/Singapore:SG Asia/Taipei:TW Asia/Tashkent:UZ Asia/Tbilisi:GE
+    Asia/Tehran:IR Asia/Tokyo:JP Asia/Osaka:JP Asia/Sapporo:JP Asia/Ulaanbaatar:MN
+    Asia/Urumqi:CN Asia/Vientiane:LA Asia/Vladivostok:RU Asia/Yekaterinburg:RU
+    Asia/Yerevan:AM Atlantic/Reykjavik:IS Australia/Adelaide:AU Australia/Brisbane:AU
+    Australia/Darwin:AU Australia/Hobart:AU Australia/Melbourne:AU Australia/Perth:AU
+    Australia/Sydney:AU Europe/Amsterdam:NL Europe/Andorra:AD Europe/Athens:GR
+    Europe/Belgrade:RS Europe/Berlin:DE Europe/Bratislava:SK Europe/Brussels:BE
+    Europe/Bucharest:RO Europe/Budapest:HU Europe/Chisinau:MD Europe/Copenhagen:DK
+    Europe/Dublin:IE Europe/Gibraltar:GI Europe/Helsinki:FI Europe/Istanbul:TR
+    Europe/Kaliningrad:RU Europe/Kiev:UA Europe/Kyiv:UA Europe/Lisbon:PT
+    Europe/Ljubljana:SI Europe/London:GB Europe/Luxembourg:LU Europe/Madrid:ES
+    Europe/Malta:MT Europe/Minsk:BY Europe/Monaco:MC Europe/Moscow:RU Europe/Oslo:NO
+    Europe/Paris:FR Europe/Podgorica:ME Europe/Prague:CZ Europe/Riga:LV
+    Europe/Rome:IT Europe/Sarajevo:BA Europe/Skopje:MK Europe/Sofia:BG
+    Europe/Stockholm:SE Europe/Tallinn:EE Europe/Tirane:AL Europe/Vienna:AT
+    Europe/Vilnius:LT Europe/Warsaw:PL Europe/Zagreb:HR Europe/Zurich:CH
+    Pacific/Auckland:NZ Pacific/Christchurch:NZ Pacific/Fiji:FJ Pacific/Guam:GU
+    Pacific/Noumea:NC Pacific/Port_Moresby:PG Pacific/Tahiti:PF
+  `)
+    .trim()
+    .split(/\s+/)
+    .reduce((map, pair) => {
+      const [zone, country] = pair.split(':');
+      if (zone && country) map[zone] = country;
+      return map;
+    }, {});
+
+  function deviceContext() {
+    let timezone = '';
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    } catch {
+      timezone = '';
+    }
+    const ua = navigator.userAgent || '';
+    const touch = Number(navigator.maxTouchPoints) || 0;
+    const isIPadOS = /Macintosh/i.test(ua) && touch > 1;
+    const isTablet = /iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) || isIPadOS;
+    const isPhone = !isTablet && /Mobi|iPhone|iPod|Android|Windows Phone/i.test(ua);
+
+    let os = 'Other';
+    if (/iPhone|iPad|iPod/i.test(ua) || isIPadOS) os = 'iOS';
+    else if (/Android/i.test(ua)) os = 'Android';
+    else if (/Windows/i.test(ua)) os = 'Windows';
+    else if (/CrOS/i.test(ua)) os = 'ChromeOS';
+    else if (/Mac OS X|Macintosh/i.test(ua)) os = 'macOS';
+    else if (/Linux/i.test(ua)) os = 'Linux';
+
+    let browser = 'Other';
+    if (/Instagram/i.test(ua)) browser = 'Instagram';
+    else if (/WhatsApp/i.test(ua)) browser = 'WhatsApp';
+    else if (/FBAN|FBAV|FB_IAB/i.test(ua)) browser = 'Facebook';
+    else if (/musical_ly|BytedanceWebview/i.test(ua)) browser = 'TikTok';
+    else if (/Snapchat/i.test(ua)) browser = 'Snapchat';
+    else if (/Edg\//i.test(ua)) browser = 'Edge';
+    else if (/OPR\/|Opera/i.test(ua)) browser = 'Opera';
+    else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Internet';
+    else if (/Chrome\/|CriOS/i.test(ua)) browser = 'Chrome';
+    else if (/Firefox\/|FxiOS/i.test(ua)) browser = 'Firefox';
+    else if (/Safari\//i.test(ua)) browser = 'Safari';
+
+    return {
+      device: isTablet ? 'Tablet' : isPhone ? 'Phone' : ua ? 'Desktop' : '',
+      os,
+      browser,
+      country: TIMEZONE_COUNTRIES[timezone] || '',
+    };
+  }
+
   // Anonymous page counting ---------------------------------------------------
   // One row per page load: path, referring site and campaign tag only. No cookie,
   // no identifier, no IP address — the same privacy stance as the download counter.
@@ -345,6 +440,7 @@
       path: (window.location.pathname || '/').slice(0, 160),
       referrer: referrer.slice(0, 160),
       campaign,
+      ...deviceContext(),
     };
     try {
       navigator.sendBeacon?.(
@@ -366,10 +462,30 @@
     const endpoint = window.VOXBRIDGE_CONFIG?.supabaseUrl;
     const key = window.VOXBRIDGE_CONFIG?.supabaseAnonKey;
     if (!endpoint || !key) return;
+    let referrer = '';
+    try {
+      referrer = document.referrer ? new URL(document.referrer).hostname : '';
+    } catch {
+      referrer = '';
+    }
+    let campaign = '';
+    try {
+      const params = new URLSearchParams(window.location.search);
+      campaign = ['utm_source', 'utm_medium', 'utm_campaign']
+        .map((name) => params.get(name))
+        .filter(Boolean)
+        .join('/')
+        .slice(0, 120);
+    } catch {
+      campaign = '';
+    }
     const payload = {
       platform: platformKey,
       version: VERSION,
       source: 'website',
+      referrer: referrer.slice(0, 160),
+      campaign,
+      ...deviceContext(),
     };
     try {
       navigator.sendBeacon?.(
@@ -545,9 +661,17 @@
   // Smooth in-page anchors offset for sticky header ---------------------------
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
     link.addEventListener('click', (event) => {
-      const id = link.getAttribute('href');
-      if (!id || id === '#') return;
-      const target = document.querySelector(id);
+      // The download buttons start life as `href="#"` and get a real file URL
+      // once the manifest arrives, so re-check the attribute before treating
+      // it as a fragment — and never hand an arbitrary string to a selector.
+      const id = link.getAttribute('href') || '';
+      if (!id.startsWith('#') || id === '#') return;
+      let target = null;
+      try {
+        target = document.querySelector(id);
+      } catch {
+        return;
+      }
       if (!target) return;
       event.preventDefault();
       const top = target.getBoundingClientRect().top + window.scrollY - 84;

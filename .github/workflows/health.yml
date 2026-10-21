@@ -1,0 +1,31 @@
+name: Site health
+
+# A 15-minute heartbeat for the owner dashboard. GitHub's scheduler can run a
+# few minutes late under load, which is fine: the dashboard shows the gaps as
+# gaps instead of pretending they did not happen.
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-health
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Probe the live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Probe endpoints and record the result
+        run: node scripts/health-probe.js
