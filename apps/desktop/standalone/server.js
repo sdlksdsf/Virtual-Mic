@@ -508,6 +508,7 @@ const METHODS = {
       'monitorGain', 'outputGainDb', 'autoStart', 'minimizeToTray', 'rememberDevices',
       'requirePairing', 'denoise', 'gate', 'agc', 'presence', 'warmth', 'compressor', 'limiter',
       'highpass', 'tray', 'showWelcome', 'diagnostics', 'quality', 'recordingDir', 'onBoard', 'muted',
+      'voiceId', 'voicePitch', 'voiceFormant', 'voiceAmount', 'soundboardGain',
     ];
     const clean = {};
     for (const key of allowed) {

@@ -2142,3 +2142,183 @@ body.demo .hide-desktop { display: inline-flex; }
     scroll-behavior: auto !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Voice changer and soundboard
+   -------------------------------------------------------------------------- */
+.voice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.voice-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.voice-group-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.voice-group-head .mono-label { margin: 0; }
+.voice-group-head span {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.voice-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.voice-tile {
+  position: relative;
+  text-align: left;
+  padding: 11px 12px 12px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 11px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 180ms var(--ease), transform 180ms var(--ease),
+    background 220ms var(--ease), box-shadow 180ms var(--ease);
+}
+.voice-tile:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+.voice-tile strong {
+  display: block;
+  padding-right: 46px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+.voice-tile span {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.38;
+  color: var(--muted);
+}
+.voice-tile .tile-mark {
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted-2);
+}
+.voice-tile.is-active {
+  border-color: var(--ink);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--ink);
+}
+.voice-tile.is-active .tile-mark { color: var(--accent); }
+.voice-tile.is-active::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--accent);
+}
+.voice-tile.is-tweaked .tile-mark::after {
+  content: ' ·';
+  color: var(--accent);
+}
+
+.pad-groups {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.pad-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(102px, 1fr));
+  gap: 7px;
+}
+
+.pad {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 60px;
+  padding: 9px 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--paper) 100%);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 90ms var(--ease), border-color 160ms var(--ease),
+    background 160ms var(--ease), box-shadow 160ms var(--ease);
+}
+.pad:hover { border-color: var(--line-strong); }
+.pad:active,
+.pad.is-hit {
+  transform: translateY(1px) scale(0.985);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.pad strong {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.pad kbd {
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--muted-2);
+  background: var(--panel-2);
+}
+.pad.has-key kbd {
+  color: var(--ink-soft);
+  border-color: var(--line-strong);
+}
+
+.pad-volume { flex: 1; max-width: 260px; }
+.pad-volume .control-label { margin-bottom: 4px; }
+
+#pad-status {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+html[data-theme='dark'] .voice-tile,
+html[data-theme='dark'] .pad {
+  background: var(--paper-deep);
+}
+html[data-theme='dark'] .voice-tile.is-active,
+html[data-theme='dark'] .pad:hover {
+  background: var(--panel);
+}
+html[data-theme='dark'] .pad.is-hit {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+@media (max-width: 1080px) {
+  .voice-grid { grid-template-columns: minmax(0, 1fr); }
+  .voice-grid .span-2 { grid-column: span 1; }
+  #pad-status { display: none; }
+}

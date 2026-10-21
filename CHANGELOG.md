@@ -2,6 +2,31 @@
 
 All notable changes to VoxBridge are documented here. Dates are UTC.
 
+## [Unreleased]
+
+### Voice changer and soundboard
+- **25 characters** across four families — Classic (chipmunk, helium, giant, villain,
+  demon, pirate…), Machine (robot, android, alien, cyborg, walkie-talkie, old phone,
+  megaphone), Space (ghost, underwater, cave, choir, angel, whisper) and Wild
+  (drunk, announcer, squeak).
+- **Pitch and formant are separate controls.** Pitch is a two-head granular shifter
+  with Hann-squared crossfades; the formant stage warps the spectral envelope with a
+  real-valued gain curve, so the note can move without the head changing size and the
+  reverse. Neither stage runs when it is not asked for, and the natural voice is a
+  straight bypass.
+- **Effects where they belong:** ring modulation, soft drive, bit crush, comb,
+  chorus, tremolo, breath, reverb and band-limiting, allocated only for the character
+  that uses them.
+- **34 troll pads**, synthesised from maths the first time the view is opened — no
+  bundled recordings, no network fetch, no licence to negotiate. Air horn, sad
+  trombone, vine boom, rimshot, fart, burp, bruh, evil laugh, crickets, applause,
+  duck, cat, dog, monkey, buzzer, alarm and more.
+- Pads play **into the microphone** next to the voice and are deliberately never
+  pitch-shifted, so a chipmunk character does not turn the air horn into a kazoo.
+  `Mute` silences the voice; the pads keep their own stop button.
+- Keyboard triggers (`Q W E …`) while the Voice view is open, a pad-level slider, and
+  a "Hear it" monitor switch for checking a character on headphones.
+
 ## [1.0.1] — 2026-10-20
 
 A patch release with two user-visible fixes. Protocol v1 is unchanged, so a

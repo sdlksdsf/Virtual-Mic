@@ -66,6 +66,7 @@
     bindNavigation();
     bindActions();
     bindShortcuts();
+    bindVoice();
     bindBridge();
     syncControls();
     renderAll();
@@ -207,6 +208,7 @@
       await pipeline.init();
       pipeline.setOutputRate(state.settings.rate || 48000);
       pipeline.configure(audioSettings());
+      applyVoice();
       pipeline.setMuted(muted);
       pipeline.setMonitor(Boolean(state.settings.monitor), state.settings.monitorGain ?? 0.8);
       window.__pipeline = pipeline;
@@ -247,6 +249,7 @@
     pipeline?.configure(audioSettings());
     pipeline?.setOutputRate(state.settings.rate || 48000);
     pipeline?.setMonitor(Boolean(state.settings.monitor), state.settings.monitorGain ?? 0.8);
+    applyVoice();
   }
 
   function base64ToArrayBuffer(base64) {
@@ -343,6 +346,7 @@
     renderAddresses();
     renderStats();
     renderSettings();
+    renderVoice();
     refreshDevices();
     setMuted(Boolean(state.settings.muted), false);
     setTimeout(() => refreshDevices(), 1200);
@@ -916,6 +920,7 @@
     });
     $('#crumb-view').textContent = {
       live: 'Live',
+      voice: 'Voice',
       pair: 'Pair',
       studio: 'Studio',
       settings: 'Settings',
@@ -927,6 +932,10 @@
       renderQR();
     }
     if (name === 'studio') refreshDevices();
+    if (name === 'voice') {
+      renderVoice();
+      ensureBank();
+    }
   }
 
   function bindActions() {
@@ -1030,6 +1039,25 @@
           } else {
             toast('ok', 'Monitoring off', 'Nothing is played on this PC.');
           }
+          break;
+        }
+        case 'voice-reset': {
+          selectVoice('natural');
+          break;
+        }
+        case 'voice-monitor': {
+          const next = !state.settings.monitor;
+          await update({ monitor: next });
+          renderMonitorButton();
+          renderVoice();
+          if (next) {
+            toast('warn', 'Hearing the processed voice', 'Use headphones — a speaker feeds back into the phone.');
+          }
+          break;
+        }
+        case 'sound-stop': {
+          pipeline?.stopSounds();
+          if ($('#pad-status')) $('#pad-status').textContent = 'Stopped.';
           break;
         }
         case 'open-recordings':
@@ -1192,6 +1220,378 @@
     });
   }
 
+  // ---------------------------------------------------------------------------
+  // Voice changer and soundboard
+  // ---------------------------------------------------------------------------
+  const voices = window.VoxBridgeVoices || { characters: [], groups: [], byId: () => ({}) };
+  const soundbank = window.VoxBridgeSoundbank || { list: [], renderAll: async () => [] };
+
+  // R, T and M stay global shortcuts, so the pads skip those three letters.
+  const PAD_KEYS = {
+    q: 'airhorn', w: 'sadtrombone', e: 'womp', y: 'vineboom', u: 'rimshot', i: 'boing',
+    o: 'slidewhistle', p: 'fart', a: 'bruh', s: 'evil_laugh', d: 'giggle', f: 'scream',
+    g: 'hello', h: 'crickets', j: 'duck', k: 'cat', l: 'dog', z: 'buzzer', x: 'ding',
+    c: 'applause', v: 'drumroll', b: 'explosion',
+  };
+  const PAD_KEY_BY_ID = Object.fromEntries(Object.entries(PAD_KEYS).map(([key, id]) => [id, key]));
+  const PAD_GROUPS = [
+    ['horns', 'Horns and stings'],
+    ['effects', 'Cartoon and effects'],
+    ['body', 'Body'],
+    ['animals', 'Animals'],
+    ['alerts', 'Alerts'],
+    ['voices', 'Voices'],
+  ];
+
+  let bankReady = false;
+  let bankLoading = false;
+
+  const VOICE_FALLBACK = { id: 'natural', name: 'Natural', note: '', pitch: 0, formant: 1 };
+
+  function voiceCharacter() {
+    return voices.byId(state.settings.voiceId || 'natural') || VOICE_FALLBACK;
+  }
+
+  function voiceAmount() {
+    const character = voiceCharacter();
+    if (!character || character.id === 'natural') return 0;
+    return Math.max(0, Math.min(1, Number(state.settings.voiceAmount ?? 1)));
+  }
+
+  function voiceConfig() {
+    const character = voiceCharacter() || {};
+    const pitch = Number(state.settings.voicePitch ?? character.pitch ?? 0);
+    const formant = Number(state.settings.voiceFormant ?? character.formant ?? 1);
+    return {
+      amount: voiceAmount(),
+      pitch,
+      formant,
+      ring: character.ring || 0,
+      ringMix: character.ringMix || 0,
+      drive: character.drive || 0,
+      crush: character.crush || 0,
+      comb: character.comb || 0,
+      trem: character.trem || 0,
+      breath: character.breath || 0,
+      noise: character.noise || 0,
+      chorus: character.chorus || 0,
+      reverb: character.reverb || 0,
+      band: character.band || null,
+      lowpass: character.lowpass || 0,
+      highpass: character.highpass || 0,
+      wobble: character.wobble || 0,
+    };
+  }
+
+  function applyVoice() {
+    pipeline?.setVoice(voiceConfig());
+    pipeline?.setSoundGain(Number(state.settings.soundboardGain ?? 0.8));
+  }
+
+  function pitchMark(character) {
+    if (character.id === 'natural') return 'off';
+    const pitch = Number(character.pitch || 0);
+    const sign = pitch > 0 ? '+' : pitch < 0 ? '\u2212' : '';
+    return `${sign}${Math.abs(pitch)} st`;
+  }
+
+  function buildVoiceTiles() {
+    const host = $('#voice-groups');
+    if (!host || !voices.characters.length) return;
+    if (host.dataset.ready === '1') return;
+    const byGroup = new Map();
+    for (const character of voices.characters) {
+      if (!byGroup.has(character.group)) byGroup.set(character.group, []);
+      byGroup.get(character.group).push(character);
+    }
+    host.innerHTML = voices.groups
+      .map((group) => {
+        const tiles = byGroup.get(group.id) || [];
+        if (!tiles.length) return '';
+        return `<div class="voice-group">
+          <div class="voice-group-head"><p class="mono-label">${escapeHtml(group.name)}</p><span>${tiles.length}</span></div>
+          <div class="voice-tiles">${tiles
+            .map(
+              (character) => `<button class="voice-tile" type="button" data-voice="${escapeHtml(character.id)}">
+                <span class="tile-mark">${pitchMark(character)}</span>
+                <strong>${escapeHtml(character.name)}</strong>
+                <span>${escapeHtml(character.note)}</span>
+              </button>`,
+            )
+            .join('')}</div>
+        </div>`;
+      })
+      .join('');
+    host.dataset.ready = '1';
+  }
+
+  function renderVoice() {
+    buildVoiceTiles();
+    const character = voiceCharacter();
+    const amount = voiceAmount();
+    const pitch = Number(state.settings.voicePitch ?? character.pitch ?? 0);
+    const formant = Number(state.settings.voiceFormant ?? character.formant ?? 1);
+
+    $$('.voice-tile').forEach((tile) => {
+      const def = voices.byId(tile.dataset.voice);
+      const active = def.id === character.id;
+      tile.classList.toggle('is-active', active);
+      tile.setAttribute('aria-pressed', active ? 'true' : 'false');
+      const tweaked =
+        active &&
+        def.id !== 'natural' &&
+        (Number(pitch) !== Number(def.pitch) || Math.abs(Number(formant) - Number(def.formant)) > 0.001);
+      tile.classList.toggle('is-tweaked', tweaked);
+    });
+
+    const current = $('#voice-current');
+    if (current) {
+      current.innerHTML =
+        character.id === 'natural'
+          ? 'Natural <em>— off</em>'
+          : `${escapeHtml(character.name)} <em>— ${Math.round(amount * 100)}%</em>`;
+    }
+    const chip = $('#voice-chip');
+    if (chip) {
+      const off = character.id === 'natural' || amount === 0;
+      chip.textContent = off ? 'Bypassed' : 'Active';
+      chip.className = `status-chip${off ? '' : ' ok'}`;
+    }
+
+    const pitchLabel = $('#voice-pitch-val');
+    if (pitchLabel) {
+      pitchLabel.textContent = `${pitch > 0 ? '+' : pitch < 0 ? '\u2212' : ''}${Math.abs(pitch)} st`;
+    }
+    const formantLabel = $('#voice-formant-val');
+    if (formantLabel) formantLabel.textContent = `${Number(formant).toFixed(2)}\u00d7`;
+    const amountLabel = $('#voice-amount-val');
+    if (amountLabel) amountLabel.textContent = `${Math.round(amount * 100)}%`;
+
+    const pitchInput = $('#voice-pitch');
+    if (pitchInput && document.activeElement !== pitchInput) {
+      pitchInput.value = String(pitch);
+      setRangeFill(pitchInput);
+    }
+    const formantInput = $('#voice-formant');
+    if (formantInput && document.activeElement !== formantInput) {
+      formantInput.value = String(Math.round(Number(formant) * 100));
+      setRangeFill(formantInput);
+    }
+    const amountInput = $('#voice-amount');
+    if (amountInput && document.activeElement !== amountInput) {
+      amountInput.value = String(Math.round(amount * 100));
+      setRangeFill(amountInput);
+    }
+
+    // Pitch shifting costs one grain (48 ms); the formant stage one frame.
+    let added = 0;
+    if (amount > 0 && pitch !== 0) added += 48;
+    if (amount > 0 && Math.abs(formant - 1) > 0.004) added += 11;
+    const latencyChip = $('#voice-latency-chip');
+    if (latencyChip) {
+      latencyChip.textContent = added ? `+${added} ms` : 'No added latency';
+      latencyChip.title = added
+        ? 'Extra delay this character adds on top of the jitter buffer'
+        : 'The natural voice passes straight through';
+    }
+
+    const hear = $('#voice-hear');
+    const hearLabel = $('#voice-hear-label');
+    if (hear) {
+      hear.setAttribute('aria-pressed', state.settings.monitor ? 'true' : 'false');
+      hear.classList.toggle('is-on', Boolean(state.settings.monitor));
+    }
+    if (hearLabel) hearLabel.textContent = state.settings.monitor ? 'Stop hearing' : 'Hear it';
+
+    const padGain = $('#pad-gain');
+    const padGainValue = Number(state.settings.soundboardGain ?? 0.8) * 100;
+    if (padGain && document.activeElement !== padGain) {
+      padGain.value = String(Math.round(padGainValue));
+      setRangeFill(padGain);
+    }
+    const padGainLabel = $('#pad-gain-val');
+    if (padGainLabel) padGainLabel.textContent = `${Math.round(padGainValue)}%`;
+
+    const bankChip = $('#bank-chip');
+    if (bankChip && bankReady) {
+      bankChip.textContent = `${soundbank.list.length} pads`;
+      bankChip.className = 'status-chip ok';
+    }
+  }
+
+  function selectVoice(id) {
+    const character = voices.byId(id);
+    const natural = character.id === 'natural';
+    state.settings.voiceId = character.id;
+    state.settings.voicePitch = character.pitch;
+    state.settings.voiceFormant = character.formant;
+    state.settings.voiceAmount = natural ? 0 : 1;
+    applyVoice();
+    renderVoice();
+    update(
+      {
+        voiceId: character.id,
+        voicePitch: character.pitch,
+        voiceFormant: character.formant,
+        voiceAmount: natural ? 0 : 1,
+      },
+      { audio: false },
+    );
+    if (natural) toast('ok', 'Voice changer off', 'Your own voice goes to the cable.');
+    else toast('ok', `${character.name} engaged`, character.note);
+  }
+
+  function buildPads() {
+    const host = $('#pad-groups');
+    if (!host || !soundbank.list.length) return;
+    if (host.dataset.ready === '1') return;
+    const known = new Set(PAD_GROUPS.map(([id]) => id));
+    const rows = PAD_GROUPS.map(([id, label]) => {
+      const pads = soundbank.list.filter((pad) => pad.group === id);
+      if (!pads.length) return '';
+      return `<div class="pad-group">
+        <div class="voice-group-head"><p class="mono-label">${escapeHtml(label)}</p><span>${pads.length}</span></div>
+        <div class="pad-row">${pads
+          .map((pad) => {
+            const key = PAD_KEY_BY_ID[pad.id];
+            return `<button class="pad${key ? ' has-key' : ''}" type="button" data-pad="${escapeHtml(pad.id)}" title="${escapeHtml(pad.name)}">
+              <strong>${escapeHtml(pad.name)}</strong>
+              <kbd>${key ? key.toUpperCase() : 'click'}</kbd>
+            </button>`;
+          })
+          .join('')}</div>
+      </div>`;
+    });
+    const extra = soundbank.list.filter((pad) => !known.has(pad.group));
+    if (extra.length) {
+      rows.push(`<div class="pad-group"><div class="pad-row">${extra
+        .map(
+          (pad) =>
+            `<button class="pad" type="button" data-pad="${escapeHtml(pad.id)}"><strong>${escapeHtml(pad.name)}</strong><kbd>click</kbd></button>`,
+        )
+        .join('')}</div></div>`);
+    }
+    host.innerHTML = rows.join('');
+    host.dataset.ready = '1';
+  }
+
+  // Building 34 pads takes a few hundred milliseconds, so it happens once, in
+  // yielding chunks, the first time the Voice view is opened.
+  async function ensureBank() {
+    if (bankReady || bankLoading) return;
+    bankLoading = true;
+    buildPads();
+    const chip = $('#bank-chip');
+    if (chip) chip.textContent = 'Building';
+    try {
+      const rate = pipeline?.rate || 48000;
+      const samples = await soundbank.renderAll(rate, (done, total) => {
+        if (chip) chip.textContent = `${done}/${total}`;
+      });
+      pipeline?.loadBank(samples);
+      bankReady = true;
+      if (chip) {
+        chip.textContent = `${samples.length} pads`;
+        chip.className = 'status-chip ok';
+      }
+      if ($('#pad-status')) $('#pad-status').textContent = 'Every pad is loaded.';
+    } catch (error) {
+      if (chip) chip.textContent = 'Failed';
+      toast('bad', 'Soundboard unavailable', error.message || 'The pads could not be built.');
+    } finally {
+      bankLoading = false;
+    }
+  }
+
+  function flashPad(id) {
+    const pad = document.querySelector(`[data-pad="${id}"]`);
+    const name = soundbank.list.find((item) => item.id === id)?.name || id;
+    if ($('#pad-status')) $('#pad-status').textContent = `Playing ${name}`;
+    if (!pad) return;
+    pad.classList.add('is-hit');
+    setTimeout(() => pad.classList.remove('is-hit'), 160);
+  }
+
+  async function playPad(id) {
+    const pad = soundbank.list.find((item) => item.id === id);
+    if (!pad) return;
+    if (!bankReady) {
+      await ensureBank();
+      if (!bankReady) return;
+    }
+    pipeline?.resume();
+    pipeline?.playSound(pad.index, 1);
+    flashPad(id);
+  }
+
+  function bindVoice() {
+    $('#voice-groups')?.addEventListener('click', (event) => {
+      const tile = event.target.closest('[data-voice]');
+      if (!tile) return;
+      selectVoice(tile.dataset.voice);
+    });
+
+    $('#pad-groups')?.addEventListener('click', (event) => {
+      const pad = event.target.closest('[data-pad]');
+      if (!pad) return;
+      playPad(pad.dataset.pad);
+    });
+
+    // The sliders paint on `input` (so the voice changes as you drag) and
+    // persist on `change` (so a drag writes one setting, not fifty).
+    bindRange(
+      '#voice-pitch',
+      (value) => {
+        state.settings.voicePitch = Number(value);
+        update({ voicePitch: Number(value) }, { audio: false });
+      },
+      (value) => {
+        state.settings.voicePitch = Number(value);
+        applyVoice();
+        renderVoice();
+      },
+    );
+
+    bindRange(
+      '#voice-formant',
+      (value) => {
+        state.settings.voiceFormant = Number(value) / 100;
+        update({ voiceFormant: Number(value) / 100 }, { audio: false });
+      },
+      (value) => {
+        state.settings.voiceFormant = Number(value) / 100;
+        applyVoice();
+        renderVoice();
+      },
+    );
+
+    bindRange(
+      '#voice-amount',
+      (value) => {
+        state.settings.voiceAmount = Number(value) / 100;
+        update({ voiceAmount: Number(value) / 100 }, { audio: false });
+      },
+      (value) => {
+        state.settings.voiceAmount = Number(value) / 100;
+        applyVoice();
+        renderVoice();
+      },
+    );
+
+    bindRange(
+      '#pad-gain',
+      (value) => {
+        state.settings.soundboardGain = Number(value) / 100;
+        update({ soundboardGain: Number(value) / 100 }, { audio: false });
+      },
+      (value) => {
+        state.settings.soundboardGain = Number(value) / 100;
+        applyVoice();
+        renderVoice();
+      },
+    );
+  }
+
   function bindShortcuts() {
     document.addEventListener('keydown', (event) => {
       const tag = (event.target.tagName || '').toLowerCase();
@@ -1200,8 +1600,10 @@
       if (key === 'm') setMuted(!muted);
       else if (key === 'r') toggleRecording();
       else if (key === 't') $('#theme-btn').click();
-      else if (['1', '2', '3', '4', '5'].includes(key)) {
-        showView(['live', 'pair', 'studio', 'settings', 'help'][Number(key) - 1]);
+      else if (['1', '2', '3', '4', '5', '6'].includes(key)) {
+        showView(['live', 'voice', 'pair', 'studio', 'settings', 'help'][Number(key) - 1]);
+      } else if (currentView === 'voice' && PAD_KEYS[key]) {
+        playPad(PAD_KEYS[key]);
       }
     });
   }

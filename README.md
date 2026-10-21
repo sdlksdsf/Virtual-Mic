@@ -89,6 +89,7 @@ VoxBridge does three things differently:
 | **Capture** | 48 / 32 / 24 / 16 kHz · PCM16 or IMA ADPCM · 10 or 20 ms frames · adaptive jitter buffer that grows on packet loss · short, faded concealment · duplicate-frame rejection |
 | **Cleaning** | Decision-directed spectral suppression (4 levels) · 80 Hz high-pass · hysteresis noise gate · auto gain · presence EQ · warmth shelf · soft-knee compressor |
 | **Output** | +24 dB boost · lookahead limiter with −1 dBFS ceiling · one-click monitor switch in the Live header (off by default) · 16-bit WAV session recording |
+| **Voice changer** | 25 characters · independent pitch (±16 st) and formant warping · 34 procedural troll pads mixed into the microphone · no download, no API key, no licence |
 | **Windows** | Native WASAPI capture service · virtual-mic detection and auto-claim · three-second verification test · per-user installer · portable ZIP · background operation · autostart · diagnostics export |
 | **Android** | Foreground service with mute and gain actions · live notification · on-device DSP · light and dark themes · Android 8+ |
 | **iOS** | SwiftUI app · background audio session · Accelerate DSP · same protocol and presets · iOS 16+ |
