@@ -103,6 +103,10 @@ the browser, for the moment you want to know rather than the last scheduled tick
 
 Deletes are immediate and cannot be undone; the buttons confirm first.
 
+`owner_cleanup` and the new message functions were added at the same time; if
+PostgREST answers 404 for one of them, run `notify pgrst, 'reload schema';` in the
+SQL editor — the function exists, the API cache is stale.
+
 ## Local development
 
 The dashboard is a static page; nothing needs a build step.
