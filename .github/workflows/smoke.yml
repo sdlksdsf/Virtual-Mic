@@ -209,18 +209,25 @@ jobs:
           # The public key can write events but must not read them, and must not
           # be able to read the owner key hash either.
           for table in page_events download_events feedback health_checks owner_access owner_auth_failures; do
-            body=$(curl -fsS "$url/rest/v1/$table?select=*&limit=1" \
+            code=$(curl -s -o /tmp/table.json -w '%{http_code}' "$url/rest/v1/$table?select=*&limit=1" \
               -H "apikey: $key" -H "Authorization: Bearer $key")
-            echo "$table -> $body"
-            test "$body" = "[]"
+            body=$(cat /tmp/table.json)
+            echo "$table -> $code $body"
+            if [ "$code" = "200" ]; then
+              test "$body" = "[]"
+            else
+              test "$code" = "401" -o "$code" = "403"
+            fi
           done
 
           # Every owner function exists and refuses a key that is too short to
           # be real. The guard rejects those before it touches the failure log,
           # so this cannot trip the owner's own lockout.
           for fn in owner_ping owner_live owner_traffic owner_health owner_messages owner_rotate; do
+            params='{"p_key":"short"}'
+            if [ "$fn" = "owner_rotate" ]; then params='{"p_key":"short","p_new_key":"short"}'; fi
             code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
-              -H "apikey: $key" -H 'Content-Type: application/json' -d '{"p_key":"short"}')
+              -H "apikey: $key" -H 'Content-Type: application/json' -d "$params")
             echo "$fn -> $code"
             test "$code" = "403"
           done

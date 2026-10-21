@@ -18,7 +18,7 @@ unreadable without the owner key.
 | Owner key | Only in your browser (`localStorage`, key `voxbridge-owner-key`) | Generated once by the database owner, shown once. Never in the repository. |
 | Key hash | `public.owner_access.key_sha256` | Single row (`id = 1`), `pgcrypto` SHA-256. The plaintext never reaches the database. |
 | Verification | `public.owner_guard(text)` | `security definer`; raises `42501` for a wrong key. |
-| Rate limit | `public.owner_auth_failures` | 30 failures in 10 minutes blocks any attempt until the window passes. Rows older than an hour are pruned on each successful call. |
+| Rate limit | `public.owner_auth_failures` | Wrong guesses are logged and answered progressively slower (`pg_sleep`, up to 1.5 s). A correct key is always accepted, so guessing cannot lock the owner out. Rows older than an hour are pruned on each successful call. |
 | Rotation | `public.owner_rotate(old, new)` | New key must be ≥ 24 characters. Clears the failure log. |
 
 Every read goes through one of five functions, all of which call `owner_guard`
