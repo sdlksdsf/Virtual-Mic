@@ -22,7 +22,7 @@
 namespace fs = std::filesystem;
 
 static const wchar_t kAppName[] = L"VoxBridge";
-static const wchar_t kVersion[] = L"1.0.1";
+static const wchar_t kVersion[] = L"1.1.0";
 static const char kFooterMagic[8] = {'V', 'B', 'X', 'P', 'A', 'Y', '1', 0};
 static const char kArchiveMagic[4] = {'V', 'B', 'X', 'P'};
 
@@ -269,7 +269,7 @@ static void registerApplication(const fs::path& installDir) {
     RegSetValueExW(key, name, 0, REG_SZ, reinterpret_cast<const BYTE*>(value.c_str()),
                    static_cast<DWORD>((value.size() + 1) * sizeof(wchar_t)));
   };
-  setString(L"DisplayName", L"VoxBridge 1.0.1");
+  setString(L"DisplayName", L"VoxBridge 1.1.0");
   setString(L"DisplayVersion", kVersion);
   setString(L"Publisher", L"VoxBridge");
   setString(L"HelpLink", L"https://github.com/sdlksdsf/Virtual-Mic");
@@ -321,7 +321,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
   const fs::path installDir = fs::path(knownFolder(FOLDERID_LocalAppData)) / L"Programs" / L"VoxBridge";
   const int answer = MessageBoxW(
       nullptr,
-      L"Install VoxBridge 1.0.1 for this user?\r\n\r\n"
+      L"Install VoxBridge 1.1.0 for this user?\r\n\r\n"
       L"The app is installed in your local app folder, with a Start menu shortcut and an entry in "
       L"Settings > Apps. Administrator rights are not required.",
       L"Install VoxBridge", MB_YESNO | MB_ICONQUESTION);

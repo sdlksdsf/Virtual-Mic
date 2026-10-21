@@ -25,7 +25,7 @@ No account · No cloud audio · No kernel driver to break your PC
 the site picks the right file for your device (`.exe` on Windows, `.apk` on Android, `.ipa` on iPhone) and
 serves it from its own domain, so a phone never has to wrestle with a GitHub redirect.
 
-New in **1.0.1**: the Android stream now survives a locked screen, and phone downloads no longer stall.
+New in **1.1.0**: a voice changer with 25 characters and a 34-pad soundboard, applied before the virtual cable so every app hears it.
 See [CHANGELOG.md](CHANGELOG.md).
 
 </div>
@@ -103,10 +103,10 @@ Every build below is produced by GitHub Actions from this repository and publish
 
 | Platform | Requirements | File |
 |---|---|---|
-| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.0.1-x64.exe`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-Setup-1.0.1-x64.exe) |
-| **Windows portable** | Same, no install | [`VoxBridge-1.0.1-win64-portable.zip`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-win64-portable.zip) |
-| **Android** | 8.0+ | [`VoxBridge-1.0.1-android.apk`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-android.apk) |
-| **iOS** | 16+, unsigned | [`VoxBridge-1.0.1-unsigned.ipa`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.0.1-unsigned.ipa) |
+| **Windows 10 / 11** | 1809+, x64, ~400 MB | [`VoxBridge-Setup-1.1.0-x64.exe`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-Setup-1.1.0-x64.exe) |
+| **Windows portable** | Same, no install | [`VoxBridge-1.1.0-win64-portable.zip`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.1.0-win64-portable.zip) |
+| **Android** | 8.0+ | [`VoxBridge-1.1.0-android.apk`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.1.0-android.apk) |
+| **iOS** | 16+, unsigned | [`VoxBridge-1.1.0-unsigned.ipa`](https://github.com/sdlksdsf/VoxBridge/releases/latest/download/VoxBridge-1.1.0-unsigned.ipa) |
 
 > **A note on signatures.** The Windows binaries are not code-signed, so SmartScreen will ask once. The IPA is
 > unsigned because a signing identity is tied to your Apple ID; use AltStore, Sideloadly or Xcode. Both are

@@ -114,7 +114,7 @@ cp "$ROOT/THIRD_PARTY_NOTICES.md" "$STAGE/licenses/THIRD_PARTY_NOTICES.md" 2>/de
 cp "$HERE/third_party/miniz/LICENSE" "$STAGE/licenses/miniz-LICENSE.txt"
 
 cat > "$STAGE/README.txt" <<'TEXT'
-VoxBridge 1.0.1 for Windows
+VoxBridge 1.1.0 for Windows
 ===========================
 
 VoxBridge turns your phone into a microphone for Windows. Audio travels
@@ -145,14 +145,14 @@ python3 "$HERE/make_payload.py" "$STAGE" "$BUILD/payload.vbx"
 
 echo "==> Creating single-file installer"
 python3 "$HERE/make_payload.py" attach "$BUILD/Setup.exe" "$BUILD/payload.vbx" \
-  "$DIST/VoxBridge-Setup-1.0.1-x64.exe"
+  "$DIST/VoxBridge-Setup-1.1.0-x64.exe"
 
 echo "==> Creating portable build"
 rm -rf "$BUILD/portable"
 mkdir -p "$BUILD/portable"
 cp -R "$STAGE" "$BUILD/portable/VoxBridge"
 rm -f "$BUILD/portable/VoxBridge/VoxBridge-Uninstall.exe"
-( cd "$BUILD/portable" && zip -q -9 -r "$DIST/VoxBridge-1.0.1-win64-portable.zip" VoxBridge )
+( cd "$BUILD/portable" && zip -q -9 -r "$DIST/VoxBridge-1.1.0-win64-portable.zip" VoxBridge )
 
-( cd "$DIST" && sha256sum "VoxBridge-Setup-1.0.1-x64.exe" "VoxBridge-1.0.1-win64-portable.zip" > SHA256SUMS.txt )
+( cd "$DIST" && sha256sum "VoxBridge-Setup-1.1.0-x64.exe" "VoxBridge-1.1.0-win64-portable.zip" > SHA256SUMS.txt )
 ls -lh "$DIST"

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       republish:
-        description: Replace the already published v1.0.1 files
+        description: Replace the already published v1.1.0 files
         type: boolean
         default: false
 
@@ -71,7 +71,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import struct, zlib
-          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.0.1-x64.exe'
+          path = 'apps/desktop/standalone/dist/VoxBridge-Setup-1.1.0-x64.exe'
           data = open(path, 'rb').read()
           assert data[-24:-16] == b'VBXPAY1\x00'
           offset, size = struct.unpack('<QQ', data[-16:])
@@ -114,27 +114,27 @@ jobs:
           set -euo pipefail
           # A release is immutable once people download it. Rebuilds happen on every
           # push, and byte-for-byte identical output is not guaranteed, so publishing
-          # again would change what 1.0.1 means under the same version number (and
+          # again would change what 1.1.0 means under the same version number (and
           # leave the website's mirror out of step with GitHub). Only the manual
           # `republish` run replaces files.
           if [ "${REPUBLISH:-false}" != "true" ]; then
-            present=$(gh release view v1.0.1 --json assets --jq '.assets[].name')
+            present=$(gh release view v1.1.0 --json assets --jq '.assets[].name' 2>/dev/null || true)
             missing=0
-            for name in 'VoxBridge-Setup-1.0.1-x64.exe' 'VoxBridge-1.0.1-win64-portable.zip'; do
+            for name in 'VoxBridge-Setup-1.1.0-x64.exe' 'VoxBridge-1.1.0-win64-portable.zip'; do
               printf '%s\n' "$present" | grep -qx "$name" || missing=1
             done
             if [ "$missing" = "0" ]; then
-              echo "v1.0.1 already carries these files; leaving the published bytes untouched."
+              echo "v1.1.0 already carries these files; leaving the published bytes untouched."
               exit 0
             fi
           fi
-          gh release view v1.0.1 >/dev/null 2>&1 || \
-            gh release create v1.0.1 --title "VoxBridge 1.0.1" --notes "See the release notes on the website." || gh release view v1.0.1 >/dev/null
+          gh release view v1.1.0 >/dev/null 2>&1 || \
+            gh release create v1.1.0 --title "VoxBridge 1.1.0" --notes "See the release notes on the website." || gh release view v1.1.0 >/dev/null
           ok=0
           for attempt in 1 2 3 4 5; do
-            if gh release upload v1.0.1 \
-              apps/desktop/standalone/dist/VoxBridge-Setup-1.0.1-x64.exe \
-              apps/desktop/standalone/dist/VoxBridge-1.0.1-win64-portable.zip \
+            if gh release upload v1.1.0 \
+              apps/desktop/standalone/dist/VoxBridge-Setup-1.1.0-x64.exe \
+              apps/desktop/standalone/dist/VoxBridge-1.1.0-win64-portable.zip \
               --clobber; then ok=1; break; fi
             echo "upload attempt $attempt failed; retrying"
             sleep $((attempt * 10))
@@ -148,10 +148,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p assets && cd assets
-          gh release download v1.0.1 --dir . --clobber --pattern 'VoxBridge-*'
+          gh release download v1.1.0 --dir . --clobber --pattern 'VoxBridge-*'
           sha256sum VoxBridge-* > SHA256SUMS.txt
           cat SHA256SUMS.txt
-          gh release upload v1.0.1 SHA256SUMS.txt --clobber
+          gh release upload v1.1.0 SHA256SUMS.txt --clobber
 
       - name: Report build log
         if: failure()

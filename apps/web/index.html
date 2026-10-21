@@ -39,7 +39,7 @@
         "applicationCategory": "MultimediaApplication",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
         "description": "Use a phone as a low-latency virtual microphone on Windows with noise suppression, gain, EQ and a verified virtual cable setup.",
-        "softwareVersion": "1.0.1",
+        "softwareVersion": "1.1.0",
         "url": "https://voxbridge-mic.vercel.app/download",
         "downloadUrl": "https://voxbridge-mic.vercel.app/downloads/VoxBridge-windows-setup.exe"
       }
@@ -212,8 +212,8 @@
 
       <div class="ticker" aria-hidden="true">
         <div class="ticker-track">
-          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
-          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
+          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 25 voice characters <i></i> 34 pads <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
+          <span>Noise suppression <i></i> +24 dB boost <i></i> Auto gain <i></i> Presence EQ <i></i> Warmth <i></i> Compressor <i></i> True-peak limiter <i></i> 25 voice characters <i></i> 34 pads <i></i> 60 ms latency <i></i> USB or Wi-Fi <i></i> 16 / 24 / 32 / 48 kHz <i></i> WAV recording <i></i> Virtual cable detection <i></i>
         </div>
       </div>
 
@@ -630,7 +630,7 @@
             'content-type': 'application/json',
             prefer: 'return=minimal',
           },
-          body: JSON.stringify({ email, topic: 'release-notes', message: 'Newsletter signup', platform: 'web', app_version: '1.0.1' }),
+          body: JSON.stringify({ email, topic: 'release-notes', message: 'Newsletter signup', platform: 'web', app_version: '1.1.0' }),
         })
           .then((response) => {
             if (!response.ok) throw new Error('failed');
