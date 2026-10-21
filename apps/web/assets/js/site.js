@@ -393,8 +393,7 @@
   // no identifier, no IP address — the same privacy stance as the download counter.
   // `view_id` is random per page load and exists only so a duplicated beacon
   // (browser retry, double-mounted frame) collapses instead of inflating counts.
-  function viewId() {
-    if (window.__voxbridgeViewId) return window.__voxbridgeViewId;
+  function randomId() {
     let id = '';
     try {
       if (window.crypto?.randomUUID) {
@@ -410,8 +409,29 @@
     } catch {
       id = '';
     }
+    return id;
+  }
+
+  function viewId() {
+    if (window.__voxbridgeViewId) return window.__voxbridgeViewId;
+    const id = randomId();
     if (id) window.__voxbridgeViewId = id;
     return id;
+  }
+
+  // One id per browser tab visit, so the dashboard can say "three people"
+  // instead of "three page loads". It lives in session storage and disappears
+  // when the tab closes — no cookie, nothing that persists or follows you.
+  function sessionId() {
+    try {
+      const stored = window.sessionStorage.getItem('voxbridge-session');
+      if (stored && /^[0-9a-f-]{36}$/i.test(stored)) return stored;
+      const id = randomId();
+      if (id) window.sessionStorage.setItem('voxbridge-session', id);
+      return id;
+    } catch {
+      return '';
+    }
   }
 
   function trackPageview() {
@@ -437,6 +457,7 @@
     }
     const payload = {
       view_id: viewId() || null,
+      session_id: sessionId() || null,
       path: (window.location.pathname || '/').slice(0, 160),
       referrer: referrer.slice(0, 160),
       campaign,
@@ -483,6 +504,7 @@
       platform: platformKey,
       version: VERSION,
       source: 'website',
+      session_id: sessionId() || null,
       referrer: referrer.slice(0, 160),
       campaign,
       ...deviceContext(),
