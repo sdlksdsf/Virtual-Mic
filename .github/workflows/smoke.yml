@@ -103,7 +103,27 @@ jobs:
           set -euo pipefail
           tag=$(gh release view --json tagName --jq .tagName)
           echo "latest release: $tag"
-          test "$tag" = "v$(python3 -c 'import json;print(json.load(open("/tmp/manifest.json"))["version"])')"
+
+          # The site mirrors whatever release was newest when it was built, so a
+          # brand-new release and the live copy disagree for a few minutes. Wait
+          # for the site to catch up instead of failing on a race.
+          base=https://voxbridge-mic.vercel.app
+          for attempt in $(seq 1 20); do
+            curl -fsSL "$base/downloads/manifest.json?x=$(date +%s)" -o /tmp/manifest.json
+            live=$(python3 -c 'import json;print(json.load(open("/tmp/manifest.json"))["version"])')
+            if [ "v$live" = "$tag" ]; then
+              echo "site reports $live (attempt $attempt)"
+              break
+            fi
+            echo "site still serves $live (attempt $attempt); waiting for the deploy"
+            sleep 30
+          done
+          python3 - <<'PY'
+          import json, subprocess
+          tag = subprocess.check_output(['gh', 'release', 'view', '--json', 'tagName', '--jq', '.tagName'], text=True).strip()
+          live = json.load(open('/tmp/manifest.json'))['version']
+          assert 'v' + live == tag, f'the site still serves {live} but the release is {tag}'
+          PY
           mkdir -p dl
           cd dl
           # Platform builds upload in parallel, so the release can be briefly
