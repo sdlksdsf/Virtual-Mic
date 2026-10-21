@@ -184,10 +184,20 @@ jobs:
           url=$(grep -o "https://[a-z0-9]*\.supabase\.co" apps/web/assets/js/config.js | head -1)
           key=$(grep -o "sb_publishable_[A-Za-z0-9_]*" apps/web/assets/js/config.js | head -1)
 
-          curl -fsSL "$base/dashboard" -o /tmp/dashboard.html
+          # A push that touches this file runs before Vercel has necessarily
+          # finished deploying it, so give the new page a few minutes.
+          for attempt in $(seq 1 10); do
+            if curl -fsSL "$base/dashboard" -o /tmp/dashboard.html; then break; fi
+            echo "dashboard not deployed yet (attempt $attempt); waiting"
+            sleep 20
+          done
           grep -q 'name="robots" content="noindex' /tmp/dashboard.html
           grep -q 'assets/js/dashboard.js' /tmp/dashboard.html
-          echo "dashboard served and marked noindex"
+          curl -fsSL "$base/assets/js/dashboard.js" -o /tmp/dashboard.js
+          grep -q 'owner_traffic' /tmp/dashboard.js
+          curl -fsSL "$base/assets/css/dashboard.css" -o /tmp/dashboard.css
+          grep -q 'live-strip' /tmp/dashboard.css
+          echo "dashboard served, with its assets, and marked noindex"
 
           # It must stay out of the sitemap and out of the public navigation.
           curl -fsSL "$base/sitemap.xml" -o /tmp/sitemap.xml
