@@ -41,13 +41,7 @@
       <main>
         <!-- Locked state ------------------------------------------------------ -->
         <section class="gate" id="gate">
-          <span class="dash-pill"><span class="dot"></span>Private</span>
           <h1>Owner <em>only.</em></h1>
-          <p>
-            Traffic, downloads, devices, countries and uptime for voxbridge-mic.vercel.app.
-            Nothing on this page loads until you unlock it, and every query is checked
-            against a hashed key in the database — the key below is the only thing that opens it.
-          </p>
           <form class="gate-card" id="gate-form" autocomplete="off">
             <label for="gate-key">Access key</label>
             <div class="gate-row">
@@ -55,11 +49,11 @@
               <button class="primary" type="submit" id="gate-submit">Unlock</button>
             </div>
             <p class="gate-error" id="gate-error" role="alert"></p>
-            <p class="gate-note">
-              The key stays in this browser only. Wrong guesses are recorded and get slower as
-              they pile up, so nobody can lock you out by guessing badly.
-            </p>
           </form>
+          <p class="gate-warning">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+            Authorised access only. If you are not the owner, close this page.
+          </p>
         </section>
 
         <!-- Unlocked ---------------------------------------------------------- -->
@@ -173,25 +167,67 @@
           </section>
 
           <section class="dash-section" aria-labelledby="h-msg">
-            <div class="dash-heading"><h2 id="h-msg">Messages.</h2><span>newest first</span></div>
-            <div class="panel"><div class="message-list" id="messages"><p class="empty-note">Loading…</p></div></div>
+            <div class="dash-heading"><h2 id="h-msg">Inbox.</h2><span id="msg-counts">—</span></div>
+            <div class="panel">
+              <div class="panel-head inbox-tools">
+                <div class="dash-tabs" role="group" aria-label="Message filter" id="msg-tabs">
+                  <button type="button" data-filter="all" aria-pressed="true">All</button>
+                  <button type="button" data-filter="open" aria-pressed="false">Open</button>
+                  <button type="button" data-filter="handled" aria-pressed="false">Handled</button>
+                </div>
+                <input class="inbox-search" id="msg-search" type="search" placeholder="Search messages" aria-label="Search messages" />
+              </div>
+              <div class="message-list" id="messages"><p class="empty-note">Loading…</p></div>
+            </div>
           </section>
 
-          <footer class="dash-foot">
-            <p>
-              Page views, downloads, devices and countries are anonymous aggregates. Raw traffic is
-              kept for 12 months; the dashboard only ever shows numbers. CI self-test rows are
-              filtered out so the counts are people, not probes.
-            </p>
-            <div class="actions">
-              <button class="dash-btn ghost" type="button" id="rotate">Rotate key</button>
-              <button class="dash-btn danger" type="button" id="lock">Lock</button>
+          <section class="dash-section" aria-labelledby="h-controls">
+            <div class="dash-heading"><h2 id="h-controls">Controls.</h2><span>data and access</span></div>
+            <div class="dash-grid two">
+              <div class="panel">
+                <div class="panel-head"><h3>Export</h3></div>
+                <p class="panel-copy">Download the numbers you are looking at as a CSV for a spreadsheet.</p>
+                <div class="control-row">
+                  <button class="dash-btn ghost" type="button" id="export-csv">Export current range</button>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>Retention</h3></div>
+                <p class="panel-copy">Delete traffic and health rows older than a number of days. Messages are kept.</p>
+                <div class="control-row">
+                  <input class="control-input" id="purge-days" type="number" min="1" max="3650" value="365" inputmode="numeric" aria-label="Keep days" />
+                  <button class="dash-btn ghost" type="button" id="purge">Purge older rows</button>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>CI noise</h3></div>
+                <p class="panel-copy">The release test writes a message each run. Remove those, and health rows older than 30 days.</p>
+                <div class="control-row">
+                  <button class="dash-btn ghost" type="button" id="cleanup">Clear test data</button>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head"><h3>Access</h3></div>
+                <p class="panel-copy">Rotate the key this browser holds, or forget it here.</p>
+                <div class="control-row">
+                  <button class="dash-btn ghost" type="button" id="rotate">Rotate key</button>
+                  <button class="dash-btn danger" type="button" id="lock">Lock</button>
+                </div>
+              </div>
             </div>
             <div class="key-reveal" id="key-reveal" aria-live="polite">
               <b style="font-size: 12px">New key — save it now</b>
               <code id="key-value"></code>
               <button class="dash-btn ghost" type="button" id="key-copy">Copy</button>
               <small>This is shown once. The old key stops working immediately.</small>
+            </div>
+            <p class="control-status" id="control-status" role="status"></p>
+          </section>
+
+          <footer class="dash-foot">
+            <p>Anonymous aggregates only. CI self-tests are filtered out of every count.</p>
+            <div class="actions">
+              <span class="dash-pill" id="foot-status"><span class="dot"></span>Ready</span>
             </div>
           </footer>
         </div>

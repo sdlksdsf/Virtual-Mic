@@ -231,9 +231,15 @@ jobs:
 
           # Every owner function exists and refuses a key too short to be real.
           # The guard rejects those before it writes to the failure log.
-          for fn in owner_ping owner_live owner_traffic owner_health owner_messages owner_rotate; do
+          for fn in owner_ping owner_live owner_traffic owner_health owner_messages owner_rotate \
+                    owner_message_update owner_message_delete owner_purge owner_cleanup; do
             params='{"p_key":"short"}'
-            if [ "$fn" = "owner_rotate" ]; then params='{"p_key":"short","p_new_key":"short"}'; fi
+            case "$fn" in
+              owner_rotate) params='{"p_key":"short","p_new_key":"short"}' ;;
+              owner_message_update) params='{"p_key":"short","p_id":1,"p_handled":true}' ;;
+              owner_message_delete) params='{"p_key":"short","p_id":1}' ;;
+              owner_purge) params='{"p_key":"short","p_days":3650}' ;;
+            esac
             code=$(curl -s -o /tmp/rpc.json -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
               -H "apikey: $key" -H 'Content-Type: application/json' -d "$params")
             echo "$fn -> $code $(cat /tmp/rpc.json)"
