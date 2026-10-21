@@ -177,67 +177,77 @@ jobs:
           assert f'-{version}-' in name, f'APK {name} does not carry {version}'
           PY
 
-      - name: Private dashboard
+      - name: Dashboard is live and private
         run: |
           set -euo pipefail
+          fail() { echo "::error title=Dashboard check::$1"; exit 1; }
+          base=https://voxbridge-mic.vercel.app
+
+          # A push that touches this file runs before Vercel has necessarily
+          # finished deploying it, so give the new page a few minutes.
+          ok=0
+          for attempt in $(seq 1 10); do
+            if curl -fsSL "$base/dashboard" -o /tmp/dashboard.html; then ok=1; break; fi
+            echo "dashboard not deployed yet (attempt $attempt); waiting"
+            sleep 20
+          done
+          test "$ok" = "1" || fail "GET /dashboard did not return 200"
+
+          grep -q 'name="robots" content="noindex' /tmp/dashboard.html || fail "dashboard is missing its noindex meta tag"
+          grep -q 'assets/js/dashboard.js' /tmp/dashboard.html || fail "dashboard does not load dashboard.js"
+
+          curl -fsSL "$base/assets/js/dashboard.js" -o /tmp/dashboard.js || fail "dashboard.js is not served"
+          grep -q 'owner_traffic' /tmp/dashboard.js || fail "dashboard.js lost its owner_traffic call"
+          curl -fsSL "$base/assets/css/dashboard.css" -o /tmp/dashboard.css || fail "dashboard.css is not served"
+          grep -q 'live-strip' /tmp/dashboard.css || fail "dashboard.css lost its layout"
+
+          curl -fsSL "$base/sitemap.xml" -o /tmp/sitemap.xml || fail "sitemap is not served"
+          if grep -q '/dashboard' /tmp/sitemap.xml; then fail "the dashboard is listed in the sitemap"; fi
+          curl -fsSL "$base/robots.txt" -o /tmp/robots.txt || fail "robots.txt is not served"
+          grep -q 'Disallow: /dashboard' /tmp/robots.txt || fail "robots.txt does not disallow the dashboard"
+          echo "dashboard served, with its assets, and hidden from crawlers"
+
+      - name: Public key cannot read the data
+        run: |
+          set -euo pipefail
+          fail() { echo "::error title=Dashboard privacy::$1"; exit 1; }
           base=https://voxbridge-mic.vercel.app
           url=$(grep -o "https://[a-z0-9]*\.supabase\.co" apps/web/assets/js/config.js | head -1)
           key=$(grep -o "sb_publishable_[A-Za-z0-9_]*" apps/web/assets/js/config.js | head -1)
 
-          # A push that touches this file runs before Vercel has necessarily
-          # finished deploying it, so give the new page a few minutes.
-          for attempt in $(seq 1 10); do
-            if curl -fsSL "$base/dashboard" -o /tmp/dashboard.html; then break; fi
-            echo "dashboard not deployed yet (attempt $attempt); waiting"
-            sleep 20
-          done
-          grep -q 'name="robots" content="noindex' /tmp/dashboard.html
-          grep -q 'assets/js/dashboard.js' /tmp/dashboard.html
-          curl -fsSL "$base/assets/js/dashboard.js" -o /tmp/dashboard.js
-          grep -q 'owner_traffic' /tmp/dashboard.js
-          curl -fsSL "$base/assets/css/dashboard.css" -o /tmp/dashboard.css
-          grep -q 'live-strip' /tmp/dashboard.css
-          echo "dashboard served, with its assets, and marked noindex"
-
-          # It must stay out of the sitemap and out of the public navigation.
-          curl -fsSL "$base/sitemap.xml" -o /tmp/sitemap.xml
-          ! grep -q '/dashboard' /tmp/sitemap.xml
-          curl -fsSL "$base/robots.txt" -o /tmp/robots.txt
-          grep -q 'Disallow: /dashboard' /tmp/robots.txt
-          echo "dashboard hidden from crawlers"
-
-          # The public key can write events but must not read them, and must not
-          # be able to read the owner key hash either.
+          # The key that ships in the page can write events but must never read
+          # them, and must never see the owner key hash.
           for table in page_events download_events feedback health_checks owner_access owner_auth_failures; do
             code=$(curl -s -o /tmp/table.json -w '%{http_code}' "$url/rest/v1/$table?select=*&limit=1" \
               -H "apikey: $key" -H "Authorization: Bearer $key")
             body=$(cat /tmp/table.json)
             echo "$table -> $code $body"
             if [ "$code" = "200" ]; then
-              test "$body" = "[]"
+              test "$body" = "[]" || fail "$table returned rows to the public key"
             else
-              test "$code" = "401" -o "$code" = "403"
+              test "$code" = "401" -o "$code" = "403" || fail "$table answered $code"
             fi
           done
 
-          # Every owner function exists and refuses a key that is too short to
-          # be real. The guard rejects those before it touches the failure log,
-          # so this cannot trip the owner's own lockout.
+          # Every owner function exists and refuses a key too short to be real.
+          # The guard rejects those before it writes to the failure log.
           for fn in owner_ping owner_live owner_traffic owner_health owner_messages owner_rotate; do
             params='{"p_key":"short"}'
             if [ "$fn" = "owner_rotate" ]; then params='{"p_key":"short","p_new_key":"short"}'; fi
-            code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
+            code=$(curl -s -o /tmp/rpc.json -w '%{http_code}' -X POST "$url/rest/v1/rpc/$fn" \
               -H "apikey: $key" -H 'Content-Type: application/json' -d "$params")
-            echo "$fn -> $code"
-            test "$code" = "403"
+            echo "$fn -> $code $(cat /tmp/rpc.json)"
+            test "$code" = "403" || fail "$fn answered $code instead of 403 (missing function?)"
           done
 
-          # A wrong key is rejected, never silently ignored. One attempt only.
+          # A plausible but wrong key is rejected too. One attempt only: each
+          # wrong guess makes the next one slower by design.
           code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$url/rest/v1/rpc/owner_ping" \
             -H "apikey: $key" -H 'Content-Type: application/json' \
             -d '{"p_key":"not-the-owner-key-0000000000"}')
           echo "wrong owner key -> $code"
-          test "$code" != "200"
+          test "$code" = "403" || fail "a wrong owner key answered $code"
+          echo "public key cannot read the data; owner functions reject wrong keys"
 
       - name: Record site health
         run: |
