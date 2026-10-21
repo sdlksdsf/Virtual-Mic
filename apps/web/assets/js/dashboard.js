@@ -1,12 +1,4 @@
-/* Owner dashboard.
- *
- * Everything on this page comes from five database functions that take the
- * owner key as their first argument. The key is never stored server-side in
- * plain text: only its SHA-256 hash lives in `owner_access`, and a wrong key
- * is rate limited. Without the key the tables are unreadable through the
- * public API, so this page is useless to anyone who does not have it — which
- * is the point of it being a page and not an account system.
- */
+/* Owner dashboard. Every request carries the owner key; see docs/ANALYTICS.md. */
 (() => {
   'use strict';
 
@@ -190,11 +182,9 @@
       await loadAll();
       return true;
     } catch (error) {
-      const message = /invalid access key/i.test(error.message)
+      const message = /invalid access key|jwt|permission|401|403/i.test(error.message)
         ? 'That key is not right.'
-        : /too many/i.test(error.message)
-          ? 'Too many wrong keys — wait a few minutes, then try again.'
-          : error.message;
+        : error.message;
       showGate(message);
       return false;
     } finally {
