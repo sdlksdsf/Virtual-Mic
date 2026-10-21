@@ -194,6 +194,35 @@ jobs:
           print('installer payload is intact:', size, 'bytes')
           PY
 
+          # The voice changer lives in the desktop build, so prove the shipped
+          # Windows files really carry it rather than trusting a version number.
+          PORTABLE="$(ls VoxBridge-*-win64-portable.zip)" EXE="$exe" python3 - <<'PY'
+          import os, struct, zipfile
+
+          wanted = ('app/src/renderer/voice.js', 'app/src/renderer/soundbank.js')
+
+          with zipfile.ZipFile(os.environ['PORTABLE']) as archive:
+              names = {name.split('VoxBridge/', 1)[-1] for name in archive.namelist()}
+          for path in wanted:
+              assert path in names, f'the portable build is missing {path}'
+          print('portable build carries the voice code')
+
+          data = open(os.environ['EXE'], 'rb').read()
+          offset, size = struct.unpack('<QQ', data[-16:])
+          payload = data[offset:offset + size]
+          assert payload[:4] == b'VBXP', 'installer payload missing'
+          count = struct.unpack('<I', payload[4:8])[0]
+          pos, paths = 8, set()
+          for _ in range(count):
+              length = struct.unpack('<H', payload[pos:pos + 2])[0]
+              pos += 2
+              paths.add(payload[pos:pos + length].decode('utf-8'))
+              pos += length + 16
+          for path in wanted:
+              assert path in paths, f'the installer is missing {path}'
+          print(f'installer carries {len(paths)} files, including the voice code')
+          PY
+
           # The version a user sees must be the version the site advertises.
           python3 - "$apk" <<'PY'
           import json, sys
